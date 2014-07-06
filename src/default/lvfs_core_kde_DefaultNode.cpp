@@ -57,6 +57,11 @@ const IEntry *DefaultNode::entry() const
     return ent.get();
 }
 
+const Interface::Holder &DefaultNode::file() const
+{
+    return m_file;
+}
+
 DefaultNode::size_type DefaultNode::size() const
 {
     return m_files.size();

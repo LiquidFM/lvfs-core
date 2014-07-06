@@ -17,33 +17,31 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_INODE_H_
-#define LVFS_CORE_INODE_H_
+#ifndef LVFS_CORE_QT_STYLEDITEMDELEGATE_H_
+#define LVFS_CORE_QT_STYLEDITEMDELEGATE_H_
 
-#include <cstdlib>
-#include <lvfs/IEntry>
-#include <lvfs/Module>
+#include <QtGui/QStyledItemDelegate>
+#include <QtGui/QStyleOptionViewItem>
+#include <platform/utils.h>
 
 
 namespace LVFS {
 namespace Core {
+namespace Qt {
 
-class PLATFORM_MAKE_PUBLIC INode
+class StyledItemDelegate : public QStyledItemDelegate
 {
-    DECLARE_INTERFACE(LVFS::Core::INode)
+    PLATFORM_MAKE_NONCOPYABLE(StyledItemDelegate)
 
 public:
-    virtual ~INode();
+    StyledItemDelegate(QObject *parent = 0);
 
-    virtual void refresh(int depth = 0) = 0;
-    virtual const IEntry *entry() const = 0;
-    virtual const Interface::Holder &file() const = 0;
+    virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 
-public:
-    static Interface::Holder open(const char *uri, Module::Error &error);
-    static Interface::Holder view(const Interface::Holder &node);
+protected:
+    void paintBackgroundLines(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 };
 
-}}
+}}}
 
-#endif /* LVFS_CORE_INODE_H_ */
+#endif /* LVFS_CORE_QT_STYLEDITEMDELEGATE_H_ */

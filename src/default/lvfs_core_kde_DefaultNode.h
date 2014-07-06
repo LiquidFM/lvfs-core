@@ -40,6 +40,7 @@ public:
 
     virtual void refresh();
     virtual const IEntry *entry() const;
+    virtual const Interface::Holder &file() const;
 
     virtual size_type size() const;
     virtual Interface::Holder at(size_type index) const;

@@ -37,12 +37,15 @@ public:
     /* Core::INode */
     virtual void refresh(int depth);
     virtual const IEntry *entry() const;
+    virtual const Interface::Holder &file() const;
 
     /* Qt::INode */
     virtual size_type size() const;
     virtual const Item &at(size_type index) const;
     virtual size_type indexOf(const Item &node) const;
     virtual QVariant data(int column, int role) const;
+
+    virtual QVariant headerData(int section, ::Qt::Orientation orientation, int role = ::Qt::DisplayRole) const;
 
 protected:
     virtual void processListFile(EFC::List<Item> &files);

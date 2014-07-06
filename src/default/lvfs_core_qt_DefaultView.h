@@ -22,6 +22,8 @@
 
 #include <QtGui/QTreeView>
 #include <lvfs-core/IView>
+#include <lvfs-core/models/Qt/SortFilterModel>
+#include <lvfs-core/models/Qt/StyledItemDelegate>
 
 
 namespace LVFS {
@@ -44,6 +46,8 @@ public:
 private:
     Interface::Holder m_node;
     Interface::Holder m_opposite;
+    SortFilterModel m_sortFilterModel;
+    StyledItemDelegate m_styledItemDelegate;
 };
 
 }}}

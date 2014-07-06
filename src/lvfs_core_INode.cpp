@@ -62,9 +62,7 @@ Interface::Holder INode::view(const Interface::Holder &node)
         res.reset(new (std::nothrow) Qt::DefaultView());
 
     if (LIKELY(res.isValid() == true))
-    {
         res->as<IView>()->setNode(node);
-    }
 
     return res;
 }

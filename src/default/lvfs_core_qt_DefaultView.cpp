@@ -32,7 +32,13 @@ namespace Qt {
 
 DefaultView::DefaultView(QWidget *parent) :
     QTreeView(parent)
-{}
+{
+    setItemDelegate(&m_styledItemDelegate);
+    setSortingEnabled(true);
+    sortByColumn(0, ::Qt::AscendingOrder);
+    m_sortFilterModel.setDynamicSortFilter(true);
+    setModel(&m_sortFilterModel);
+}
 
 DefaultView::~DefaultView()
 {}
@@ -56,7 +62,7 @@ bool DefaultView::setNode(const Interface::Holder &node)
         node->as<Core::INode>()->refresh(1);
 
         m_node = node;
-        setModel(qtNode->model());
+        m_sortFilterModel.setSourceModel(qtNode->model());
 
         return true;
     }

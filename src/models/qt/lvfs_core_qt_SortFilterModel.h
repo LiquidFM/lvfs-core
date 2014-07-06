@@ -17,33 +17,31 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_INODE_H_
-#define LVFS_CORE_INODE_H_
+#ifndef LVFS_CORE_QT_SORTFILTERMODEL_H_
+#define LVFS_CORE_QT_SORTFILTERMODEL_H_
 
-#include <cstdlib>
-#include <lvfs/IEntry>
-#include <lvfs/Module>
+#include <QtGui/QSortFilterProxyModel>
+#include <platform/utils.h>
 
 
 namespace LVFS {
 namespace Core {
+namespace Qt {
 
-class PLATFORM_MAKE_PUBLIC INode
+class PLATFORM_MAKE_PUBLIC SortFilterModel : public QSortFilterProxyModel
 {
-    DECLARE_INTERFACE(LVFS::Core::INode)
+    PLATFORM_MAKE_NONCOPYABLE(SortFilterModel)
 
 public:
-    virtual ~INode();
+    SortFilterModel(QObject *parent = 0);
 
-    virtual void refresh(int depth = 0) = 0;
-    virtual const IEntry *entry() const = 0;
-    virtual const Interface::Holder &file() const = 0;
+    static bool compareFileNames(const QString &str1, const QString &str2);
+    static bool compareFileNames(const char *str1, const char *str2);
 
-public:
-    static Interface::Holder open(const char *uri, Module::Error &error);
-    static Interface::Holder view(const Interface::Holder &node);
+protected:
+    virtual bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
 };
 
-}}
+}}}
 
-#endif /* LVFS_CORE_INODE_H_ */
+#endif /* LVFS_CORE_QT_SORTFILTERMODEL_H_ */

@@ -52,6 +52,11 @@ const IEntry *DefaultNode::entry() const
     return ent.get();
 }
 
+const Interface::Holder &DefaultNode::file() const
+{
+    return m_file;
+}
+
 DefaultNode::size_type DefaultNode::size() const
 {
     return m_files.size();
@@ -82,6 +87,14 @@ QVariant DefaultNode::data(int column, int role) const
         icon.addFile(toUnicode(m_file->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
         return icon;
     }
+
+    return QVariant();
+}
+
+QVariant DefaultNode::headerData(int section, ::Qt::Orientation orientation, int role) const
+{
+    if (section == 0 && role == ::Qt::DisplayRole)
+        return QObject::tr("Name");
 
     return QVariant();
 }
