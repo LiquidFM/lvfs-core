@@ -52,9 +52,7 @@ void DefaultNode::refresh()
 
 const IEntry *DefaultNode::entry() const
 {
-    Interface::Adaptor<IEntry> ent(m_file);
-    ASSERT(ent.isValid());
-    return ent.get();
+    return m_file->as<IEntry>();
 }
 
 const Interface::Holder &DefaultNode::file() const

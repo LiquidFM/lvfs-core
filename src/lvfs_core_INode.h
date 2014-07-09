@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <lvfs/IEntry>
 #include <lvfs/Module>
+#include <QtCore/QString>
 
 
 namespace LVFS {
@@ -35,9 +36,14 @@ class PLATFORM_MAKE_PUBLIC INode
 public:
     virtual ~INode();
 
-    virtual void refresh(int depth = 0) = 0;
-    virtual const IEntry *entry() const = 0;
+    virtual const QString &title() const = 0;
+    virtual const QString &schema() const = 0;
+    virtual const QString &location() const = 0;
     virtual const Interface::Holder &file() const = 0;
+
+    virtual void refresh(int depth = 0) = 0;
+    virtual void opened(const Interface::Holder &view) = 0;
+    virtual void closed(const Interface::Holder &view) = 0;
 
 public:
     static Interface::Holder open(const char *uri, Module::Error &error);

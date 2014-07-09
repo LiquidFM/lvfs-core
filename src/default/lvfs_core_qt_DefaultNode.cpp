@@ -32,6 +32,9 @@ namespace Qt {
 
 DefaultNode::DefaultNode(const Interface::Holder &file, const Item &parent) :
     ModelNode(parent),
+    m_title(toUnicode(file->as<IEntry>()->title())),
+    m_schema(toUnicode(file->as<IEntry>()->schema())),
+    m_location(toUnicode(file->as<IEntry>()->location())),
     m_file(file)
 {
     ASSERT(m_file.isValid());
@@ -40,21 +43,32 @@ DefaultNode::DefaultNode(const Interface::Holder &file, const Item &parent) :
 DefaultNode::~DefaultNode()
 {}
 
-void DefaultNode::refresh(int depth)
+const QString &DefaultNode::title() const
 {
-    doListFile(m_file, depth);
+    return m_title;
 }
 
-const IEntry *DefaultNode::entry() const
+const QString &DefaultNode::schema() const
 {
-    Interface::Adaptor<IEntry> ent(m_file);
-    ASSERT(ent.isValid());
-    return ent.get();
+    return m_schema;
+}
+
+const QString &DefaultNode::location() const
+{
+    return m_location;
 }
 
 const Interface::Holder &DefaultNode::file() const
 {
     return m_file;
+}
+
+void DefaultNode::refresh(int depth)
+{
+    if (!m_files.empty())
+        removeChildren();
+
+    doListFile(m_file, depth);
 }
 
 DefaultNode::size_type DefaultNode::size() const
@@ -99,14 +113,25 @@ QVariant DefaultNode::headerData(int section, ::Qt::Orientation orientation, int
     return QVariant();
 }
 
+void DefaultNode::removeChildren()
+{
+    beginRemoveRows(QModelIndex(), 0, m_files.size() - 1);
+    m_files.clear();
+    endRemoveRows();
+}
+
 void DefaultNode::processListFile(EFC::List<Item> &files)
 {
+    beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
     m_files.insert(m_files.end(), files.begin(), files.end());
+    endInsertRows();
 }
 
 void DefaultNode::doListFileDone(EFC::List<Item> &files)
 {
+    beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
     m_files.insert(m_files.end(), files.begin(), files.end());
+    endInsertRows();
 }
 
 }}}

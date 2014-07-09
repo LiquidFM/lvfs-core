@@ -41,7 +41,9 @@ DefaultView::DefaultView(QWidget *parent) :
 }
 
 DefaultView::~DefaultView()
-{}
+{
+    ASSERT(!m_node.isValid());
+}
 
 QWidget *DefaultView::widget() const
 {
@@ -55,17 +57,21 @@ const Interface::Holder &DefaultView::node() const
 
 bool DefaultView::setNode(const Interface::Holder &node)
 {
-    ASSERT(node.isValid());
+    if (!node.isValid())
+        m_node.reset();
+    else
+        if (Qt::INode *qtNode = node->as<Qt::INode>())
+        {
+            if (m_node.isValid())
+                m_node->as<Core::INode>()->closed(Interface::Holder::fromRawData(this));
 
-    if (Qt::INode *qtNode = node->as<Qt::INode>())
-    {
-        node->as<Core::INode>()->refresh(1);
+            m_node = node;
+            m_sortFilterModel.setSourceModel(qtNode->model());
+            m_node->as<Core::INode>()->opened(Interface::Holder::fromRawData(this));
+            m_node->as<Core::INode>()->refresh(0);
 
-        m_node = node;
-        m_sortFilterModel.setSourceModel(qtNode->model());
-
-        return true;
-    }
+            return true;
+        }
 
     return false;
 }

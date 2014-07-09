@@ -35,9 +35,11 @@ public:
     virtual ~DefaultNode();
 
     /* Core::INode */
-    virtual void refresh(int depth);
-    virtual const IEntry *entry() const;
+    virtual const QString &title() const;
+    virtual const QString &schema() const;
+    virtual const QString &location() const;
     virtual const Interface::Holder &file() const;
+    virtual void refresh(int depth);
 
     /* Qt::INode */
     virtual size_type size() const;
@@ -48,10 +50,15 @@ public:
     virtual QVariant headerData(int section, ::Qt::Orientation orientation, int role = ::Qt::DisplayRole) const;
 
 protected:
+    virtual void removeChildren();
+
     virtual void processListFile(EFC::List<Item> &files);
     virtual void doListFileDone(EFC::List<Item> &files);
 
 private:
+    QString m_title;
+    QString m_schema;
+    QString m_location;
     Interface::Holder m_file;
     EFC::Vector<Item> m_files;
 };

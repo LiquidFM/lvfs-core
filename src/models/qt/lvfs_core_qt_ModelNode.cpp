@@ -66,7 +66,7 @@ QVariant ModelNode::data(const QModelIndex &index, int role) const
         if (role == ::Qt::DisplayRole)
         {
             ASSERT(indexNode->as<Core::INode>() != NULL);
-            return toUnicode(indexNode->as<Core::INode>()->entry()->title());
+            return indexNode->as<Core::INode>()->title();
         }
         else
             if (role == ::Qt::DecorationRole)
@@ -74,7 +74,7 @@ QVariant ModelNode::data(const QModelIndex &index, int role) const
                 ASSERT(indexNode->as<Core::INode>() != NULL);
 
                 QIcon icon;
-                icon.addFile(toUnicode(indexNode->as<Core::INode>()->entry()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
+                icon.addFile(toUnicode(indexNode->as<Core::INode>()->file()->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
                 return icon;
             }
 

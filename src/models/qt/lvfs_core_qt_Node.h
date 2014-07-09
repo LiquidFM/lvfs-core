@@ -39,7 +39,12 @@ public:
 
     virtual const Item &parent() const;
 
+    virtual void opened(const Interface::Holder &view);
+    virtual void closed(const Interface::Holder &view);
+
 protected:
+    virtual void removeChildren() = 0;
+
     void doListFile(const Item &file, int depth = 0);
     virtual void processListFile(EFC::List<Item> &files) = 0;
     virtual void doListFileDone(EFC::List<Item> &files) = 0;
@@ -50,6 +55,7 @@ protected:
     static QString toUnicode(const char *string);
 
 private:
+    int m_links;
     Item m_parent;
 };
 

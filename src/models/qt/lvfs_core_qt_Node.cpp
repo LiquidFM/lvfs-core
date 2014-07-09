@@ -33,7 +33,8 @@ namespace Qt {
 static ::EFC::TasksPool s_pool(10);
 
 
-Node::Node(const Holder &parent) :
+Node::Node(const Item &parent) :
+    m_links(0),
     m_parent(parent)
 {}
 
@@ -43,6 +44,17 @@ Node::~Node()
 const Node::Item &Node::parent() const
 {
     return m_parent;
+}
+
+void Node::opened(const Interface::Holder &view)
+{
+    ++m_links;
+}
+
+void Node::closed(const Interface::Holder &view)
+{
+    if (--m_links == 0)
+        removeChildren();
 }
 
 void Node::doListFile(const Item &file, int depth)
@@ -61,7 +73,7 @@ void Node::doListFile(const Item &file, int depth)
                 node.reset(factory->createNode(i));
 
             if (!node.isValid())
-                node.reset(new (std::nothrow) DefaultNode(i, Item(this)));
+                node.reset(new (std::nothrow) DefaultNode(i, Item::fromRawData(this)));
 
             if (node.isValid())
             {
