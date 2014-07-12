@@ -19,6 +19,7 @@
 
 #include "lvfs_core_qt_DefaultView.h"
 
+#include <lvfs/IDirectory>
 #include <lvfs-core/INode>
 #include <lvfs-core/models/Qt/INode>
 
@@ -30,14 +31,22 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-DefaultView::DefaultView(QWidget *parent) :
-    QTreeView(parent)
+DefaultView::DefaultView() :
+    m_view(&m_eventHandler),
+    m_eventHandler(this)
 {
-    setItemDelegate(&m_styledItemDelegate);
-    setSortingEnabled(true);
-    sortByColumn(0, ::Qt::AscendingOrder);
+    m_view.setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_view.setContextMenuPolicy(::Qt::DefaultContextMenu);
+    m_view.setItemDelegate(&m_styledItemDelegate);
+    m_view.setSortingEnabled(true);
+    m_view.sortByColumn(0, ::Qt::AscendingOrder);
     m_sortFilterModel.setDynamicSortFilter(true);
-    setModel(&m_sortFilterModel);
+    m_view.setModel(&m_sortFilterModel);
+
+    m_eventHandler.registerMouseDoubleClickEventHandler(&DefaultView::goInto);
+    m_eventHandler.registerShortcut(::Qt::NoModifier, ::Qt::Key_Return, &DefaultView::goInto);
+    m_eventHandler.registerShortcut(::Qt::NoModifier, ::Qt::Key_Enter, &DefaultView::goInto);
+    m_eventHandler.registerShortcut(::Qt::NoModifier, ::Qt::Key_Backspace, &DefaultView::goUp);
 }
 
 DefaultView::~DefaultView()
@@ -47,7 +56,7 @@ DefaultView::~DefaultView()
 
 QWidget *DefaultView::widget() const
 {
-    return const_cast<DefaultView *>(this);
+    return const_cast<TreeView *>(&m_view);
 }
 
 const Interface::Holder &DefaultView::node() const
@@ -58,10 +67,43 @@ const Interface::Holder &DefaultView::node() const
 bool DefaultView::setNode(const Interface::Holder &node)
 {
     if (!node.isValid())
+    {
         m_node.reset();
-    else
+        return true;
+    }
+
+    return openNode(node, QModelIndex(), QModelIndex());
+}
+
+const Interface::Holder &DefaultView::opposite() const
+{
+    return m_opposite;
+}
+
+void DefaultView::goUp()
+{
+    Interface::Holder node = m_node->as<Qt::INode>()->parent();
+
+    if (node.isValid())
+        openNode(node, m_node->as<Qt::INode>()->parentIndex(), QModelIndex());
+}
+
+void DefaultView::goInto()
+{
+    QModelIndex index = m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
+
+    if (index.isValid())
+        openNode(m_node->as<Qt::INode>()->at(index.row()), QModelIndex(), index);
+}
+
+bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &current, const QModelIndex &parent)
+{
+    if (node->as<Core::INode>()->file()->as<IDirectory>())
         if (Qt::INode *qtNode = node->as<Qt::INode>())
         {
+            if (parent.isValid())
+                qtNode->setParentIndex(parent);
+
             if (m_node.isValid())
                 m_node->as<Core::INode>()->closed(Interface::Holder::fromRawData(this));
 
@@ -70,15 +112,20 @@ bool DefaultView::setNode(const Interface::Holder &node)
             m_node->as<Core::INode>()->opened(Interface::Holder::fromRawData(this));
             m_node->as<Core::INode>()->refresh(0);
 
+            QModelIndex selected = current.isValid() ? m_sortFilterModel.mapFromSource(current) : m_sortFilterModel.index(0, 0);
+
+            if (LIKELY(selected.isValid() == true))
+            {
+                m_view.setFocus();
+                m_view.scrollTo(selected, QAbstractItemView::PositionAtCenter);
+                m_view.selectionModel()->select(selected, QItemSelectionModel::ClearAndSelect);
+                m_view.selectionModel()->setCurrentIndex(selected, QItemSelectionModel::ClearAndSelect);
+            }
+
             return true;
         }
 
     return false;
-}
-
-const Interface::Holder &DefaultView::opposite() const
-{
-    return m_opposite;
 }
 
 }}}

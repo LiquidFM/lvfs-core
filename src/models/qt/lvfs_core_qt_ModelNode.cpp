@@ -40,6 +40,16 @@ QAbstractItemModel *ModelNode::model() const
     return const_cast<ModelNode *>(this);
 }
 
+QModelIndex ModelNode::parentIndex() const
+{
+    return m_index;
+}
+
+void ModelNode::setParentIndex(const QModelIndex &index)
+{
+    m_index = index;
+}
+
 int ModelNode::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())

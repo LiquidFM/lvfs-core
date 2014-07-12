@@ -20,6 +20,8 @@ add_definitions (${QT_DEFINITIONS} -DQT_NO_CAST_FROM_ASCII)
 
 # Sources
 add_subdirectory (src)
+QT4_WRAP_CPP (${PROJECT_NAME}_MOC_SOURCES ${${PROJECT_NAME}_HEADERS} OPTIONS "-nw")
+list (APPEND ${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_MOC_SOURCES})
 
 # Target - lvfs-core
 add_library(lvfs-core SHARED ${${PROJECT_NAME}_SOURCES})
@@ -38,6 +40,20 @@ install_header_files (lvfs-core "src/lvfs_core_INode.h:INode"
                                 "src/lvfs_core_IViewFactory.h:IViewFactory"
 
                                 "src/tools/strings/strnatcmp.h:tools/strings/strnatcmp.h"
+                                "src/tools/strings/readableints.h:tools/strings/readableints.h"
+                                "src/tools/templates/mtp.h:tools/templates/mtp.h"
+                                "src/tools/events/eventhandler.h:tools/events/EventHandler"
+                                "src/tools/events/eventsourcebase.h:tools/events/EventSourceBase"
+                                "src/tools/events/eventhandlerbase.h:tools/events/EventHandlerBase"
+                                "src/tools/events/eventhandlerdefault.h:tools/events/EventHandlerDefault"
+                                "src/tools/events/contextmenueventhandler.h:tools/events/ContextMenuEventHandler"
+                                "src/tools/events/contextmenueventsource.h:tools/events/ContextMenuEventSource"
+                                "src/tools/events/focuseventhandler.h:tools/events/FocusEventHandler"
+                                "src/tools/events/focuseventsource.h:tools/events/FocusEventSource"
+                                "src/tools/events/keyboardeventhandler.h:tools/events/KeyboardEventHandler"
+                                "src/tools/events/keyboardeventsource.h:tools/events/KeyboardEventSource"
+                                "src/tools/events/mouseeventhandler.h:tools/events/MouseEventHandler"
+                                "src/tools/events/mouseeventsource.h:tools/events/MouseEventSource"
 
                                 "src/models/kde/lvfs_core_kde_INode.h:models/Kde/INode"
 

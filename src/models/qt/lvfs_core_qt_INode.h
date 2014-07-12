@@ -47,6 +47,9 @@ public:
     virtual QVariant data(int column, int role) const = 0;
 
     virtual QAbstractItemModel *model() const = 0;
+
+    virtual QModelIndex parentIndex() const = 0;
+    virtual void setParentIndex(const QModelIndex &index) = 0;
 };
 
 }}}

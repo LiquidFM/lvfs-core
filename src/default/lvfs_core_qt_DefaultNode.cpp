@@ -19,11 +19,13 @@
 
 #include "lvfs_core_qt_DefaultNode.h"
 
-#include <kitemviews/kstandarditem.h>
-
+#include <lvfs/IFile>
 #include <lvfs/IEntry>
+#include <lvfs/IFsFile>
 #include <brolly/assert.h>
 #include <QtGui/QIcon>
+
+#include <lvfs-core/tools/strings/readableints.h>
 
 
 namespace LVFS {
@@ -32,12 +34,16 @@ namespace Qt {
 
 DefaultNode::DefaultNode(const Interface::Holder &file, const Item &parent) :
     ModelNode(parent),
-    m_title(toUnicode(file->as<IEntry>()->title())),
     m_schema(toUnicode(file->as<IEntry>()->schema())),
     m_location(toUnicode(file->as<IEntry>()->location())),
-    m_file(file)
+    m_file(file),
+    m_title(toUnicode(file->as<IEntry>()->title())),
+    m_icon(),
+    m_size(file->as<IFile>() ? humanReadableSize(file->as<IFile>()->size()) : QString::fromLatin1("<DIR>")),
+    m_modified(file->as<IFsFile>() ? QDateTime::fromTime_t(file->as<IFsFile>()->mTime()).toLocalTime() : QDateTime())
 {
     ASSERT(m_file.isValid());
+    m_icon.addFile(toUnicode(m_file->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
 }
 
 DefaultNode::~DefaultNode()
@@ -92,23 +98,68 @@ DefaultNode::size_type DefaultNode::indexOf(const Item &node) const
 
 QVariant DefaultNode::data(int column, int role) const
 {
-    if (column == 0 && role == ::Qt::DisplayRole)
-        return toUnicode(m_file->as<IEntry>()->title());
-
-    if (role == ::Qt::DecorationRole)
+    switch (role)
     {
-        QIcon icon;
-        icon.addFile(toUnicode(m_file->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
-        return icon;
+        case ::Qt::DisplayRole:
+            switch (column)
+            {
+                case 0:
+                    return m_title;
+
+                case 1:
+                    return m_size;
+
+                case 2:
+                    return m_modified;
+
+                default:
+                    break;
+            }
+            break;
+
+        case ::Qt::DecorationRole:
+            if (column == 0)
+                return m_icon;
+            break;
+
+        default:
+            break;
     }
 
     return QVariant();
 }
 
+int DefaultNode::columnCount(const QModelIndex &parent) const
+{
+    return 3;
+}
+
 QVariant DefaultNode::headerData(int section, ::Qt::Orientation orientation, int role) const
 {
-    if (section == 0 && role == ::Qt::DisplayRole)
-        return QObject::tr("Name");
+    if (orientation == ::Qt::Horizontal && role == ::Qt::DisplayRole)
+        switch (section)
+        {
+            case 0:
+            {
+                return tr("Name");
+                break;
+            }
+
+            case 1:
+            {
+                return tr("Size");
+                break;
+            }
+
+            case 2:
+            {
+                return tr("Modified");
+                break;
+            }
+
+            default:
+                break;
+        }
 
     return QVariant();
 }

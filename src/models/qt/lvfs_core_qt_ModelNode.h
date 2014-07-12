@@ -34,8 +34,10 @@ public:
     ModelNode(const Item &parent = Item());
     virtual ~ModelNode();
 
-    /* INode */
+    /* Qt::INode */
     virtual QAbstractItemModel *model() const;
+    virtual QModelIndex parentIndex() const;
+    virtual void setParentIndex(const QModelIndex &index);
 
     /* QAbstractItemModel */
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -50,6 +52,9 @@ private:
     QModelIndex index(Item *item) const;
     QModelIndex parent(Item *item) const;
 //    QModelIndex parent(Item *item, size_type &row) const;
+
+private:
+    QModelIndex m_index;
 };
 
 }}}

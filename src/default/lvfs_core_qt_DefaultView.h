@@ -25,15 +25,22 @@
 #include <lvfs-core/models/Qt/SortFilterModel>
 #include <lvfs-core/models/Qt/StyledItemDelegate>
 
+#include <lvfs-core/tools/events/ContextMenuEventHandler>
+#include <lvfs-core/tools/events/ContextMenuEventSource>
+#include <lvfs-core/tools/events/KeyboardEventHandler>
+#include <lvfs-core/tools/events/KeyboardEventSource>
+#include <lvfs-core/tools/events/MouseEventHandler>
+#include <lvfs-core/tools/events/MouseEventSource>
+
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-class PLATFORM_MAKE_PRIVATE DefaultView : public Implements<IView>, public QTreeView
+class PLATFORM_MAKE_PRIVATE DefaultView : public Implements<IView>
 {
 public:
-    DefaultView(QWidget *parent = 0);
+    DefaultView();
     virtual ~DefaultView();
 
     virtual QWidget *widget() const;
@@ -44,8 +51,36 @@ public:
     virtual const Interface::Holder &opposite() const;
 
 private:
+    void goUp();
+    void goInto();
+
+private:
+    inline bool openNode(const Interface::Holder &node, const QModelIndex &current, const QModelIndex &parent);
+
+private:
+    typedef Tools::MouseDoubleClickEventSource<
+                Tools::ContextMenuEventSource<
+                    Tools::KeyboardEventSource<
+                        Tools::EventSourceBase<
+                            QTreeView
+                        >
+                    >
+                >
+            > TreeView;
+
+    typedef Tools::MouseDoubleClickEventHandler<
+                Tools::KeyboardEventHandler<
+                    Tools::EventHandlerBase<DefaultView>
+                >
+            > EventHandler;
+
+private:
     Interface::Holder m_node;
     Interface::Holder m_opposite;
+
+private:
+    TreeView m_view;
+    EventHandler m_eventHandler;
     SortFilterModel m_sortFilterModel;
     StyledItemDelegate m_styledItemDelegate;
 };

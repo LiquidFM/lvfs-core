@@ -21,6 +21,9 @@
 #define LVFS_CORE_QT_DEFAULTNODE_H_
 
 #include <efc/Vector>
+#include <QtGui/QIcon>
+#include <QtCore/QObject>
+#include <QtCore/QDateTime>
 #include <lvfs-core/models/Qt/ModelNode>
 
 
@@ -30,6 +33,8 @@ namespace Qt {
 
 class PLATFORM_MAKE_PRIVATE DefaultNode : public ModelNode
 {
+    Q_OBJECT
+
 public:
     DefaultNode(const Interface::Holder &file, const Item &parent = Item());
     virtual ~DefaultNode();
@@ -47,6 +52,8 @@ public:
     virtual size_type indexOf(const Item &node) const;
     virtual QVariant data(int column, int role) const;
 
+    /* ModelNode */
+    virtual int columnCount(const QModelIndex &parent) const;
     virtual QVariant headerData(int section, ::Qt::Orientation orientation, int role = ::Qt::DisplayRole) const;
 
 protected:
@@ -56,11 +63,16 @@ protected:
     virtual void doListFileDone(EFC::List<Item> &files);
 
 private:
-    QString m_title;
     QString m_schema;
     QString m_location;
     Interface::Holder m_file;
     EFC::Vector<Item> m_files;
+
+private:
+    QString m_title;
+    QIcon m_icon;
+    QString m_size;
+    QDateTime m_modified;
 };
 
 }}}
