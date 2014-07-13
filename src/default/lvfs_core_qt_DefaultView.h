@@ -55,7 +55,7 @@ private:
     void goInto();
 
 private:
-    inline bool openNode(const Interface::Holder &node, const QModelIndex &current, const QModelIndex &parent);
+    inline bool openNode(const Interface::Holder &node, const QModelIndex &currentIdx, const QModelIndex &parentIdx);
 
 private:
     typedef Tools::MouseDoubleClickEventSource<

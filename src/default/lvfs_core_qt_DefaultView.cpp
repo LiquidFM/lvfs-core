@@ -90,21 +90,21 @@ void DefaultView::goUp()
 
 void DefaultView::goInto()
 {
-    QModelIndex index = m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
+    QModelIndex index1 = m_view.selectionModel()->currentIndex();
+    QModelIndex index2 = m_sortFilterModel.mapToSource(index1);
 
-    if (index.isValid())
-        openNode(m_node->as<Qt::INode>()->at(index.row()), QModelIndex(), index);
+    if (index2.isValid())
+        openNode(m_node->as<Qt::INode>()->at(index2.row()), QModelIndex(), index1);
 }
 
-bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &current, const QModelIndex &parent)
+bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &currentIdx, const QModelIndex &parentIdx)
 {
     if (node->as<Core::INode>()->file()->as<IDirectory>())
         if (Qt::INode *qtNode = node->as<Qt::INode>())
         {
-            if (parent.isValid())
-                qtNode->setParentIndex(parent);
-
-            if (m_node.isValid())
+            if (parentIdx.isValid())
+                qtNode->setParentIndex(parentIdx);
+            else if (currentIdx.isValid())
                 m_node->as<Core::INode>()->closed(Interface::Holder::fromRawData(this));
 
             m_node = node;
@@ -112,7 +112,7 @@ bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &cur
             m_node->as<Core::INode>()->opened(Interface::Holder::fromRawData(this));
             m_node->as<Core::INode>()->refresh(0);
 
-            QModelIndex selected = current.isValid() ? m_sortFilterModel.mapFromSource(current) : m_sortFilterModel.index(0, 0);
+            QModelIndex selected = currentIdx.isValid() ? m_sortFilterModel.index(currentIdx.row(), currentIdx.column()) : m_sortFilterModel.index(0, 0);
 
             if (LIKELY(selected.isValid() == true))
             {
