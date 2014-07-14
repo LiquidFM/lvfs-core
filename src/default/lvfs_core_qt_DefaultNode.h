@@ -44,6 +44,9 @@ public:
     virtual const QString &schema() const;
     virtual const QString &location() const;
     virtual const Interface::Holder &file() const;
+    virtual const Geometry &geometry() const;
+    virtual const Sorting &sorting() const;
+
     virtual void refresh(int depth);
 
     /* Qt::INode */
@@ -67,6 +70,8 @@ private:
     QString m_location;
     Interface::Holder m_file;
     EFC::Vector<Item> m_files;
+    Geometry m_geometry;
+    Sorting m_sorting;
 
 private:
     QString m_title;

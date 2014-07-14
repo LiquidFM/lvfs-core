@@ -41,11 +41,6 @@ Node::Node(const Item &parent) :
 Node::~Node()
 {}
 
-const Node::Item &Node::parent() const
-{
-    return m_parent;
-}
-
 void Node::opened(const Interface::Holder &view)
 {
     ++m_links;
@@ -55,6 +50,11 @@ void Node::closed(const Interface::Holder &view)
 {
     if (--m_links == 0)
         removeChildren();
+}
+
+const Node::Item &Node::parent() const
+{
+    return m_parent;
 }
 
 void Node::doListFile(const Item &file, int depth)
@@ -85,11 +85,6 @@ void Node::doListFile(const Item &file, int depth)
         }
 
     doListFileDone(nodes);
-}
-
-void Node::handleTask(EFC::Task::Holder &task)
-{
-
 }
 
 QString Node::toUnicode(const char *string)

@@ -21,6 +21,8 @@
 #define LVFS_CORE_INODE_H_
 
 #include <cstdlib>
+#include <efc/Pair>
+#include <efc/List>
 #include <lvfs/IEntry>
 #include <lvfs/Module>
 #include <QtCore/QString>
@@ -34,12 +36,18 @@ class PLATFORM_MAKE_PUBLIC INode
     DECLARE_INTERFACE(LVFS::Core::INode)
 
 public:
+    typedef EFC::List<qint32>                  Geometry;
+    typedef EFC::Pair<qint32, ::Qt::SortOrder> Sorting;
+
+public:
     virtual ~INode();
 
     virtual const QString &title() const = 0;
     virtual const QString &schema() const = 0;
     virtual const QString &location() const = 0;
     virtual const Interface::Holder &file() const = 0;
+    virtual const Geometry &geometry() const = 0;
+    virtual const Sorting &sorting() const = 0;
 
     virtual void refresh(int depth = 0) = 0;
     virtual void opened(const Interface::Holder &view) = 0;

@@ -37,12 +37,16 @@ DefaultNode::DefaultNode(const Interface::Holder &file, const Item &parent) :
     m_schema(toUnicode(file->as<IEntry>()->schema())),
     m_location(toUnicode(file->as<IEntry>()->location())),
     m_file(file),
+    m_geometry({ 300, 80, 50 }),
+    m_sorting(0, ::Qt::AscendingOrder),
     m_title(toUnicode(file->as<IEntry>()->title())),
     m_icon(),
     m_size(file->as<IFile>() ? humanReadableSize(file->as<IFile>()->size()) : QString::fromLatin1("<DIR>")),
     m_modified(file->as<IFsFile>() ? QDateTime::fromTime_t(file->as<IFsFile>()->mTime()).toLocalTime() : QDateTime())
 {
     ASSERT(m_file.isValid());
+    ASSERT(m_geometry.size() == columnCount(QModelIndex()));
+    ASSERT(m_sorting.first < columnCount(QModelIndex()));
     m_icon.addFile(toUnicode(m_file->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
 }
 
@@ -67,6 +71,16 @@ const QString &DefaultNode::location() const
 const Interface::Holder &DefaultNode::file() const
 {
     return m_file;
+}
+
+const DefaultNode::Geometry &DefaultNode::geometry() const
+{
+    return m_geometry;
+}
+
+const DefaultNode::Sorting &DefaultNode::sorting() const
+{
+    return m_sorting;
 }
 
 void DefaultNode::refresh(int depth)

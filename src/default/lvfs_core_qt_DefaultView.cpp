@@ -39,7 +39,6 @@ DefaultView::DefaultView() :
     m_view.setContextMenuPolicy(::Qt::DefaultContextMenu);
     m_view.setItemDelegate(&m_styledItemDelegate);
     m_view.setSortingEnabled(true);
-    m_view.sortByColumn(0, ::Qt::AscendingOrder);
     m_sortFilterModel.setDynamicSortFilter(true);
     m_view.setModel(&m_sortFilterModel);
 
@@ -99,7 +98,9 @@ void DefaultView::goInto()
 
 bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &currentIdx, const QModelIndex &parentIdx)
 {
-    if (node->as<Core::INode>()->file()->as<IDirectory>())
+    Core::INode *coreNode = node->as<Core::INode>();
+
+    if (coreNode->file()->as<IDirectory>())
         if (Qt::INode *qtNode = node->as<Qt::INode>())
         {
             if (parentIdx.isValid())
@@ -109,8 +110,15 @@ bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &cur
 
             m_node = node;
             m_sortFilterModel.setSourceModel(qtNode->model());
-            m_node->as<Core::INode>()->opened(Interface::Holder::fromRawData(this));
-            m_node->as<Core::INode>()->refresh(0);
+            coreNode->opened(Interface::Holder::fromRawData(this));
+
+            qint32 column = 0;
+            for (auto i : coreNode->geometry())
+                m_view.setColumnWidth(column++, i);
+
+            m_view.sortByColumn(coreNode->sorting().first, coreNode->sorting().second);
+
+            coreNode->refresh(0);
 
             QModelIndex selected = currentIdx.isValid() ? m_sortFilterModel.index(currentIdx.row(), currentIdx.column()) : m_sortFilterModel.index(0, 0);
 
