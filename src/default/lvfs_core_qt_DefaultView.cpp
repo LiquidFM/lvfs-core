@@ -120,7 +120,13 @@ bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &cur
 
             coreNode->refresh(0);
 
-            QModelIndex selected = currentIdx.isValid() ? m_sortFilterModel.index(currentIdx.row(), currentIdx.column()) : m_sortFilterModel.index(0, 0);
+            QModelIndex selected = currentIdx;
+
+            if (selected.isValid())
+                selected = m_sortFilterModel.index(currentIdx.row(), currentIdx.column());
+
+            if (!selected.isValid())
+                selected = m_sortFilterModel.index(0, 0);
 
             if (LIKELY(selected.isValid() == true))
             {
