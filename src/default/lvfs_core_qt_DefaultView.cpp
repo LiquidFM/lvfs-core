@@ -126,7 +126,7 @@ bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &cur
             {
                 m_view.setFocus();
                 m_view.scrollTo(selected, QAbstractItemView::PositionAtCenter);
-                m_view.selectionModel()->select(selected, QItemSelectionModel::ClearAndSelect);
+                m_view.selectionModel()->select(selected, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Columns);
                 m_view.selectionModel()->setCurrentIndex(selected, QItemSelectionModel::ClearAndSelect);
             }
 
