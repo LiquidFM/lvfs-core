@@ -37,10 +37,10 @@ public:
     Node(const Item &parent = Item());
     virtual ~Node();
 
+    virtual const Item &parent() const;
+
     virtual void opened(const Interface::Holder &view);
     virtual void closed(const Interface::Holder &view);
-
-    virtual const Item &parent() const;
 
 protected: /* Actions section */
     void doListFile(const Item &file, int depth = 0);

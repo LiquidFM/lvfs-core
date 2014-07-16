@@ -40,7 +40,6 @@ public:
 public:
     virtual ~INode();
 
-    virtual const Item &parent() const = 0;
     virtual size_type size() const = 0;
     virtual const Item &at(size_type index) const = 0;
     virtual size_type indexOf(const Item &node) const = 0;

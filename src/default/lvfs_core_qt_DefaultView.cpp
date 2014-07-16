@@ -81,7 +81,7 @@ const Interface::Holder &DefaultView::opposite() const
 
 void DefaultView::goUp()
 {
-    Interface::Holder node = m_node->as<Qt::INode>()->parent();
+    Interface::Holder node = m_node->as<Core::INode>()->parent();
 
     if (node.isValid())
         openNode(node, m_node->as<Qt::INode>()->parentIndex(), QModelIndex());
@@ -123,7 +123,7 @@ bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &cur
             QModelIndex selected = currentIdx;
 
             if (selected.isValid())
-                selected = m_sortFilterModel.index(currentIdx.row(), currentIdx.column());
+                selected = m_sortFilterModel.index(selected.row(), selected.column());
 
             if (!selected.isValid())
                 selected = m_sortFilterModel.index(0, 0);

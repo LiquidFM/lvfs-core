@@ -115,14 +115,14 @@ QModelIndex ModelNode::index(int row, int column, const QModelIndex &parent) con
 QModelIndex ModelNode::parent(const QModelIndex &child) const
 {
     if (child.isValid())
-        if (Qt::INode *qtNode = (*static_cast<Item *>(child.internalPointer()))->as<Qt::INode>())
+        if (Core::INode *coreNode = (*static_cast<Item *>(child.internalPointer()))->as<Core::INode>())
         {
-            const Item &parent = qtNode->parent();
+            const Item &parent = coreNode->parent();
 
             if (parent.isValid())
-                if (Qt::INode *qtParentNode = parent->as<Qt::INode>())
+                if (Core::INode *coreParentNode = parent->as<Core::INode>())
                 {
-                    const Item &grandParent = qtParentNode->parent();
+                    const Item &grandParent = coreParentNode->parent();
 
                     if (grandParent.isValid())
                         if (Qt::INode *qtGrandParent = grandParent->as<Qt::INode>())
@@ -137,9 +137,9 @@ QModelIndex ModelNode::parent(const QModelIndex &child) const
 
 QModelIndex ModelNode::index(Item *item) const
 {
-    if (Qt::INode *qtNode = (*item)->as<Qt::INode>())
-        if (qtNode->parent().isValid())
-            if (Qt::INode *qtParentNode = qtNode->parent()->as<Qt::INode>())
+    if (Core::INode *coreNode = (*item)->as<Core::INode>())
+        if (coreNode->parent().isValid())
+            if (Qt::INode *qtParentNode = coreNode->parent()->as<Qt::INode>())
                 return createIndex(qtParentNode->indexOf(*item), 0, item);
 
     return createIndex(indexOf(*item), 0, item);
@@ -147,15 +147,15 @@ QModelIndex ModelNode::index(Item *item) const
 
 QModelIndex ModelNode::parent(Item *item) const
 {
-    if (Qt::INode *qtNode = (*item)->as<Qt::INode>())
-        if (qtNode->parent().isValid())
+    if (Core::INode *coreNode = (*item)->as<Core::INode>())
+        if (coreNode->parent().isValid())
         {
-            if (Qt::INode *qtParentNode = qtNode->parent()->as<Qt::INode>())
-                if (qtParentNode->parent().isValid())
-                    if (Qt::INode *qtGrandParentNode = qtParentNode->parent()->as<Qt::INode>())
-                        return createIndex(qtGrandParentNode->indexOf(qtNode->parent()), 0, const_cast<Item *>(&qtNode->parent()));
+            if (Core::INode *coreParentNode = coreNode->parent()->as<Core::INode>())
+                if (coreParentNode->parent().isValid())
+                    if (Qt::INode *qtGrandParentNode = coreParentNode->parent()->as<Qt::INode>())
+                        return createIndex(qtGrandParentNode->indexOf(coreNode->parent()), 0, const_cast<Item *>(&coreNode->parent()));
 
-            return createIndex(indexOf(qtNode->parent()), 0, const_cast<Item *>(&qtNode->parent()));
+            return createIndex(indexOf(coreNode->parent()), 0, const_cast<Item *>(&coreNode->parent()));
         }
 
     return QModelIndex();

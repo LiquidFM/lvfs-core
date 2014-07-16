@@ -46,6 +46,7 @@ public:
     virtual const QString &schema() const = 0;
     virtual const QString &location() const = 0;
     virtual const Interface::Holder &file() const = 0;
+    virtual const Interface::Holder &parent() const = 0;
     virtual const Geometry &geometry() const = 0;
     virtual const Sorting &sorting() const = 0;
 

@@ -25,6 +25,10 @@
 #include <lvfs-core/IViewFactory>
 
 #include <brolly/assert.h>
+#include <cstring>
+#include <cstdio>
+
+#include <linux/limits.h>
 
 
 namespace LVFS {
@@ -35,19 +39,103 @@ INode::~INode()
 
 Interface::Holder INode::open(const char *uri, Module::Error &error)
 {
-    Interface::Holder file = Module::open(uri, error);
-    Interface::Holder res;
+    char buffer[PATH_MAX + Module::MaxSchemaLength + Module::SchemaDelimiterLength];
+    Interface::Holder parent;
+    Interface::Holder current;
+    char *p;
 
-    if (file.isValid())
+    buffer[sizeof(buffer) - 1] = 0;
+    strncpy(buffer, uri, sizeof(buffer) - 1);
+
+    if (p = strstr(buffer, Module::SchemaDelimiter))
+        ++p;
+    else
+        p = buffer;
+
+    if (p[0] == '/' && p - buffer < Module::MaxSchemaLength)
     {
-        if (INodeFactory *factory = file->as<INodeFactory>())
-            res = factory->createNode(file);
+        INodeFactory *factory;
+        char *d;
+        char c = p[1];
+        p[1] = 0;
 
-        if (!res.isValid())
-            res.reset(new (std::nothrow) Qt::DefaultNode(file));
+        Interface::Holder file = Module::open(buffer, error);
+
+        (*++p) = c;
+
+        while (file.isValid())
+        {
+            parent = current;
+            current.reset();
+
+            if (factory = file->as<INodeFactory>())
+                current = factory->createNode(file, parent);
+
+            if (!current.isValid())
+                current.reset(new (std::nothrow) Qt::DefaultNode(file, parent));
+
+            if (!p)
+                break;
+
+            if (d = strchr(p, '/'))
+            {
+                while (d == p)
+                {
+                    size_t len = strlen(p + 1);
+                    memcpy(p, p + 1, len);
+                    p[len] = 0;
+
+                    if ((d = strchr(p, '/')) == NULL)
+                        return current;
+                }
+
+                d[0] = 0;
+
+                while (strcmp(p, ".") == 0)
+                {
+                    size_t len = strlen(++d);
+                    memcpy(p, d, len);
+                    p[len] = 0;
+
+                    if ((d = strchr(p, '/')) == NULL)
+                        return current;
+
+                    d[0] = 0;
+                }
+
+                while (strcmp(p, "..") == 0)
+                {
+                    if (parent.isValid())
+                    {
+                        current = parent;
+                        parent = parent->as<Core::INode>()->parent();
+                    }
+                    else
+                        return current;
+
+                    *(p - 1) = 0;
+                    size_t len = strlen(++d);
+                    memcpy(p = strrchr(buffer, '/') + 1, d, len);
+                    p[len] = 0;
+
+                    if ((d = strchr(p, '/')) == NULL)
+                        return current;
+
+                    d[0] = 0;
+                }
+
+                file = Module::open(buffer, error);
+                *(p = d)++ = '/';
+            }
+            else
+            {
+                file = Module::open(buffer, error);
+                p = NULL;
+            }
+        }
     }
 
-    return res;
+    return current;
 }
 
 Interface::Holder INode::view(const Interface::Holder &node)

@@ -33,7 +33,7 @@ class PLATFORM_MAKE_PUBLIC INodeFactory
 public:
     virtual ~INodeFactory();
 
-    virtual Interface::Holder createNode(const Interface::Holder &file) = 0;
+    virtual Interface::Holder createNode(const Interface::Holder &file, const Interface::Holder &parent = Interface::Holder()) = 0;
 };
 
 }}
