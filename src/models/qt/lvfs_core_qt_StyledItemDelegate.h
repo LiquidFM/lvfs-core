@@ -20,16 +20,16 @@
 #ifndef LVFS_CORE_QT_STYLEDITEMDELEGATE_H_
 #define LVFS_CORE_QT_STYLEDITEMDELEGATE_H_
 
+#include <platform/utils.h>
 #include <QtGui/QStyledItemDelegate>
 #include <QtGui/QStyleOptionViewItem>
-#include <platform/utils.h>
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-class StyledItemDelegate : public QStyledItemDelegate
+class PLATFORM_MAKE_PUBLIC StyledItemDelegate : public QStyledItemDelegate
 {
     PLATFORM_MAKE_NONCOPYABLE(StyledItemDelegate)
 
