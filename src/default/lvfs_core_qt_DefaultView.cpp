@@ -42,10 +42,22 @@ DefaultView::DefaultView() :
     m_sortFilterModel.setDynamicSortFilter(true);
     m_view.setModel(&m_sortFilterModel);
 
-    m_eventHandler.registerMouseDoubleClickEventHandler(&DefaultView::goInto);
-    m_eventHandler.registerShortcut(::Qt::NoModifier, ::Qt::Key_Return, &DefaultView::goInto);
-    m_eventHandler.registerShortcut(::Qt::NoModifier, ::Qt::Key_Enter, &DefaultView::goInto);
-    m_eventHandler.registerShortcut(::Qt::NoModifier, ::Qt::Key_Backspace, &DefaultView::goUp);
+    m_eventHandler.registerMouseDoubleClickEventHandler(&DefaultView::goIntoShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Return, &DefaultView::goIntoShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Enter, &DefaultView::goIntoShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Backspace, &DefaultView::goUpShortcut);
+    m_eventHandler.registerShortcut(::Qt::ALT + ::Qt::CTRL, ::Qt::Key_X, &DefaultView::pathToClipboardShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F2, &DefaultView::renameShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F8, &DefaultView::createFileShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F7, &DefaultView::createDirectoryShortcut);
+    m_eventHandler.registerShortcut(::Qt::SHIFT,            ::Qt::Key_Delete, &DefaultView::removeShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Space, &DefaultView::calculateSizeShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F5, &DefaultView::copyShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F6, &DefaultView::moveShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_F, &DefaultView::searchShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_C, &DefaultView::copyToClipboardShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_X, &DefaultView::cutToClipboardShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_V, &DefaultView::pasteFromClipboardShortcut);
 }
 
 DefaultView::~DefaultView()
@@ -79,7 +91,7 @@ const Interface::Holder &DefaultView::opposite() const
     return m_opposite;
 }
 
-void DefaultView::goUp()
+void DefaultView::goUpShortcut()
 {
     Interface::Holder node = m_node->as<Core::INode>()->parent();
 
@@ -87,13 +99,95 @@ void DefaultView::goUp()
         openNode(node, m_node->as<Qt::INode>()->parentIndex(), QModelIndex());
 }
 
-void DefaultView::goInto()
+void DefaultView::goIntoShortcut()
 {
     QModelIndex index1 = m_view.selectionModel()->currentIndex();
     QModelIndex index2 = m_sortFilterModel.mapToSource(index1);
 
     if (index2.isValid())
         openNode(m_node->as<Qt::INode>()->at(index2.row()), QModelIndex(), index1);
+}
+
+void DefaultView::pathToClipboardShortcut()
+{
+
+}
+
+void DefaultView::renameShortcut()
+{
+
+}
+
+void DefaultView::createFileShortcut()
+{
+
+}
+
+void DefaultView::createDirectoryShortcut()
+{
+
+}
+
+void DefaultView::removeShortcut()
+{
+
+}
+
+void DefaultView::calculateSizeShortcut()
+{
+
+}
+
+void DefaultView::copyShortcut()
+{
+
+}
+
+void DefaultView::moveShortcut()
+{
+
+}
+
+void DefaultView::searchShortcut()
+{
+
+}
+
+void DefaultView::copyToClipboardShortcut()
+{
+    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
+
+    if (!items.isEmpty())
+    {
+        QModelIndexList files;
+        files.reserve(items.size());
+
+        for (int i = 0; i < items.size(); ++i)
+            files.push_back(m_sortFilterModel.mapToSource(items.at(i)));
+
+        m_node->as<Qt::INode>()->copyToClipboard(files, false);
+    }
+}
+
+void DefaultView::cutToClipboardShortcut()
+{
+    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
+
+    if (!items.isEmpty())
+    {
+        QModelIndexList files;
+        files.reserve(items.size());
+
+        for (int i = 0; i < items.size(); ++i)
+            files.push_back(m_sortFilterModel.mapToSource(items.at(i)));
+
+        m_node->as<Qt::INode>()->copyToClipboard(files, true);
+    }
+}
+
+void DefaultView::pasteFromClipboardShortcut()
+{
+
 }
 
 bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &currentIdx, const QModelIndex &parentIdx)

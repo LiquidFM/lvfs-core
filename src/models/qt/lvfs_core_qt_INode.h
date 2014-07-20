@@ -49,6 +49,8 @@ public:
 
     virtual QModelIndex parentIndex() const = 0;
     virtual void setParentIndex(const QModelIndex &index) = 0;
+
+    virtual void copyToClipboard(const QModelIndexList &files, bool move) = 0;
 };
 
 }}}

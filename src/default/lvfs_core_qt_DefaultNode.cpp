@@ -23,9 +23,72 @@
 #include <lvfs/IEntry>
 #include <lvfs/IFsFile>
 #include <brolly/assert.h>
+
 #include <QtGui/QIcon>
+#include <QtGui/QClipboard>
+#include <QtGui/QApplication>
+#include <QtCore/QMimeData>
+#include <QtCore/QSet>
 
 #include <lvfs-core/tools/strings/readableints.h>
+#include <efc/ScopedPointer>
+
+#include <platform/platform.h>
+#define PLATFORM_DE(PLATFORM_FEATURE) PLATFORM_IS_SET(PLATFORM_DE_##PLATFORM_FEATURE)
+
+
+namespace {
+
+static const QString uriListMimetype = QString::fromLatin1("text/uri-list");
+#if PLATFORM_DE(KDE)
+    static const QString kdeCutMimetype = QString::fromLatin1("application/x-kde-cutselection");
+#endif
+
+
+class ClipboardMimeData : public QMimeData
+{
+    PLATFORM_MAKE_NONCOPYABLE(ClipboardMimeData)
+
+public:
+    ClipboardMimeData(bool move) :
+        QMimeData(),
+        m_move(move)
+    {}
+
+    void setData(const QByteArray &data)
+    {
+        QMimeData::setData(uriListMimetype, data);
+    }
+
+#if PLATFORM_DE(KDE)
+    virtual bool hasFormat(const QString &mimetype) const
+    {
+        return (m_move && mimetype == kdeCutMimetype) || QMimeData::hasFormat(mimetype);
+    }
+
+    virtual QStringList formats() const
+    {
+        if (m_move)
+            return QMimeData::formats() << kdeCutMimetype;
+
+        return QMimeData::formats();
+    }
+
+protected:
+    virtual QVariant retrieveData(const QString &mimetype, QVariant::Type preferredType) const
+    {
+        if (mimetype == kdeCutMimetype && m_move)
+            return QByteArray("1");
+
+        return QMimeData::retrieveData(mimetype, preferredType);
+    }
+#endif
+
+private:
+    bool m_move;
+};
+
+}
 
 
 namespace LVFS {
@@ -139,6 +202,40 @@ QVariant DefaultNode::data(int column, int role) const
     }
 
     return QVariant();
+}
+
+void DefaultNode::copyToClipboard(const QModelIndexList &files, bool move)
+{
+#if PLATFORM_DE(KDE)
+    static const QByteArray suffix = QByteArray::fromRawData("\r\n", qstrlen("\r\n"));
+#else
+    static const QByteArray suffix = QByteArray::fromRawData("\n", qstrlen("\n"));
+#endif
+
+    const IEntry *file;
+    EFC::ScopedPointer<ClipboardMimeData> data(new (std::nothrow) ClipboardMimeData(move));
+
+    if (LIKELY(data != NULL))
+    {
+        QByteArray res;
+        QSet<const IEntry *> set;
+
+        set.reserve(files.size());
+
+        for (int i = 0; i < files.size(); ++i)
+        {
+            file = (*static_cast<Interface::Holder *>(files.at(i).internalPointer()))->as<Core::INode>()->file()->as<IEntry>();
+
+            if (!set.contains(file))
+            {
+                set.insert(file);
+                res.append(file->schema()).append(Module::SchemaDelimiter).append(file->location()).append(suffix);
+            }
+        }
+
+        data->setData(res);
+        QApplication::clipboard()->setMimeData(data.release(), QClipboard::Clipboard);
+    }
 }
 
 int DefaultNode::columnCount(const QModelIndex &parent) const

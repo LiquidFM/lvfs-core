@@ -55,6 +55,8 @@ public:
     virtual size_type indexOf(const Item &node) const;
     virtual QVariant data(int column, int role) const;
 
+    virtual void copyToClipboard(const QModelIndexList &files, bool move);
+
     /* ModelNode */
     virtual int columnCount(const QModelIndex &parent) const;
     virtual QVariant headerData(int section, ::Qt::Orientation orientation, int role = ::Qt::DisplayRole) const;

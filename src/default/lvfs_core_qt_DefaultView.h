@@ -51,8 +51,20 @@ public:
     virtual const Interface::Holder &opposite() const;
 
 private:
-    void goUp();
-    void goInto();
+    void goUpShortcut();
+    void goIntoShortcut();
+    void pathToClipboardShortcut();
+    void renameShortcut();
+    void createFileShortcut();
+    void createDirectoryShortcut();
+    void removeShortcut();
+    void calculateSizeShortcut();
+    void copyShortcut();
+    void moveShortcut();
+    void searchShortcut();
+    void copyToClipboardShortcut();
+    void cutToClipboardShortcut();
+    void pasteFromClipboardShortcut();
 
 private:
     inline bool openNode(const Interface::Holder &node, const QModelIndex &currentIdx, const QModelIndex &parentIdx);
