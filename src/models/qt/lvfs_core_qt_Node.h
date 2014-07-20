@@ -44,9 +44,9 @@ public:
     virtual void closed(const Interface::Holder &view);
 
 protected: /* Actions section */
-    void doListFile(const Item &file, int depth = 0);
-    virtual void processListFile(EFC::List<Item> &files) = 0;
-    virtual void doListFileDone(EFC::List<Item> &files) = 0;
+    void doListFile(int depth = 0);
+    virtual void processListFile(EFC::List<Item> &files, bool isFirstEvent) = 0;
+    virtual void doneListFile(EFC::List<Item> &files, bool isFirstEvent) = 0;
 
 protected: /* Aux section */
     virtual void removeChildren() = 0;
@@ -57,9 +57,7 @@ private:
     class EventsHandler : public QObject
     {
     public:
-        EventsHandler(Node *node) :
-            m_node(node)
-        {}
+        EventsHandler(Node *node);
         virtual ~EventsHandler();
 
         virtual bool event(QEvent *event);
@@ -72,6 +70,7 @@ private:
     int m_links;
     Item m_parent;
     EventsHandler m_eventsHandler;
+    bool m_doListFile;
 };
 
 }}}

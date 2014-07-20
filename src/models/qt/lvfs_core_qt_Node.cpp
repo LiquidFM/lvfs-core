@@ -18,7 +18,9 @@
  */
 
 #include "lvfs_core_qt_Node.h"
-#include "../../default/lvfs_core_qt_DefaultNode.h"
+#include "tasks/lvfs_core_qt_RefreshTask.h"
+
+#include <QtCore/QThread>
 
 #include <lvfs-core/INodeFactory>
 #include <lvfs/IDirectory>
@@ -30,13 +32,15 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-static ::EFC::TasksPool s_pool(10);
+static QThread *mainThread = QThread::currentThread();
+static ::EFC::TasksPool tasksPool(10);
 
 
 Node::Node(const Item &parent) :
     m_links(0),
     m_parent(parent),
-    m_eventsHandler(this)
+    m_eventsHandler(this),
+    m_doListFile(false)
 {}
 
 Node::~Node()
@@ -58,34 +62,15 @@ void Node::closed(const Interface::Holder &view)
         removeChildren();
 }
 
-void Node::doListFile(const Item &file, int depth)
+void Node::doListFile(int depth)
 {
-    ASSERT(depth >= 0);
+    if (!m_doListFile)
+    {
+        EFC::Task::Holder task(new (std::nothrow) RefreshTask(&m_eventsHandler, Item::fromRawData(this), depth));
 
-    Item node;
-    EFC::List<Item> nodes;
-
-    if (IDirectory *dir = file->as<IDirectory>())
-        for (auto i : (*dir))
-        {
-            i = Module::open(i);
-
-            if (INodeFactory *factory = i->as<INodeFactory>())
-                node.reset(factory->createNode(i));
-
-            if (!node.isValid())
-                node.reset(new (std::nothrow) DefaultNode(i, Item::fromRawData(this)));
-
-            if (node.isValid())
-            {
-                if (depth > 0)
-                    node->as<Core::INode>()->refresh(depth - 1);
-
-                nodes.push_back(std::move(node));
-            }
-        }
-
-    doListFileDone(nodes);
+        m_doListFile = true;
+        tasksPool.handle(task);
+    }
 }
 
 QString Node::toUnicode(const char *string)
@@ -93,11 +78,38 @@ QString Node::toUnicode(const char *string)
     return QString::fromLocal8Bit(string);
 }
 
+Node::EventsHandler::EventsHandler(Node *node) :
+    m_node(node)
+{
+    moveToThread(mainThread);
+}
+
 Node::EventsHandler::~EventsHandler()
 {}
 
 bool Node::EventsHandler::event(QEvent *event)
 {
+    switch (static_cast<FilesBaseTask::Event::Type>(event->type()))
+    {
+        case FilesBaseTask::Event::ProcessListFileEventId:
+        {
+            event->accept();
+            m_node->processListFile(static_cast<RefreshTask::ListFileEvent *>(event)->snapshot, static_cast<RefreshTask::ListFileEvent *>(event)->isFirstEvent);
+            return true;
+        }
+
+        case FilesBaseTask::Event::DoneListFileEventId:
+        {
+            event->accept();
+            m_node->m_doListFile = false;
+            m_node->doneListFile(static_cast<RefreshTask::ListFileEvent *>(event)->snapshot, static_cast<RefreshTask::ListFileEvent *>(event)->isFirstEvent);
+            return true;
+        }
+
+        default:
+            break;
+    }
+
     return QObject::event(event);
 }
 

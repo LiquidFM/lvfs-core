@@ -149,7 +149,7 @@ const DefaultNode::Sorting &DefaultNode::sorting() const
 void DefaultNode::refresh(int depth)
 {
     removeChildren();
-    doListFile(m_file, depth);
+    doListFile(depth);
 }
 
 DefaultNode::size_type DefaultNode::size() const
@@ -283,18 +283,21 @@ void DefaultNode::removeChildren()
     }
 }
 
-void DefaultNode::processListFile(EFC::List<Item> &files)
+void DefaultNode::processListFile(EFC::List<Item> &files, bool isFirstEvent)
 {
-    if (!files.empty())
-    {
-        beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
-        m_files.insert(m_files.end(), files.begin(), files.end());
-        endInsertRows();
-    }
+    if (isFirstEvent)
+        removeChildren();
+
+    beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
+    m_files.insert(m_files.end(), files.begin(), files.end());
+    endInsertRows();
 }
 
-void DefaultNode::doListFileDone(EFC::List<Item> &files)
+void DefaultNode::doneListFile(EFC::List<Item> &files, bool isFirstEvent)
 {
+    if (isFirstEvent)
+        removeChildren();
+
     if (!files.empty())
     {
         beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);

@@ -20,6 +20,7 @@
 #ifndef LVFS_CORE_QT_BASETASK_H_
 #define LVFS_CORE_QT_BASETASK_H_
 
+#include <efc/List>
 #include <efc/Task>
 #include <QtCore/QEvent>
 #include <QtCore/QObject>
@@ -34,6 +35,8 @@ namespace Qt {
 class PLATFORM_MAKE_PRIVATE BaseTask : public EFC::Task
 {
 public:
+    typedef EFC::List<Interface::Holder> Snapshot;
+
     class Event : public QEvent
     {
         PLATFORM_MAKE_NONCOPYABLE(Event)

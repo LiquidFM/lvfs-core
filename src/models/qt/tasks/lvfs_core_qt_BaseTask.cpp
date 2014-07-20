@@ -35,7 +35,6 @@ BaseTask::BaseTask(QObject *receiver) :
     m_canceled(false)
 {
     ASSERT(m_receiver != NULL);
-    ASSERT(m_receiver->thread() == QThread::currentThread());
 }
 
 BaseTask::BaseTask(QObject *receiver, const Interface::Holder &destination) :

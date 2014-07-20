@@ -64,8 +64,8 @@ public:
 protected:
     virtual void removeChildren();
 
-    virtual void processListFile(EFC::List<Item> &files);
-    virtual void doListFileDone(EFC::List<Item> &files);
+    virtual void processListFile(EFC::List<Item> &files, bool isFirstEvent);
+    virtual void doneListFile(EFC::List<Item> &files, bool isFirstEvent);
 
 private:
     QString m_schema;

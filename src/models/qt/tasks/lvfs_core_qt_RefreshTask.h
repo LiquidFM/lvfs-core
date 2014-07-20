@@ -17,25 +17,41 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_INODEFACTORY_H_
-#define LVFS_CORE_INODEFACTORY_H_
+#ifndef LVFS_CORE_QT_REFRESHTASK_H_
+#define LVFS_CORE_QT_REFRESHTASK_H_
 
-#include <lvfs/Interface>
+#include "lvfs_core_qt_FilesBaseTask.h"
 
 
 namespace LVFS {
 namespace Core {
+namespace Qt {
 
-class PLATFORM_MAKE_PUBLIC INodeFactory
+class PLATFORM_MAKE_PRIVATE RefreshTask : public FilesBaseTask
 {
-    DECLARE_INTERFACE(LVFS::Core::INodeFactory)
+public:
+    class ListFileEvent : public Event
+    {
+    public:
+        ListFileEvent(BaseTask *task, Type type, bool isFirstEvent, Snapshot &snapshot, bool canceled) :
+            Event(task, type, canceled, snapshot),
+            isFirstEvent(isFirstEvent)
+        {}
+
+        bool isFirstEvent;
+    };
 
 public:
-    virtual ~INodeFactory();
+    RefreshTask(QObject *receiver, const Interface::Holder &node, int depth);
 
-    virtual Interface::Holder createNode(const Interface::Holder &file, const Interface::Holder &parent) = 0;
+protected:
+    virtual void run(const volatile bool &aborted);
+
+private:
+    Interface::Holder m_node;
+    int m_depth;
 };
 
-}}
+}}}
 
-#endif /* LVFS_CORE_INODEFACTORY_H_ */
+#endif /* LVFS_CORE_QT_REFRESHTASK_H_ */

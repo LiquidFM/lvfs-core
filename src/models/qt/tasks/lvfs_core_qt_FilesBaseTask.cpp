@@ -17,25 +17,19 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_INODEFACTORY_H_
-#define LVFS_CORE_INODEFACTORY_H_
-
-#include <lvfs/Interface>
+#include "lvfs_core_qt_FilesBaseTask.h"
 
 
 namespace LVFS {
 namespace Core {
+namespace Qt {
 
-class PLATFORM_MAKE_PUBLIC INodeFactory
-{
-    DECLARE_INTERFACE(LVFS::Core::INodeFactory)
+FilesBaseTask::FilesBaseTask(QObject *receiver) :
+    BaseTask(receiver)
+{}
 
-public:
-    virtual ~INodeFactory();
+FilesBaseTask::FilesBaseTask(QObject *receiver, const Interface::Holder &destination) :
+    BaseTask(receiver, destination)
+{}
 
-    virtual Interface::Holder createNode(const Interface::Holder &file, const Interface::Holder &parent) = 0;
-};
-
-}}
-
-#endif /* LVFS_CORE_INODEFACTORY_H_ */
+}}}
