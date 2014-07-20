@@ -21,10 +21,11 @@
 #define LVFS_CORE_QT_NODE_H_
 
 #include <platform/utils.h>
-#include <lvfs-core/INode>
-#include <lvfs-core/models/Qt/INode>
 #include <efc/Task>
 #include <efc/List>
+#include <QtCore/QObject>
+#include <lvfs-core/INode>
+#include <lvfs-core/models/Qt/INode>
 
 
 namespace LVFS {
@@ -53,8 +54,24 @@ protected: /* Aux section */
     static QString toUnicode(const char *string);
 
 private:
+    class EventsHandler : public QObject
+    {
+    public:
+        EventsHandler(Node *node) :
+            m_node(node)
+        {}
+        virtual ~EventsHandler();
+
+        virtual bool event(QEvent *event);
+
+    private:
+        Node *m_node;
+    };
+
+private:
     int m_links;
     Item m_parent;
+    EventsHandler m_eventsHandler;
 };
 
 }}}

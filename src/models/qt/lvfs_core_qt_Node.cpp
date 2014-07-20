@@ -35,7 +35,8 @@ static ::EFC::TasksPool s_pool(10);
 
 Node::Node(const Item &parent) :
     m_links(0),
-    m_parent(parent)
+    m_parent(parent),
+    m_eventsHandler(this)
 {}
 
 Node::~Node()
@@ -90,6 +91,14 @@ void Node::doListFile(const Item &file, int depth)
 QString Node::toUnicode(const char *string)
 {
     return QString::fromLocal8Bit(string);
+}
+
+Node::EventsHandler::~EventsHandler()
+{}
+
+bool Node::EventsHandler::event(QEvent *event)
+{
+    return QObject::event(event);
 }
 
 }}}
