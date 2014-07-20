@@ -20,6 +20,7 @@
 #ifndef LVFS_CORE_TREEMODEL_H_
 #define LVFS_CORE_TREEMODEL_H_
 
+#include <platform/utils.h>
 #include <QtCore/QAbstractItemModel>
 
 
@@ -31,7 +32,7 @@ namespace Tools {
  * @note
  * Any QModelIndex instance must have internalPointer() == some "TreeModel::Item" instance!
  */
-class TreeModel : public QAbstractItemModel
+class PLATFORM_MAKE_PUBLIC TreeModel : public QAbstractItemModel
 {
 public:
     class Item;
