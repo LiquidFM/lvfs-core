@@ -44,11 +44,10 @@ public:
     virtual ~DefaultView();
 
     virtual QWidget *widget() const;
+    virtual void setMainView(const Interface::Holder &mainView);
 
     virtual const Interface::Holder &node() const;
     virtual bool setNode(const Interface::Holder &node);
-
-    virtual const Interface::Holder &opposite() const;
 
 private:
     void goUpShortcut();
@@ -88,7 +87,7 @@ private:
 
 private:
     Interface::Holder m_node;
-    Interface::Holder m_opposite;
+    Interface::Holder m_mainView;
 
 private:
     TreeView m_view;

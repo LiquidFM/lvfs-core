@@ -17,32 +17,26 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_IVIEW_H_
-#define LVFS_CORE_IVIEW_H_
+#ifndef LVFS_CORE_IMAINVIEW_H_
+#define LVFS_CORE_IMAINVIEW_H_
 
 #include <lvfs/Interface>
-
-
-class QWidget;
 
 
 namespace LVFS {
 namespace Core {
 
-class PLATFORM_MAKE_PUBLIC IView
+class PLATFORM_MAKE_PUBLIC IMainView
 {
-    DECLARE_INTERFACE(LVFS::Core::IView)
+    DECLARE_INTERFACE(LVFS::Core::IMainView)
 
 public:
-    virtual ~IView();
+    virtual ~IMainView();
 
-    virtual QWidget *widget() const = 0;
-    virtual void setMainView(const Interface::Holder &mainView) = 0;
-
-    virtual const Interface::Holder &node() const = 0;
-    virtual bool setNode(const Interface::Holder &node) = 0;
+    virtual const Interface::Holder &opposite(const Interface::Holder &view) const = 0;
+    virtual void show(const Interface::Holder &view, const Interface::Holder &node) = 0;
 };
 
 }}
 
-#endif /* LVFS_CORE_IVIEW_H_ */
+#endif /* LVFS_CORE_IMAINVIEW_H_ */

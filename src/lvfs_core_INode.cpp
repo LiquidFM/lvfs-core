@@ -144,13 +144,10 @@ Interface::Holder INode::view(const Interface::Holder &node)
     Interface::Holder res;
 
     if (IViewFactory *factory = node->as<IViewFactory>())
-        res = factory->createView(node);
+        res = factory->createView();
 
     if (!res.isValid())
         res.reset(new (std::nothrow) Qt::DefaultView());
-
-    if (LIKELY(res.isValid() == true))
-        res->as<IView>()->setNode(node);
 
     return res;
 }

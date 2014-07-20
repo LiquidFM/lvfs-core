@@ -21,6 +21,7 @@
 
 #include <lvfs/IDirectory>
 #include <lvfs-core/INode>
+#include <lvfs-core/IMainView>
 #include <lvfs-core/models/Qt/INode>
 
 #include <brolly/assert.h>
@@ -70,6 +71,13 @@ QWidget *DefaultView::widget() const
     return const_cast<TreeView *>(&m_view);
 }
 
+void DefaultView::setMainView(const Interface::Holder &mainView)
+{
+    ASSERT(mainView.isValid());
+    ASSERT(mainView->as<IMainView>() != NULL);
+    m_mainView = mainView;
+}
+
 const Interface::Holder &DefaultView::node() const
 {
     return m_node;
@@ -84,11 +92,6 @@ bool DefaultView::setNode(const Interface::Holder &node)
     }
 
     return openNode(node, QModelIndex(), QModelIndex());
-}
-
-const Interface::Holder &DefaultView::opposite() const
-{
-    return m_opposite;
 }
 
 void DefaultView::goUpShortcut()

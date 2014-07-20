@@ -33,7 +33,7 @@ class PLATFORM_MAKE_PUBLIC IViewFactory
 public:
     virtual ~IViewFactory();
 
-    virtual Interface::Holder createView(const Interface::Holder &node) = 0;
+    virtual Interface::Holder createView() const = 0;
 };
 
 }}
