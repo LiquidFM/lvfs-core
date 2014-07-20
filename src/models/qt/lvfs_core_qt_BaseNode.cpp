@@ -27,7 +27,7 @@ namespace Qt {
 BaseNode::~BaseNode()
 {}
 
-QString BaseNode::toUnicode(const char *string) const
+QString BaseNode::toUnicode(const char *string)
 {
     return QString::fromLocal8Bit(string);
 }

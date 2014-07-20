@@ -36,8 +36,7 @@ public:
     {}
     virtual ~BaseNode();
 
-protected: /* Aux section */
-    QString toUnicode(const char *string) const;
+    static QString toUnicode(const char *string);
 };
 
 }}}
