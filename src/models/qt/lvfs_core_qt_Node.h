@@ -20,26 +20,25 @@
 #ifndef LVFS_CORE_QT_NODE_H_
 #define LVFS_CORE_QT_NODE_H_
 
-#include <platform/utils.h>
-#include <efc/Task>
 #include <efc/List>
 #include <QtCore/QObject>
 #include <lvfs-core/INode>
 #include <lvfs-core/models/Qt/INode>
+#include <lvfs-core/models/Qt/BaseNode>
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-class PLATFORM_MAKE_PUBLIC Node : public Implements<Core::INode, Qt::INode>
+class PLATFORM_MAKE_PUBLIC Node : public Implements<Core::INode, Qt::INode>, public BaseNode
 {
 public:
-    Node(const Item &parent = Item());
+    Node(const Item &parent);
     virtual ~Node();
 
-    virtual const Item &parent() const;
-
+    /* Core::INode */
+    virtual const Interface::Holder &parent() const;
     virtual void opened(const Interface::Holder &view);
     virtual void closed(const Interface::Holder &view);
 
@@ -47,11 +46,6 @@ protected: /* Actions section */
     void doListFile(int depth = 0);
     virtual void processListFile(EFC::List<Item> &files, bool isFirstEvent) = 0;
     virtual void doneListFile(EFC::List<Item> &files, bool isFirstEvent) = 0;
-
-protected: /* Aux section */
-    virtual void removeChildren() = 0;
-
-    static QString toUnicode(const char *string);
 
 private:
     class EventsHandler : public QObject
@@ -67,8 +61,6 @@ private:
     };
 
 private:
-    int m_links;
-    Item m_parent;
     EventsHandler m_eventsHandler;
     bool m_doListFile;
 };

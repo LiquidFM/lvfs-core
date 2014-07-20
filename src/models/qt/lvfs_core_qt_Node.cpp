@@ -24,7 +24,6 @@
 
 #include <lvfs-core/INodeFactory>
 #include <lvfs/IDirectory>
-#include <efc/TasksPool>
 #include <brolly/assert.h>
 
 
@@ -33,12 +32,10 @@ namespace Core {
 namespace Qt {
 
 static QThread *mainThread = QThread::currentThread();
-static ::EFC::TasksPool tasksPool(10);
 
 
 Node::Node(const Item &parent) :
-    m_links(0),
-    m_parent(parent),
+    BaseNode(parent),
     m_eventsHandler(this),
     m_doListFile(false)
 {}
@@ -46,20 +43,19 @@ Node::Node(const Item &parent) :
 Node::~Node()
 {}
 
-const Node::Item &Node::parent() const
+const Interface::Holder &Node::parent() const
 {
-    return m_parent;
+    return Core::Node::parent();
 }
 
 void Node::opened(const Interface::Holder &view)
 {
-    ++m_links;
+    Core::Node::opened();
 }
 
 void Node::closed(const Interface::Holder &view)
 {
-    if (--m_links == 0)
-        removeChildren();
+    Core::Node::closed();
 }
 
 void Node::doListFile(int depth)
@@ -69,13 +65,8 @@ void Node::doListFile(int depth)
         EFC::Task::Holder task(new (std::nothrow) RefreshTask(&m_eventsHandler, Item::fromRawData(this), depth));
 
         m_doListFile = true;
-        tasksPool.handle(task);
+        handleTask(task);
     }
-}
-
-QString Node::toUnicode(const char *string)
-{
-    return QString::fromLocal8Bit(string);
 }
 
 Node::EventsHandler::EventsHandler(Node *node) :

@@ -9,11 +9,7 @@ list (APPEND ${PROJECT_NAME}_LIBS efc)
 list (APPEND ${PROJECT_NAME}_LIBS lvfs)
 list (APPEND ${PROJECT_NAME}_LIBS kitemviews)
 
-if (WIN32)
-    find_package (Qt4 4.7.1 COMPONENTS QtCore QtGui QtXml REQUIRED)
-else (UNIX)
-    find_package (Qt4 4.7.1 COMPONENTS QtCore QtGui QtXml QtDbus REQUIRED)
-endif ()
+find_package (Qt4 4.7.1 COMPONENTS QtCore QtGui REQUIRED)
 include (${QT_USE_FILE})
 list (APPEND ${PROJECT_NAME}_LIBS ${QT_LIBRARIES})
 add_definitions (${QT_DEFINITIONS} -DQT_NO_CAST_FROM_ASCII)
@@ -39,6 +35,7 @@ install_header_files (lvfs-core "src/lvfs_core_INode.h:INode"
                                 "src/lvfs_core_INodeFactory.h:INodeFactory"
                                 "src/lvfs_core_IViewFactory.h:IViewFactory"
 
+                                "src/tools/models/lvfs_core_TreeModel.h:tools/models/TreeModel"
                                 "src/tools/strings/strnatcmp.h:tools/strings/strnatcmp.h"
                                 "src/tools/strings/readableints.h:tools/strings/readableints.h"
                                 "src/tools/templates/mtp.h:tools/templates/mtp.h"
@@ -57,8 +54,10 @@ install_header_files (lvfs-core "src/lvfs_core_INode.h:INode"
 
                                 "src/models/kde/lvfs_core_kde_INode.h:models/Kde/INode"
 
+                                "src/models/lvfs_core_Node.h:models/Node"
                                 "src/models/qt/lvfs_core_qt_INode.h:models/Qt/INode"
                                 "src/models/qt/lvfs_core_qt_Node.h:models/Qt/Node"
+                                "src/models/qt/lvfs_core_qt_BaseNode.h:models/Qt/BaseNode"
                                 "src/models/qt/lvfs_core_qt_ModelNode.h:models/Qt/ModelNode"
                                 "src/models/qt/lvfs_core_qt_SortFilterModel.h:models/Qt/SortFilterModel"
                                 "src/models/qt/lvfs_core_qt_StyledItemDelegate.h:models/Qt/StyledItemDelegate")

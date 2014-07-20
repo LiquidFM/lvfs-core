@@ -62,22 +62,24 @@ public:
     virtual QVariant headerData(int section, ::Qt::Orientation orientation, int role = ::Qt::DisplayRole) const;
 
 protected:
+    /* Core::Node */
     virtual void removeChildren();
 
+    /* Core::Qt::Node */
     virtual void processListFile(EFC::List<Item> &files, bool isFirstEvent);
     virtual void doneListFile(EFC::List<Item> &files, bool isFirstEvent);
 
 private:
-    QString m_schema;
-    QString m_location;
     Interface::Holder m_file;
     EFC::Vector<Item> m_files;
-    Geometry m_geometry;
-    Sorting m_sorting;
 
 private:
     QString m_title;
+    QString m_schema;
+    QString m_location;
     QIcon m_icon;
+    Geometry m_geometry;
+    Sorting m_sorting;
     QString m_size;
     QDateTime m_modified;
 };

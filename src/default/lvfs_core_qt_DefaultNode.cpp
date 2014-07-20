@@ -97,13 +97,13 @@ namespace Qt {
 
 DefaultNode::DefaultNode(const Interface::Holder &file, const Item &parent) :
     ModelNode(parent),
+    m_file(file),
+    m_title(toUnicode(file->as<IEntry>()->title())),
     m_schema(toUnicode(file->as<IEntry>()->schema())),
     m_location(toUnicode(file->as<IEntry>()->location())),
-    m_file(file),
+    m_icon(),
     m_geometry({ 300, 80, 50 }),
     m_sorting(0, ::Qt::AscendingOrder),
-    m_title(toUnicode(file->as<IEntry>()->title())),
-    m_icon(),
     m_size(file->as<IFile>() ? humanReadableSize(file->as<IFile>()->size()) : QString::fromLatin1("<DIR>")),
     m_modified(file->as<IFsFile>() ? QDateTime::fromTime_t(file->as<IFsFile>()->mTime()).toLocalTime() : QDateTime())
 {
