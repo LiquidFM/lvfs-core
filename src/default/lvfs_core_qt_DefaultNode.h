@@ -36,16 +36,11 @@ class PLATFORM_MAKE_PRIVATE DefaultNode : public ModelNode
     Q_OBJECT
 
 public:
-    DefaultNode(const Interface::Holder &file, const Item &parent = Item());
+    DefaultNode(const Interface::Holder &file, const Interface::Holder &parent = Interface::Holder());
     virtual ~DefaultNode();
 
     /* Core::INode */
-    virtual const QString &title() const;
-    virtual const QString &schema() const;
-    virtual const QString &location() const;
     virtual const Interface::Holder &file() const;
-    virtual const Geometry &geometry() const;
-    virtual const Sorting &sorting() const;
 
     virtual void refresh(int depth);
 
@@ -53,12 +48,15 @@ public:
     virtual size_type size() const;
     virtual const Item &at(size_type index) const;
     virtual size_type indexOf(const Item &node) const;
-    virtual QVariant data(int column, int role) const;
+
+    virtual const Geometry &geometry() const;
+    virtual const Sorting &sorting() const;
 
     virtual void copyToClipboard(const QModelIndexList &files, bool move);
 
     /* ModelNode */
     virtual int columnCount(const QModelIndex &parent) const;
+    QVariant data(const QModelIndex &index, int role) const;
     virtual QVariant headerData(int section, ::Qt::Orientation orientation, int role = ::Qt::DisplayRole) const;
 
 protected:
@@ -66,22 +64,14 @@ protected:
     virtual void removeChildren();
 
     /* Core::Qt::Node */
-    virtual void processListFile(EFC::List<Item> &files, bool isFirstEvent);
-    virtual void doneListFile(EFC::List<Item> &files, bool isFirstEvent);
+    virtual void processListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent);
+    virtual void doneListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent);
 
 private:
     Interface::Holder m_file;
     EFC::Vector<Item> m_files;
-
-private:
-    QString m_title;
-    QString m_schema;
-    QString m_location;
-    QIcon m_icon;
     Geometry m_geometry;
     Sorting m_sorting;
-    QString m_size;
-    QDateTime m_modified;
 };
 
 }}}

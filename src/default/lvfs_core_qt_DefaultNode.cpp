@@ -95,55 +95,23 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-DefaultNode::DefaultNode(const Interface::Holder &file, const Item &parent) :
+DefaultNode::DefaultNode(const Interface::Holder &file, const Interface::Holder &parent) :
     ModelNode(parent),
     m_file(file),
-    m_title(toUnicode(file->as<IEntry>()->title())),
-    m_schema(toUnicode(file->as<IEntry>()->schema())),
-    m_location(toUnicode(file->as<IEntry>()->location())),
-    m_icon(),
     m_geometry({ 300, 80, 50 }),
-    m_sorting(0, ::Qt::AscendingOrder),
-    m_size(file->as<IFile>() ? humanReadableSize(file->as<IFile>()->size()) : QString::fromLatin1("<DIR>")),
-    m_modified(file->as<IFsFile>() ? QDateTime::fromTime_t(file->as<IFsFile>()->mTime()).toLocalTime() : QDateTime())
+    m_sorting(0, ::Qt::AscendingOrder)
 {
     ASSERT(m_file.isValid());
     ASSERT(m_geometry.size() == columnCount(QModelIndex()));
     ASSERT(m_sorting.first < columnCount(QModelIndex()));
-    m_icon.addFile(toUnicode(m_file->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
 }
 
 DefaultNode::~DefaultNode()
 {}
 
-const QString &DefaultNode::title() const
-{
-    return m_title;
-}
-
-const QString &DefaultNode::schema() const
-{
-    return m_schema;
-}
-
-const QString &DefaultNode::location() const
-{
-    return m_location;
-}
-
 const Interface::Holder &DefaultNode::file() const
 {
     return m_file;
-}
-
-const DefaultNode::Geometry &DefaultNode::geometry() const
-{
-    return m_geometry;
-}
-
-const DefaultNode::Sorting &DefaultNode::sorting() const
-{
-    return m_sorting;
 }
 
 void DefaultNode::refresh(int depth)
@@ -165,43 +133,20 @@ const DefaultNode::Item &DefaultNode::at(size_type index) const
 DefaultNode::size_type DefaultNode::indexOf(const Item &node) const
 {
     for (size_type i = 0, size = m_files.size(); i < size; ++i)
-        if (m_files[i] == node)
+        if (m_files[i].node == node.node)
             return i;
 
     return 0;
 }
 
-QVariant DefaultNode::data(int column, int role) const
+const DefaultNode::Geometry &DefaultNode::geometry() const
 {
-    switch (role)
-    {
-        case ::Qt::DisplayRole:
-            switch (column)
-            {
-                case 0:
-                    return m_title;
+    return m_geometry;
+}
 
-                case 1:
-                    return m_size;
-
-                case 2:
-                    return m_modified;
-
-                default:
-                    break;
-            }
-            break;
-
-        case ::Qt::DecorationRole:
-            if (column == 0)
-                return m_icon;
-            break;
-
-        default:
-            break;
-    }
-
-    return QVariant();
+const DefaultNode::Sorting &DefaultNode::sorting() const
+{
+    return m_sorting;
 }
 
 void DefaultNode::copyToClipboard(const QModelIndexList &files, bool move)
@@ -241,6 +186,41 @@ void DefaultNode::copyToClipboard(const QModelIndexList &files, bool move)
 int DefaultNode::columnCount(const QModelIndex &parent) const
 {
     return 3;
+}
+
+QVariant DefaultNode::data(const QModelIndex &index, int role) const
+{
+    const Item &indexNode(index.isValid() ? *static_cast<Item *>(index.internalPointer()) : at(index.row()));
+
+    switch (role)
+    {
+        case ::Qt::DisplayRole:
+            switch (index.column())
+            {
+                case 0:
+                    return indexNode.title;
+
+                case 1:
+                    return indexNode.size;
+
+                case 2:
+                    return indexNode.modified;
+
+                default:
+                    break;
+            }
+            break;
+
+        case ::Qt::DecorationRole:
+            if (index.column() == 0)
+                return indexNode.icon;
+            break;
+
+        default:
+            break;
+    }
+
+    return QVariant();
 }
 
 QVariant DefaultNode::headerData(int section, ::Qt::Orientation orientation, int role) const
@@ -283,17 +263,31 @@ void DefaultNode::removeChildren()
     }
 }
 
-void DefaultNode::processListFile(EFC::List<Item> &files, bool isFirstEvent)
+void DefaultNode::processListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent)
 {
     if (isFirstEvent)
         removeChildren();
 
     beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
-    m_files.insert(m_files.end(), files.begin(), files.end());
+    for (auto i : files)
+    {
+        Item item;
+
+        item.isDir = strcmp(i->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+        item.title = toUnicode(i->as<Core::INode>()->file()->as<IEntry>()->title());
+        item.schema = toUnicode(i->as<Core::INode>()->file()->as<IEntry>()->schema());
+        item.location = toUnicode(i->as<Core::INode>()->file()->as<IEntry>()->location());
+        item.icon.addFile(toUnicode(i->as<Core::INode>()->file()->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
+        item.size = i->as<Core::INode>()->file()->as<IFile>() ? humanReadableSize(i->as<Core::INode>()->file()->as<IFile>()->size()) : QString::fromLatin1("<DIR>");
+        item.modified = as<Core::INode>()->file()->as<IFsFile>() ? QDateTime::fromTime_t(i->as<Core::INode>()->file()->as<IFsFile>()->mTime()).toLocalTime() : QDateTime();
+        item.node = i;
+
+        m_files.push_back(item);
+    }
     endInsertRows();
 }
 
-void DefaultNode::doneListFile(EFC::List<Item> &files, bool isFirstEvent)
+void DefaultNode::doneListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent)
 {
     if (isFirstEvent)
         removeChildren();
@@ -301,7 +295,21 @@ void DefaultNode::doneListFile(EFC::List<Item> &files, bool isFirstEvent)
     if (!files.empty())
     {
         beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
-        m_files.insert(m_files.end(), files.begin(), files.end());
+        for (auto i : files)
+        {
+            Item item;
+
+            item.isDir = strcmp(i->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+            item.title = toUnicode(i->as<Core::INode>()->file()->as<IEntry>()->title());
+            item.schema = toUnicode(i->as<Core::INode>()->file()->as<IEntry>()->schema());
+            item.location = toUnicode(i->as<Core::INode>()->file()->as<IEntry>()->location());
+            item.icon.addFile(toUnicode(i->as<Core::INode>()->file()->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
+            item.size = i->as<Core::INode>()->file()->as<IFile>() ? humanReadableSize(i->as<Core::INode>()->file()->as<IFile>()->size()) : QString::fromLatin1("<DIR>");
+            item.modified = as<Core::INode>()->file()->as<IFsFile>() ? QDateTime::fromTime_t(i->as<Core::INode>()->file()->as<IFsFile>()->mTime()).toLocalTime() : QDateTime();
+            item.node = i;
+
+            m_files.push_back(item);
+        }
         endInsertRows();
     }
 }

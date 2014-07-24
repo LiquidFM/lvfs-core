@@ -20,6 +20,11 @@
 #ifndef LVFS_CORE_QT_INODE_H_
 #define LVFS_CORE_QT_INODE_H_
 
+#include <efc/Pair>
+#include <efc/List>
+#include <QtGui/QIcon>
+#include <QtCore/QString>
+#include <QtCore/QDateTime>
 #include <QtCore/QVariant>
 #include <QtCore/QAbstractItemModel>
 #include <lvfs/Interface>
@@ -34,8 +39,22 @@ class PLATFORM_MAKE_PUBLIC INode
     DECLARE_INTERFACE(LVFS::Core::Qt::INode)
 
 public:
-    typedef int               size_type;
-    typedef Interface::Holder Item;
+    typedef int size_type;
+
+    struct Item
+    {
+        bool isDir;
+        QString title;
+        QString schema;
+        QString location;
+        QIcon icon;
+        QString size;
+        QDateTime modified;
+        Interface::Holder node;
+    };
+
+    typedef EFC::List<qint32>                  Geometry;
+    typedef EFC::Pair<qint32, ::Qt::SortOrder> Sorting;
 
 public:
     virtual ~INode();
@@ -43,12 +62,14 @@ public:
     virtual size_type size() const = 0;
     virtual const Item &at(size_type index) const = 0;
     virtual size_type indexOf(const Item &node) const = 0;
-    virtual QVariant data(int column, int role) const = 0;
 
     virtual QAbstractItemModel *model() const = 0;
 
-    virtual QModelIndex parentIndex() const = 0;
-    virtual void setParentIndex(const QModelIndex &index) = 0;
+    virtual const Geometry &geometry() const = 0;
+    virtual const Sorting &sorting() const = 0;
+
+    virtual QModelIndex currentIndex() const = 0;
+    virtual void setCurrentIndex(const QModelIndex &index) = 0;
 
     virtual void copyToClipboard(const QModelIndexList &files, bool move) = 0;
 };

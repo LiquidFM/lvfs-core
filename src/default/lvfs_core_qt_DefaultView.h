@@ -66,7 +66,9 @@ private:
     void pasteFromClipboardShortcut();
 
 private:
-    inline bool openNode(const Interface::Holder &node, const QModelIndex &currentIdx, const QModelIndex &parentIdx);
+    inline void tryToSelect(const QModelIndex &selected);
+    inline bool openChildNode(const Interface::Holder &node, const QModelIndex &selected);
+    inline bool openParentNode(const Interface::Holder &node, const QModelIndex &selected);
 
 private:
     typedef Tools::MouseDoubleClickEventSource<

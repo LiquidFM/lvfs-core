@@ -31,13 +31,13 @@ namespace Qt {
 class PLATFORM_MAKE_PUBLIC ModelNode : public Node, public QAbstractItemModel
 {
 public:
-    ModelNode(const Item &parent = Item());
+    ModelNode(const Interface::Holder &parent);
     virtual ~ModelNode();
 
     /* Qt::INode */
     virtual QAbstractItemModel *model() const;
-    virtual QModelIndex parentIndex() const;
-    virtual void setParentIndex(const QModelIndex &index);
+    virtual QModelIndex currentIndex() const;
+    virtual void setCurrentIndex(const QModelIndex &index);
 
     /* QAbstractItemModel */
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -54,7 +54,7 @@ private:
 //    QModelIndex parent(Item *item, size_type &row) const;
 
 private:
-    QModelIndex m_index;
+    QModelIndex m_currentIndex;
 };
 
 }}}

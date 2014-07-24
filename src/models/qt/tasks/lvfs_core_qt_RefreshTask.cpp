@@ -41,7 +41,6 @@ void RefreshTask::run(const volatile bool &aborted)
 {
     Snapshot nodes;
     bool isFirstEvent = true;
-    Interface::Holder file;
     Interface::Holder node;
 
     QTime baseTime = QTime::currentTime();
@@ -52,13 +51,11 @@ void RefreshTask::run(const volatile bool &aborted)
         {
             currentTime = QTime::currentTime();
 
-            file = Module::open(*i);
-
-            if (INodeFactory *factory = file->as<INodeFactory>())
-                node.reset(factory->createNode(file, m_node));
+            if (INodeFactory *factory = (*i)->as<INodeFactory>())
+                node = factory->createNode(*i, m_node);
 
             if (!node.isValid())
-                node.reset(new (std::nothrow) DefaultNode(file, m_node));
+                node.reset(new (std::nothrow) DefaultNode(*i, m_node));
 
             if (node.isValid())
             {

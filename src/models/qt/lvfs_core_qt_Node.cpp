@@ -34,7 +34,7 @@ namespace Qt {
 static QThread *mainThread = QThread::currentThread();
 
 
-Node::Node(const Item &parent) :
+Node::Node(const Interface::Holder &parent) :
     BaseNode(parent),
     m_eventsHandler(this),
     m_doListFile(false)
@@ -48,12 +48,12 @@ const Interface::Holder &Node::parent() const
     return Core::Node::parent();
 }
 
-void Node::opened(const Interface::Holder &view)
+void Node::opened()
 {
     Core::Node::opened();
 }
 
-void Node::closed(const Interface::Holder &view)
+void Node::closed()
 {
     Core::Node::closed();
 }
@@ -62,7 +62,7 @@ void Node::doListFile(int depth)
 {
     if (!m_doListFile)
     {
-        EFC::Task::Holder task(new (std::nothrow) RefreshTask(&m_eventsHandler, Item::fromRawData(this), depth));
+        EFC::Task::Holder task(new (std::nothrow) RefreshTask(&m_eventsHandler, Interface::Holder::fromRawData(this), depth));
 
         m_doListFile = true;
         handleTask(task);

@@ -34,18 +34,18 @@ namespace Qt {
 class PLATFORM_MAKE_PUBLIC Node : public Implements<Core::INode, Qt::INode>, public BaseNode
 {
 public:
-    Node(const Item &parent);
+    Node(const Interface::Holder &parent);
     virtual ~Node();
 
     /* Core::INode */
     virtual const Interface::Holder &parent() const;
-    virtual void opened(const Interface::Holder &view);
-    virtual void closed(const Interface::Holder &view);
+    virtual void opened();
+    virtual void closed();
 
 protected: /* Actions section */
     void doListFile(int depth = 0);
-    virtual void processListFile(EFC::List<Item> &files, bool isFirstEvent) = 0;
-    virtual void doneListFile(EFC::List<Item> &files, bool isFirstEvent) = 0;
+    virtual void processListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent) = 0;
+    virtual void doneListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent) = 0;
 
 private:
     class EventsHandler : public QObject

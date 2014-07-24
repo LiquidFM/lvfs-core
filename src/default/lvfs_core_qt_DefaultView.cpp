@@ -62,9 +62,7 @@ DefaultView::DefaultView() :
 }
 
 DefaultView::~DefaultView()
-{
-    ASSERT(!m_node.isValid());
-}
+{}
 
 QWidget *DefaultView::widget() const
 {
@@ -91,24 +89,48 @@ bool DefaultView::setNode(const Interface::Holder &node)
         return true;
     }
 
-    return openNode(node, QModelIndex(), QModelIndex());
+    Core::INode *coreNode = node->as<Core::INode>();
+
+    if (coreNode->file()->as<IDirectory>())
+        if (Qt::INode *qtNode = node->as<Qt::INode>())
+        {
+            if (m_node.isValid())
+            {
+                Qt::INode *currentQtNode = m_node->as<Qt::INode>();
+                currentQtNode->setCurrentIndex(m_view.selectionModel()->currentIndex());
+            }
+
+            m_node = node;
+            m_sortFilterModel.setSourceModel(qtNode->model());
+
+            qint32 column = 0;
+            for (auto i : qtNode->geometry())
+                m_view.setColumnWidth(column++, i);
+
+            m_view.sortByColumn(qtNode->sorting().first, qtNode->sorting().second);
+
+            tryToSelect(qtNode->currentIndex());
+
+            return true;
+        }
+
+    return false;
 }
 
 void DefaultView::goUpShortcut()
 {
-    Interface::Holder node = m_node->as<Core::INode>()->parent();
+    const Interface::Holder &node = m_node->as<Core::INode>()->parent();
 
     if (node.isValid())
-        openNode(node, m_node->as<Qt::INode>()->parentIndex(), QModelIndex());
+        m_mainView->as<Core::IMainView>()->show(Interface::Holder::fromRawData(this), node);
 }
 
 void DefaultView::goIntoShortcut()
 {
-    QModelIndex index1 = m_view.selectionModel()->currentIndex();
-    QModelIndex index2 = m_sortFilterModel.mapToSource(index1);
+    QModelIndex index = m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
 
-    if (index2.isValid())
-        openNode(m_node->as<Qt::INode>()->at(index2.row()), QModelIndex(), index1);
+    if (index.isValid())
+        m_mainView->as<Core::IMainView>()->show(Interface::Holder::fromRawData(this), m_node->as<Qt::INode>()->at(index.row()).node);
 }
 
 void DefaultView::pathToClipboardShortcut()
@@ -193,50 +215,23 @@ void DefaultView::pasteFromClipboardShortcut()
 
 }
 
-bool DefaultView::openNode(const Interface::Holder &node, const QModelIndex &currentIdx, const QModelIndex &parentIdx)
+void DefaultView::tryToSelect(const QModelIndex &selected)
 {
-    Core::INode *coreNode = node->as<Core::INode>();
+    QModelIndex toBeSelected = selected;
 
-    if (coreNode->file()->as<IDirectory>())
-        if (Qt::INode *qtNode = node->as<Qt::INode>())
-        {
-            if (parentIdx.isValid())
-                qtNode->setParentIndex(parentIdx);
-            else if (currentIdx.isValid())
-                m_node->as<Core::INode>()->closed(Interface::Holder::fromRawData(this));
+    if (toBeSelected.isValid())
+        toBeSelected = m_sortFilterModel.index(toBeSelected.row(), toBeSelected.column());
 
-            m_node = node;
-            m_sortFilterModel.setSourceModel(qtNode->model());
-            coreNode->opened(Interface::Holder::fromRawData(this));
+    if (!toBeSelected.isValid())
+        toBeSelected = m_sortFilterModel.index(0, 0);
 
-            qint32 column = 0;
-            for (auto i : coreNode->geometry())
-                m_view.setColumnWidth(column++, i);
-
-            m_view.sortByColumn(coreNode->sorting().first, coreNode->sorting().second);
-
-            coreNode->refresh(0);
-
-            QModelIndex selected = currentIdx;
-
-            if (selected.isValid())
-                selected = m_sortFilterModel.index(selected.row(), selected.column());
-
-            if (!selected.isValid())
-                selected = m_sortFilterModel.index(0, 0);
-
-            if (LIKELY(selected.isValid() == true))
-            {
-                m_view.setFocus();
-                m_view.scrollTo(selected, QAbstractItemView::PositionAtCenter);
-                m_view.selectionModel()->select(selected, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Columns);
-                m_view.selectionModel()->setCurrentIndex(selected, QItemSelectionModel::ClearAndSelect);
-            }
-
-            return true;
-        }
-
-    return false;
+    if (LIKELY(toBeSelected.isValid() == true))
+    {
+        m_view.setFocus();
+        m_view.scrollTo(toBeSelected, QAbstractItemView::PositionAtCenter);
+        m_view.selectionModel()->select(toBeSelected, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Columns);
+        m_view.selectionModel()->setCurrentIndex(toBeSelected, QItemSelectionModel::ClearAndSelect);
+    }
 }
 
 }}}

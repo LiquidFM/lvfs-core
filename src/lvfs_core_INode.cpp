@@ -143,7 +143,7 @@ Interface::Holder INode::view(const Interface::Holder &node)
     ASSERT(node.isValid());
     Interface::Holder res;
 
-    if (IViewFactory *factory = node->as<IViewFactory>())
+    if (IViewFactory *factory = node->as<Core::INode>()->file()->as<IViewFactory>())
         res = factory->createView();
 
     if (!res.isValid())

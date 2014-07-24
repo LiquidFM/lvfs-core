@@ -60,31 +60,31 @@ bool SortFilterModel::compareFileNames(const char *str1, const char *str2)
 
 bool SortFilterModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
-    const Interface::Holder &leftItem = *static_cast<Interface::Holder *>(left.internalPointer());
-    const Interface::Holder &rightItem = *static_cast<Interface::Holder *>(right.internalPointer());
+    Qt::INode::Item *leftItem = static_cast<Qt::INode::Item *>(left.internalPointer());
+    Qt::INode::Item *rightItem = static_cast<Qt::INode::Item *>(right.internalPointer());
 
     if (sortOrder() == ::Qt::AscendingOrder)
-        if (strcmp(leftItem->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0)
-            if (strcmp(rightItem->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0)
-                return compareFileNames(leftItem->as<Core::INode>()->title(), rightItem->as<Core::INode>()->title());
+        if (leftItem->isDir)
+            if (rightItem->isDir)
+                return compareFileNames(leftItem->title, rightItem->title);
             else
                 return true;
         else
-            if (strcmp(rightItem->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0)
+            if (rightItem->isDir)
                 return false;
             else
-                return compareFileNames(leftItem->as<Core::INode>()->title(), rightItem->as<Core::INode>()->title());
+                return compareFileNames(leftItem->title, rightItem->title);
     else
-        if (strcmp(leftItem->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0)
-            if (strcmp(rightItem->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0)
-                return !compareFileNames(leftItem->as<Core::INode>()->title(), rightItem->as<Core::INode>()->title());
+        if (leftItem->isDir)
+            if (rightItem->isDir)
+                return !compareFileNames(leftItem->title, rightItem->title);
             else
                 return false;
         else
-            if (strcmp(rightItem->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0)
+            if (rightItem->isDir)
                 return true;
             else
-                return !compareFileNames(leftItem->as<Core::INode>()->title(), rightItem->as<Core::INode>()->title());
+                return !compareFileNames(leftItem->title, rightItem->title);
 
     return true;
 }
