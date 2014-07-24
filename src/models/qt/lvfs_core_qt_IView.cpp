@@ -17,35 +17,14 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_INODE_H_
-#define LVFS_CORE_INODE_H_
-
-#include <lvfs/Interface>
-#include <lvfs/Module>
+#include "lvfs_core_qt_IView.h"
 
 
 namespace LVFS {
 namespace Core {
+namespace Qt {
 
-class PLATFORM_MAKE_PUBLIC INode
-{
-    DECLARE_INTERFACE(LVFS::Core::INode)
+IView::~IView()
+{}
 
-public:
-    virtual ~INode();
-
-    virtual const Interface::Holder &parent() const = 0;
-    virtual const Interface::Holder &file() const = 0;
-
-    virtual void refresh(int depth = 0) = 0;
-    virtual void opened(const Interface::Holder &view) = 0;
-    virtual void closed(const Interface::Holder &view) = 0;
-
-public:
-    static Interface::Holder open(const char *uri, Module::Error &error);
-    static Interface::Holder view(const Interface::Holder &node);
-};
-
-}}
-
-#endif /* LVFS_CORE_INODE_H_ */
+}}}

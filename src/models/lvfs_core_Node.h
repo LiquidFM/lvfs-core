@@ -21,6 +21,7 @@
 #define LVFS_CORE_NODE_H_
 
 #include <platform/utils.h>
+#include <efc/Set>
 #include <efc/Task>
 #include <lvfs/Interface>
 
@@ -41,8 +42,8 @@ public:
     virtual ~Node();
 
     inline const Interface::Holder &parent() const { return m_parent; }
-    inline void opened() { ++m_links; }
-    inline void closed() { if (--m_links == 0) removeChildren(); }
+    inline void opened(const Interface::Holder &view) { m_views.insert(view); ++m_links; }
+    inline void closed(const Interface::Holder &view) { m_views.erase(view); if (--m_links == 0) removeChildren(); }
 
 protected:
     virtual void removeChildren() = 0;
@@ -50,9 +51,13 @@ protected:
 protected:
     void handleTask(EFC::Task::Holder &task);
 
+protected:
+    const EFC::Set<Interface::Holder> &views() const { return m_views; }
+
 private:
     int m_links;
     Interface::Holder m_parent;
+    EFC::Set<Interface::Holder> m_views;
 };
 
 }}

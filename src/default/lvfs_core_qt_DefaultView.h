@@ -22,6 +22,7 @@
 
 #include <QtGui/QTreeView>
 #include <lvfs-core/IView>
+#include <lvfs-core/models/Qt/IView>
 #include <lvfs-core/models/Qt/SortFilterModel>
 #include <lvfs-core/models/Qt/StyledItemDelegate>
 
@@ -37,17 +38,21 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-class PLATFORM_MAKE_PRIVATE DefaultView : public Implements<IView>
+class PLATFORM_MAKE_PRIVATE DefaultView : public Implements<Core::IView, Qt::IView>
 {
 public:
     DefaultView();
     virtual ~DefaultView();
 
+    /* Core::IView */
     virtual QWidget *widget() const;
     virtual void setMainView(const Interface::Holder &mainView);
 
     virtual const Interface::Holder &node() const;
     virtual bool setNode(const Interface::Holder &node);
+
+    /* Qt::IView */
+    virtual void select(const QModelIndex &index);
 
 private:
     void goUpShortcut();
@@ -66,7 +71,6 @@ private:
     void pasteFromClipboardShortcut();
 
 private:
-    inline void tryToSelect(const QModelIndex &selected);
     inline bool openChildNode(const Interface::Holder &node, const QModelIndex &selected);
     inline bool openParentNode(const Interface::Holder &node, const QModelIndex &selected);
 

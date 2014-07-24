@@ -109,12 +109,31 @@ bool DefaultView::setNode(const Interface::Holder &node)
 
             m_view.sortByColumn(qtNode->sorting().first, qtNode->sorting().second);
 
-            tryToSelect(qtNode->currentIndex());
+            select(qtNode->currentIndex());
 
             return true;
         }
 
     return false;
+}
+
+void DefaultView::select(const QModelIndex &index)
+{
+    QModelIndex toBeSelected = index;
+
+    if (toBeSelected.isValid())
+        toBeSelected = m_sortFilterModel.index(toBeSelected.row(), toBeSelected.column());
+
+    if (!toBeSelected.isValid())
+        toBeSelected = m_sortFilterModel.index(0, 0);
+
+    if (LIKELY(toBeSelected.isValid() == true))
+    {
+        m_view.setFocus();
+        m_view.scrollTo(toBeSelected, QAbstractItemView::PositionAtCenter);
+        m_view.selectionModel()->select(toBeSelected, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Columns);
+        m_view.selectionModel()->setCurrentIndex(toBeSelected, QItemSelectionModel::ClearAndSelect);
+    }
 }
 
 void DefaultView::goUpShortcut()
@@ -213,25 +232,6 @@ void DefaultView::cutToClipboardShortcut()
 void DefaultView::pasteFromClipboardShortcut()
 {
 
-}
-
-void DefaultView::tryToSelect(const QModelIndex &selected)
-{
-    QModelIndex toBeSelected = selected;
-
-    if (toBeSelected.isValid())
-        toBeSelected = m_sortFilterModel.index(toBeSelected.row(), toBeSelected.column());
-
-    if (!toBeSelected.isValid())
-        toBeSelected = m_sortFilterModel.index(0, 0);
-
-    if (LIKELY(toBeSelected.isValid() == true))
-    {
-        m_view.setFocus();
-        m_view.scrollTo(toBeSelected, QAbstractItemView::PositionAtCenter);
-        m_view.selectionModel()->select(toBeSelected, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Columns);
-        m_view.selectionModel()->setCurrentIndex(toBeSelected, QItemSelectionModel::ClearAndSelect);
-    }
 }
 
 }}}

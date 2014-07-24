@@ -48,14 +48,14 @@ const Interface::Holder &Node::parent() const
     return Core::Node::parent();
 }
 
-void Node::opened()
+void Node::opened(const Interface::Holder &view)
 {
-    Core::Node::opened();
+    Core::Node::opened(view);
 }
 
-void Node::closed()
+void Node::closed(const Interface::Holder &view)
 {
-    Core::Node::closed();
+    Core::Node::closed(view);
 }
 
 void Node::doListFile(int depth)
