@@ -42,8 +42,10 @@ public:
     virtual ~Node();
 
     inline const Interface::Holder &parent() const { return m_parent; }
-    inline void opened(const Interface::Holder &view) { m_views.insert(view); ++m_links; }
-    inline void closed(const Interface::Holder &view) { m_views.erase(view); if (--m_links == 0) removeChildren(); }
+    inline void incLinks(int count) { m_links += count; }
+    inline void decLinks(int count) { if ((m_links -= count) == 0) removeChildren(); }
+    inline void opened(const Interface::Holder &view) { m_views.insert(view); }
+    inline void closed(const Interface::Holder &view) { m_views.erase(view); }
 
 protected:
     virtual void removeChildren() = 0;

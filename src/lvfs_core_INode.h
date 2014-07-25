@@ -38,6 +38,8 @@ public:
     virtual const Interface::Holder &file() const = 0;
 
     virtual void refresh(int depth = 0) = 0;
+    virtual void incLinks(int count = 1) = 0;
+    virtual void decLinks(int count = 1) = 0;
     virtual void opened(const Interface::Holder &view) = 0;
     virtual void closed(const Interface::Holder &view) = 0;
 

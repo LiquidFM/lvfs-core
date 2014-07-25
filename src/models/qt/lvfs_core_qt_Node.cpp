@@ -48,6 +48,16 @@ const Interface::Holder &Node::parent() const
     return Core::Node::parent();
 }
 
+void Node::incLinks(int count)
+{
+    Core::Node::incLinks(count);
+}
+
+void Node::decLinks(int count)
+{
+    Core::Node::decLinks(count);
+}
+
 void Node::opened(const Interface::Holder &view)
 {
     Core::Node::opened(view);
