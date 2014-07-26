@@ -108,7 +108,9 @@ DefaultNode::DefaultNode(const Interface::Holder &file, const Interface::Holder 
 }
 
 DefaultNode::~DefaultNode()
-{}
+{
+    ASSERT(m_files.empty());
+}
 
 const Interface::Holder &DefaultNode::file() const
 {
