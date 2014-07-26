@@ -20,6 +20,9 @@
 #ifndef EVENTHANDLER_H_
 #define EVENTHANDLER_H_
 
+#include <platform/utils.h>
+
+
 class QEvent;
 class QMouseEvent;
 class QKeyEvent;
@@ -30,7 +33,7 @@ class QContextMenuEvent;
 namespace LVFS {
 namespace Tools {
 
-class EventHandler
+class PLATFORM_MAKE_PUBLIC EventHandler
 {
 public:
 	virtual ~EventHandler();
