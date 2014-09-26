@@ -91,7 +91,7 @@ TreeModel::Item::Item(Item *parent) :
 TreeModel::Item::~Item()
 {}
 
-TreeModel::Item::Base *TreeModel::Item::at(size_type index) const
+TreeModel::Item *TreeModel::Item::at(size_type index) const
 {
     return NULL;
 }
@@ -101,7 +101,7 @@ TreeModel::Item::size_type TreeModel::Item::size() const
     return 0;
 }
 
-TreeModel::Item::size_type TreeModel::Item::indexOf(Base *item) const
+TreeModel::Item::size_type TreeModel::Item::indexOf(Item *item) const
 {
     return InvalidIndex;
 }

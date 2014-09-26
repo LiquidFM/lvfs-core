@@ -56,24 +56,23 @@ public:
     class Item
     {
     public:
-        typedef Item Base;
         typedef TreeModel::size_type size_type;
         enum { InvalidIndex = TreeModel::InvalidIndex };
 
     public:
-        Item(Base *parent);
+        Item(Item *parent);
         virtual ~Item();
 
-        Base *parent() const { return m_parent; }
+        Item *parent() const { return m_parent; }
 
-        virtual Base *at(size_type index) const;
+        virtual Item *at(size_type index) const;
         virtual size_type size() const;
-        virtual size_type indexOf(Base *item) const;
+        virtual size_type indexOf(Item *item) const;
 
         virtual QVariant data(qint32 column, qint32 role) const = 0;
 
     private:
-        Base *m_parent;
+        Item *m_parent;
     };
 
 protected:
