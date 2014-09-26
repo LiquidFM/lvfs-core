@@ -19,6 +19,8 @@
 
 #include "lvfs_core_qt_BaseNode.h"
 
+#include <QtCore/QTextCodec>
+
 
 namespace LVFS {
 namespace Core {
@@ -29,7 +31,14 @@ BaseNode::~BaseNode()
 
 QString BaseNode::toUnicode(const char *string)
 {
-    return QString::fromLocal8Bit(string);
+    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+    return codec->toUnicode(string);
+}
+
+QByteArray BaseNode::fromUnicode(const QString &string)
+{
+    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+    return codec->fromUnicode(string);
 }
 
 }}}

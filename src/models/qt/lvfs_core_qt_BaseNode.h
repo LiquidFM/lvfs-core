@@ -37,6 +37,7 @@ public:
     virtual ~BaseNode();
 
     static QString toUnicode(const char *string);
+    static QByteArray fromUnicode(const QString &string);
 };
 
 }}}
