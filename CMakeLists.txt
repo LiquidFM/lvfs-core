@@ -53,6 +53,15 @@ install_header_files (lvfs-core "src/lvfs_core_INode.h:INode"
                                 "src/tools/events/mouseeventhandler.h:tools/events/MouseEventHandler"
                                 "src/tools/events/mouseeventsource.h:tools/events/MouseEventSource"
 
+                                "src/tools/widgets/choosedialog/lvfs_core_ChooseDialog.h:tools/widgets/ChooseDialog"
+                                "src/tools/widgets/intdialog/lvfs_core_IntDialog.h:tools/widgets/IntDialog"
+                                "src/tools/widgets/nestedplaindialog/widgets/lvfs_core_BaseNestedWidget.h:tools/widgets/BaseNestedWidget"
+                                "src/tools/widgets/nestedplaindialog/widgets/lvfs_core_NestedDialog.h:tools/widgets/NestedDialog"
+                                "src/tools/widgets/nestedplaindialog/widgets/lvfs_core_NestedWidget.h:tools/widgets/NestedWidget"
+                                "src/tools/widgets/nestedplaindialog/lvfs_core_NestedPlainDialog.h:tools/widgets/NestedPlainDialog"
+                                "src/tools/widgets/stringdialog/lvfs_core_StringDialog.h:tools/widgets/StringDialog"
+                                "src/tools/widgets/valuedialog/lvfs_core_ValueDialog.h:tools/widgets/ValueDialog"
+
                                 "src/models/kde/lvfs_core_kde_INode.h:models/Kde/INode"
 
                                 "src/models/lvfs_core_Node.h:models/Node"
