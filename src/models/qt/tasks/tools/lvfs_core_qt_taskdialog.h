@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2012 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ private:
 };
 
 
-class UserInputEvent: public BaseTask::Event
+class PLATFORM_MAKE_PRIVATE UserInputEvent: public BaseTask::Event
 {
 public:
 	class Result
