@@ -31,9 +31,6 @@ namespace Qt {
 class PLATFORM_MAKE_PUBLIC BaseNode : public Core::Node
 {
 public:
-    inline BaseNode(const Interface::Holder &parent) :
-        Core::Node(parent)
-    {}
     virtual ~BaseNode();
 
     static QString toUnicode(const char *string);

@@ -30,29 +30,26 @@ namespace LVFS {
 namespace Core {
 namespace Kde {
 
-DefaultNode::DefaultNode(const Interface::Holder &file) :
+DefaultNode::DefaultNode(const Interface::Holder &file, const Interface::Holder &parent) :
+    m_ref(0),
+    m_parent(parent),
     m_file(file)
 {
     ASSERT(m_file.isValid());
 
-    KStandardItem *parent = new KStandardItem(QString::fromLatin1("Parent 3"));
-    parent->addChildren(new KStandardItem(QString::fromLatin1("Item 3.1"), parent));
-    parent->addChildren(new KStandardItem(QString::fromLatin1("Item 3.2"), parent));
+    KStandardItem *p = new KStandardItem(QString::fromLatin1("Parent 3"));
+    p->addChildren(new KStandardItem(QString::fromLatin1("Item 3.1"), p));
+    p->addChildren(new KStandardItem(QString::fromLatin1("Item 3.2"), p));
 
-    appendItem(parent);
+    appendItem(p);
 }
 
 DefaultNode::~DefaultNode()
 {}
 
-void DefaultNode::refresh()
+const Interface::Holder &DefaultNode::parent() const
 {
-//    doListFile(m_file);
-}
-
-const IEntry *DefaultNode::entry() const
-{
-    return m_file->as<IEntry>();
+    return m_parent;
 }
 
 const Interface::Holder &DefaultNode::file() const
@@ -60,28 +57,54 @@ const Interface::Holder &DefaultNode::file() const
     return m_file;
 }
 
-DefaultNode::size_type DefaultNode::size() const
+void DefaultNode::refresh(int depth)
 {
-    return m_files.size();
+    //    doListFile(m_file);
 }
 
-Interface::Holder DefaultNode::at(size_type index) const
+void DefaultNode::opened(const Interface::Holder &view)
 {
-    return m_files[index];
+
 }
 
-DefaultNode::size_type DefaultNode::indexOf(const Interface::Holder &node) const
+void DefaultNode::closed(const Interface::Holder &view)
 {
-    for (size_type i = 0, size = m_files.size(); i < size; ++i)
-        if (m_files[i] == node)
-            return i;
 
-    return 0;
+}
+
+int DefaultNode::refs() const
+{
+    return m_ref;
+}
+
+void DefaultNode::incRef()
+{
+    ++m_ref;
+}
+
+int DefaultNode::decRef()
+{
+    return --m_ref;
+}
+
+void DefaultNode::clear()
+{
+
 }
 
 KItemModelBase *DefaultNode::model() const
 {
     return const_cast<DefaultNode *>(this);
+}
+
+Interface::Holder DefaultNode::node(const Interface::Holder &file) const
+{
+    return Interface::Holder();
+}
+
+void DefaultNode::setNode(const Interface::Holder &file, const Interface::Holder &node)
+{
+
 }
 
 bool DefaultNode::setExpanded(int index, bool expanded)

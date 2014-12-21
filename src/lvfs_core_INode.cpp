@@ -20,19 +20,48 @@
 #include "lvfs_core_INode.h"
 #include "default/lvfs_core_qt_DefaultNode.h"
 #include "default/lvfs_core_qt_DefaultView.h"
+#include "default/lvfs_core_qt_DefaultNodeFactory.h"
+#include "default/lvfs_core_qt_DefaultViewFactory.h"
+#include "default/lvfs_core_qt_DefaultNodeViewFactory.h"
 
+#include <lvfs/IEntry>
 #include <lvfs-core/INodeFactory>
 #include <lvfs-core/IViewFactory>
 
+#include <efc/Map>
+#include <efc/String>
 #include <brolly/assert.h>
+
 #include <cstring>
 #include <cstdio>
 
 #include <linux/limits.h>
 
 
+int DefaultNode_count;
+
+
 namespace LVFS {
 namespace Core {
+
+typedef EFC::Map<EFC::String, Interface::Holder> Container;
+
+namespace {
+
+struct RootNode
+{
+    ~RootNode()
+    {
+        ASSERT(items.empty());
+    }
+
+    Container items;
+};
+
+static RootNode root;
+
+}
+
 
 INode::~INode()
 {}
@@ -40,42 +69,101 @@ INode::~INode()
 Interface::Holder INode::open(const char *uri, Module::Error &error)
 {
     char buffer[PATH_MAX + Module::MaxSchemaLength + Module::SchemaDelimiterLength];
-    Interface::Holder parent;
     Interface::Holder current;
     char *p;
 
-    buffer[sizeof(buffer) - 1] = 0;
-    strncpy(buffer, uri, sizeof(buffer) - 1);
-
-    if (p = strstr(buffer, Module::SchemaDelimiter))
-        ++p;
-    else
-        p = buffer;
-
-    if (p[0] == '/' && p - buffer < Module::MaxSchemaLength)
+    if (p = const_cast<char *>(strstr(uri, Module::SchemaDelimiter)))
     {
-        INodeFactory *factory;
-        char *d;
-        char c = p[1];
+        p += Module::SchemaDelimiterLength;
+
+        if (p - uri >= Module::MaxSchemaLength + Module::SchemaDelimiterLength)
+            return current;
+
+        buffer[sizeof(buffer) - 1] = 0;
+        strncpy(buffer, uri, sizeof(buffer) - 1);
+
+        p = buffer + (p - uri);
+    }
+    else
+    {
+        static const char file[] = "file";
+
+        if (snprintf(buffer, sizeof(buffer), "%s%s%s", file, Module::SchemaDelimiter, uri) >= sizeof(buffer))
+            return current;
+
+        p = buffer + sizeof(file) + Module::SchemaDelimiterLength - 1;
+    }
+
+    if (p[0] == '/')
+    {
+        Interface::Holder parent;
+        Container::iterator items;
+        bool firstTime = true;
+        char *d = p;
+        char c;
+
+        c = p[1];
         p[1] = 0;
+
+        {
+            EFC::String key(buffer);
+
+            items = root.items.lower_bound(key);
+
+            if (items == root.items.end() || (root.items.key_comp()(key, items->first)))
+                items = root.items.insert(items, Container::value_type(key, Container::value_type::second_type()));
+        }
 
         Interface::Holder file = Module::open(buffer, error);
 
-        (*++p) = c;
-
         while (file.isValid())
         {
+            if (file->as<INodeFactory>() == NULL)
+                if (file->as<IViewFactory>() == NULL)
+                    file.reset(new (std::nothrow) Qt::DefaultNodeViewFactory(file));
+                else
+                    file.reset(new (std::nothrow) Qt::DefaultNodeFactory(file));
+            else
+                if (file->as<IViewFactory>() == NULL)
+                    file.reset(new (std::nothrow) Qt::DefaultViewFactory(file));
+
+            if (UNLIKELY(!file.isValid()))
+                return current;
+
             parent = current;
             current.reset();
 
-            if (factory = file->as<INodeFactory>())
-                current = factory->createNode(file, parent);
+            if (UNLIKELY(firstTime))
+            {
+                firstTime = false;
+                auto &item = items->second;
 
-            if (!current.isValid())
-                current.reset(new (std::nothrow) Qt::DefaultNode(file, parent));
+                p[1] = c;
+
+                if (!item.isValid())
+                    item = file->as<INodeFactory>()->createNode(file, parent);
+
+                current = item;
+            }
+            else
+            {
+                ASSERT(parent.isValid());
+                current = parent->as<Core::INode>()->node(file);
+
+                if (!current.isValid())
+                {
+                    current = file->as<INodeFactory>()->createNode(file, parent);
+                    parent->as<Core::INode>()->setNode(file, current);
+                }
+            }
+
+            if (UNLIKELY(!current.isValid()))
+                return parent;
 
             if (!p)
                 break;
+            else
+                *(p = d)++ = '/';
 
             if (d = strchr(p, '/'))
             {
@@ -125,7 +213,6 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
                 }
 
                 file = Module::open(buffer, error);
-                *(p = d)++ = '/';
             }
             else
             {
@@ -138,18 +225,12 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
     return current;
 }
 
-Interface::Holder INode::view(const Interface::Holder &node)
+void INode::cleanup()
 {
-    ASSERT(node.isValid());
-    Interface::Holder res;
+    for (Container::iterator i = root.items.begin(); i != root.items.end(); i = root.items.erase(i))
+        i->second->as<Core::INode>()->clear();
 
-    if (IViewFactory *factory = node->as<Core::INode>()->file()->as<IViewFactory>())
-        res = factory->createView();
-
-    if (!res.isValid())
-        res.reset(new (std::nothrow) Qt::DefaultView());
-
-    return res;
+    printf("!!!!!!!!!!!!!!There is %d nodes\n", DefaultNode_count);
 }
 
 }}

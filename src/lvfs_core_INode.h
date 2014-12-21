@@ -38,14 +38,35 @@ public:
     virtual const Interface::Holder &file() const = 0;
 
     virtual void refresh(int depth = 0) = 0;
-    virtual void incLinks(int count = 1) = 0;
-    virtual void decLinks(int count = 1) = 0;
     virtual void opened(const Interface::Holder &view) = 0;
     virtual void closed(const Interface::Holder &view) = 0;
 
+    virtual int refs() const = 0;
+    virtual void incRef() = 0;
+    virtual int decRef() = 0;
+    virtual void clear() = 0;
+
+protected:
+    virtual Interface::Holder node(const Interface::Holder &file) const = 0;
+    virtual void setNode(const Interface::Holder &file, const Interface::Holder &node) = 0;
+
+protected:
+    template <typename T, typename Adaptor>
+    static inline void clear(T &container, Adaptor adaptor)
+    {
+        for (typename T::iterator i = container.begin(); i != container.end();)
+            if (static_cast<Interface::Holder &>(adaptor(i))->as<Core::INode>()->refs() == 0)
+            {
+                static_cast<Interface::Holder &>(adaptor(i))->as<Core::INode>()->clear();
+                i = container.erase(i);
+            }
+            else
+                ++i;
+    }
+
 public:
     static Interface::Holder open(const char *uri, Module::Error &error);
-    static Interface::Holder view(const Interface::Holder &node);
+    static void cleanup();
 };
 
 }}

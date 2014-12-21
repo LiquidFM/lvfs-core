@@ -35,37 +35,18 @@ static QThread *mainThread = QThread::currentThread();
 
 
 Node::Node(const Interface::Holder &parent) :
-    BaseNode(parent),
     m_eventsHandler(this),
     m_doListFile(false)
-{}
+{
+    m_parent = parent;
+}
 
 Node::~Node()
 {}
 
 const Interface::Holder &Node::parent() const
 {
-    return Core::Node::parent();
-}
-
-void Node::incLinks(int count)
-{
-    Core::Node::incLinks(count);
-}
-
-void Node::decLinks(int count)
-{
-    Core::Node::decLinks(count);
-}
-
-void Node::opened(const Interface::Holder &view)
-{
-    Core::Node::opened(view);
-}
-
-void Node::closed(const Interface::Holder &view)
-{
-    Core::Node::closed(view);
+    return m_parent;
 }
 
 void Node::doListFile(int depth)

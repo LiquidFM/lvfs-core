@@ -39,10 +39,6 @@ public:
 
     /* Core::INode */
     virtual const Interface::Holder &parent() const;
-    virtual void incLinks(int count);
-    virtual void decLinks(int count);
-    virtual void opened(const Interface::Holder &view);
-    virtual void closed(const Interface::Holder &view);
 
 protected: /* Actions section */
     void doListFile(int depth = 0);

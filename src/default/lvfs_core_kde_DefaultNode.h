@@ -30,23 +30,33 @@ namespace LVFS {
 namespace Core {
 namespace Kde {
 
-class PLATFORM_MAKE_PRIVATE DefaultNode : public Implements<INode, Kde::INode>, public KStandardItemModel
+class PLATFORM_MAKE_PRIVATE DefaultNode : public Implements<Core::INode, Kde::INode>, public KStandardItemModel
 {
-    typedef int               size_type;
+    typedef int size_type;
 
 public:
-    DefaultNode(const Interface::Holder &file);
+    DefaultNode(const Interface::Holder &file, const Interface::Holder &parent);
     virtual ~DefaultNode();
 
-    virtual void refresh();
-    virtual const IEntry *entry() const;
+public: /* Core::INode */
+    virtual const Interface::Holder &parent() const;
     virtual const Interface::Holder &file() const;
 
-    virtual size_type size() const;
-    virtual Interface::Holder at(size_type index) const;
-    virtual size_type indexOf(const Interface::Holder &node) const;
+    virtual void refresh(int depth = 0);
+    virtual void opened(const Interface::Holder &view);
+    virtual void closed(const Interface::Holder &view);
 
+    virtual int refs() const;
+    virtual void incRef();
+    virtual int decRef();
+    virtual void clear();
+
+public: /* Kde::INode */
     virtual KItemModelBase *model() const;
+
+protected: /* Core::INode */
+    virtual Interface::Holder node(const Interface::Holder &file) const;
+    virtual void setNode(const Interface::Holder &file, const Interface::Holder &node);
 
     /* KItemModelBase */
     virtual bool setExpanded(int index, bool expanded);
@@ -62,6 +72,8 @@ protected:
 //    virtual void doListFileDone(EFC::List<Node::Holder> &files);
 
 private:
+    int m_ref;
+    Interface::Holder m_parent;
     Interface::Holder m_file;
     EFC::Vector<Interface::Holder> m_files;
 };

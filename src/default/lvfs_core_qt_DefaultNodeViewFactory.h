@@ -17,33 +17,27 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_NODE_H_
-#define LVFS_CORE_NODE_H_
+#ifndef WORKSPACE_LVFS_CORE_SRC_DEFAULT_LVFS_CORE_QT_DEFAULTNODEVIEWFACTORY_H_
+#define WORKSPACE_LVFS_CORE_SRC_DEFAULT_LVFS_CORE_QT_DEFAULTNODEVIEWFACTORY_H_
 
-#include <platform/utils.h>
-#include <efc/Task>
-#include <lvfs/Interface>
+#include <lvfs-core/INodeFactory>
+#include <lvfs-core/IViewFactory>
 
 
 namespace LVFS {
 namespace Core {
+namespace Qt {
 
-/**
- * Implementation of links counting for Node objects
- */
-class PLATFORM_MAKE_PUBLIC Node
+class PLATFORM_MAKE_PRIVATE DefaultNodeViewFactory : public ExtendsBy<Core::INodeFactory, Core::IViewFactory>
 {
 public:
-    inline Node()
-    {}
-    virtual ~Node();
+    DefaultNodeViewFactory(const Interface::Holder &original);
+    virtual ~DefaultNodeViewFactory();
 
-protected:
-    void handleTask(EFC::Task::Holder &task);
-
-    Interface::Holder m_parent;
+    virtual Interface::Holder createNode(const Interface::Holder &file, const Interface::Holder &parent) const;
+    virtual Interface::Holder createView() const;
 };
 
-}}
+}}}
 
-#endif /* LVFS_CORE_NODE_H_ */
+#endif /* WORKSPACE_LVFS_CORE_SRC_DEFAULT_LVFS_CORE_QT_DEFAULTNODEVIEWFACTORY_H_ */

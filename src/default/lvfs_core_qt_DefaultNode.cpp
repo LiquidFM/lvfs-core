@@ -92,12 +92,16 @@ private:
 }
 
 
+extern int DefaultNode_count;
+
+
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
 DefaultNode::DefaultNode(const Interface::Holder &file, const Interface::Holder &parent) :
     ModelNode(parent),
+    m_ref(0),
     m_file(file),
     m_geometry({ 300, 80, 50 }),
     m_sorting(0, ::Qt::AscendingOrder)
@@ -105,11 +109,13 @@ DefaultNode::DefaultNode(const Interface::Holder &file, const Interface::Holder 
     ASSERT(m_file.isValid());
     ASSERT(m_geometry.size() == columnCount(QModelIndex()));
     ASSERT(m_sorting.first < columnCount(QModelIndex()));
+    ++DefaultNode_count;
 }
 
 DefaultNode::~DefaultNode()
 {
     ASSERT(m_files.empty());
+    --DefaultNode_count;
 }
 
 const Interface::Holder &DefaultNode::file() const
@@ -119,8 +125,56 @@ const Interface::Holder &DefaultNode::file() const
 
 void DefaultNode::refresh(int depth)
 {
-    removeChildren();
     doListFile(depth);
+}
+
+void DefaultNode::opened(const Interface::Holder &view)
+{
+    m_views.insert(view);
+}
+
+void DefaultNode::closed(const Interface::Holder &view)
+{
+    m_views.erase(view);
+}
+
+int DefaultNode::refs() const
+{
+    return m_ref;
+}
+
+void DefaultNode::incRef()
+{
+    ++m_ref;
+}
+
+int DefaultNode::decRef()
+{
+    return --m_ref;
+}
+
+void DefaultNode::clear()
+{
+    if (!m_files.empty())
+    {
+        struct LocalAdaptor
+        {
+            inline Interface::Holder &operator()(EFC::Vector<Item>::iterator &iterator)
+            { return iterator->node; }
+        };
+
+        beginRemoveRows(QModelIndex(), 0, m_files.size() - 1);
+        Core::INode::clear(m_files, LocalAdaptor());
+        EFC::Vector<Item> files(std::move(m_files));
+        endRemoveRows();
+
+        if (!files.empty())
+        {
+            beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
+            m_files = std::move(files);
+            endInsertRows();
+        }
+    }
 }
 
 DefaultNode::size_type DefaultNode::size() const
@@ -256,20 +310,48 @@ QVariant DefaultNode::headerData(int section, ::Qt::Orientation orientation, int
     return QVariant();
 }
 
-void DefaultNode::removeChildren()
+Interface::Holder DefaultNode::node(const Interface::Holder &file) const
 {
-    if (!m_files.empty())
+    ASSERT(file.isValid());
+    const char *title = file->as<IEntry>()->title();
+
+    for (auto i = m_files.begin(); i != m_files.end(); ++i)
+        if (strcmp(i->node->as<Core::INode>()->file()->as<IEntry>()->title(), title) == 0)
+            return i->node;
+
+    return Interface::Holder();
+}
+
+void DefaultNode::setNode(const Interface::Holder &file, const Interface::Holder &node)
+{
+    ASSERT(file.isValid());
+
+    if (node.isValid())
     {
-        beginRemoveRows(QModelIndex(), 0, m_files.size() - 1);
-        m_files.clear();
-        endRemoveRows();
+        beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + 1);
+        {
+            Item item;
+            Core::INode *coreINode = node->as<Core::INode>();
+
+            item.isDir = strcmp(coreINode->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+            item.title = toUnicode(coreINode->file()->as<IEntry>()->title());
+            item.schema = toUnicode(coreINode->file()->as<IEntry>()->schema());
+            item.location = toUnicode(coreINode->file()->as<IEntry>()->location());
+            item.icon.addFile(toUnicode(coreINode->file()->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
+            item.size = coreINode->file()->as<IFile>() ? humanReadableSize(coreINode->file()->as<IFile>()->size()) : QString::fromLatin1("<DIR>");
+            item.modified = coreINode->file()->as<IFsFile>() ? QDateTime::fromTime_t(coreINode->file()->as<IFsFile>()->mTime()).toLocalTime() : QDateTime();
+            item.node = node;
+
+            m_files.push_back(item);
+        }
+        endInsertRows();
     }
 }
 
 void DefaultNode::processListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent)
 {
     if (isFirstEvent)
-        removeChildren();
+        clear();
 
     beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
     for (auto i = files.begin(), end = files.end(); i != end; i = files.erase(i))
@@ -293,7 +375,7 @@ void DefaultNode::processListFile(EFC::List<Interface::Holder> &files, bool isFi
 void DefaultNode::doneListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent)
 {
     if (isFirstEvent)
-        removeChildren();
+        clear();
 
     if (!files.empty())
     {
@@ -317,7 +399,7 @@ void DefaultNode::doneListFile(EFC::List<Interface::Holder> &files, bool isFirst
     }
 
     if (!m_files.empty())
-        for (auto i : views())
+        for (auto i : m_views)
             i->as<Qt::IView>()->select(currentIndex());
 }
 

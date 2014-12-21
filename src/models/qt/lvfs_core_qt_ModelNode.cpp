@@ -28,8 +28,7 @@ namespace Core {
 namespace Qt {
 
 ModelNode::ModelNode(const Interface::Holder &parent) :
-    Node(parent),
-    QAbstractItemModel()
+    Node(parent)
 {}
 
 ModelNode::~ModelNode()

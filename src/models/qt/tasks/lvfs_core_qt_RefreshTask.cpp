@@ -18,7 +18,9 @@
  */
 
 #include "lvfs_core_qt_RefreshTask.h"
-#include "../../../default/lvfs_core_qt_DefaultNode.h"
+#include "../../../default/lvfs_core_qt_DefaultNodeFactory.h"
+#include "../../../default/lvfs_core_qt_DefaultViewFactory.h"
+#include "../../../default/lvfs_core_qt_DefaultNodeViewFactory.h"
 
 #include <QtCore/QDateTime>
 
@@ -42,6 +44,7 @@ void RefreshTask::run(const volatile bool &aborted)
     Snapshot nodes;
     bool isFirstEvent = true;
     Interface::Holder node;
+    Interface::Holder file;
 
     QTime baseTime = QTime::currentTime();
     QTime currentTime;
@@ -50,12 +53,24 @@ void RefreshTask::run(const volatile bool &aborted)
         for (auto i = dir->begin(), end = dir->end(); i != end && !aborted; ++i)
         {
             currentTime = QTime::currentTime();
+            file = (*i);
 
-            if (INodeFactory *factory = (*i)->as<INodeFactory>())
-                node = factory->createNode(*i, m_node);
+            if (file->as<INodeFactory>() == NULL)
+                if (file->as<IViewFactory>() == NULL)
+                    file.reset(new (std::nothrow) Qt::DefaultNodeViewFactory(file));
+                else
+                    file.reset(new (std::nothrow) Qt::DefaultNodeFactory(file));
+            else
+                if (file->as<IViewFactory>() == NULL)
+                    file.reset(new (std::nothrow) Qt::DefaultViewFactory(file));
 
-            if (!node.isValid())
-                node.reset(new (std::nothrow) DefaultNode(*i, m_node));
+            if (UNLIKELY(!file.isValid()))
+            {
+                nodes.clear();
+                break;
+            }
+
+            node = file->as<INodeFactory>()->createNode(file, m_node);
 
             if (node.isValid())
             {

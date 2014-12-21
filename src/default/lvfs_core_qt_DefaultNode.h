@@ -20,10 +20,8 @@
 #ifndef LVFS_CORE_QT_DEFAULTNODE_H_
 #define LVFS_CORE_QT_DEFAULTNODE_H_
 
+#include <efc/Set>
 #include <efc/Vector>
-#include <QtGui/QIcon>
-#include <QtCore/QObject>
-#include <QtCore/QDateTime>
 #include <lvfs-core/models/Qt/ModelNode>
 
 
@@ -36,15 +34,22 @@ class PLATFORM_MAKE_PRIVATE DefaultNode : public ModelNode
     Q_OBJECT
 
 public:
-    DefaultNode(const Interface::Holder &file, const Interface::Holder &parent = Interface::Holder());
+    DefaultNode(const Interface::Holder &file, const Interface::Holder &parent);
     virtual ~DefaultNode();
 
-    /* Core::INode */
+public: /* Core::INode */
     virtual const Interface::Holder &file() const;
 
     virtual void refresh(int depth);
+    virtual void opened(const Interface::Holder &view);
+    virtual void closed(const Interface::Holder &view);
 
-    /* Qt::INode */
+    virtual int refs() const;
+    virtual void incRef();
+    virtual int decRef();
+    virtual void clear();
+
+public: /* Qt::INode */
     virtual size_type size() const;
     virtual const Item &at(size_type index) const;
     virtual size_type indexOf(const Item &node) const;
@@ -54,22 +59,24 @@ public:
 
     virtual void copyToClipboard(const QModelIndexList &files, bool move);
 
-    /* ModelNode */
+public: /* Qt::ModelNode */
     virtual int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
     virtual QVariant headerData(int section, ::Qt::Orientation orientation, int role = ::Qt::DisplayRole) const;
 
-protected:
-    /* Core::Node */
-    virtual void removeChildren();
+protected: /* Core::INode */
+    virtual Interface::Holder node(const Interface::Holder &file) const;
+    virtual void setNode(const Interface::Holder &file, const Interface::Holder &node);
 
-    /* Core::Qt::Node */
+protected: /* Core::Qt::Node */
     virtual void processListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent);
     virtual void doneListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent);
 
 private:
+    int m_ref;
     Interface::Holder m_file;
     EFC::Vector<Item> m_files;
+    EFC::Set<Interface::Holder> m_views;
     Geometry m_geometry;
     Sorting m_sorting;
 };
