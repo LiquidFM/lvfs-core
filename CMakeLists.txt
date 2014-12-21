@@ -20,7 +20,7 @@ QT4_WRAP_CPP (${PROJECT_NAME}_MOC_SOURCES ${${PROJECT_NAME}_HEADERS} OPTIONS "-n
 list (APPEND ${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_MOC_SOURCES})
 
 # Target - lvfs-core
-add_library(lvfs-core SHARED ${${PROJECT_NAME}_SOURCES})
+add_library (lvfs-core SHARED ${${PROJECT_NAME}_SOURCES})
 target_link_libraries (lvfs-core ${${PROJECT_NAME}_LIBS})
 
 # Version
