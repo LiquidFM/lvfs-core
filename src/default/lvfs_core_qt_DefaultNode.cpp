@@ -100,13 +100,10 @@ namespace Core {
 namespace Qt {
 
 DefaultNode::DefaultNode(const Interface::Holder &file, const Interface::Holder &parent) :
-    ModelNode(parent),
-    m_ref(0),
-    m_file(file),
+    Complements<Qt::Node, Qt::INode>(file, parent),
     m_geometry({ 300, 80, 50 }),
     m_sorting(0, ::Qt::AscendingOrder)
 {
-    ASSERT(m_file.isValid());
     ASSERT(m_geometry.size() == columnCount(QModelIndex()));
     ASSERT(m_sorting.first < columnCount(QModelIndex()));
     ++DefaultNode_count;
@@ -116,11 +113,6 @@ DefaultNode::~DefaultNode()
 {
     ASSERT(m_files.empty());
     --DefaultNode_count;
-}
-
-const Interface::Holder &DefaultNode::file() const
-{
-    return m_file;
 }
 
 void DefaultNode::refresh(int depth)
@@ -136,21 +128,6 @@ void DefaultNode::opened(const Interface::Holder &view)
 void DefaultNode::closed(const Interface::Holder &view)
 {
     m_views.erase(view);
-}
-
-int DefaultNode::refs() const
-{
-    return m_ref;
-}
-
-void DefaultNode::incRef()
-{
-    ++m_ref;
-}
-
-int DefaultNode::decRef()
-{
-    return --m_ref;
 }
 
 void DefaultNode::clear()
@@ -194,6 +171,11 @@ DefaultNode::size_type DefaultNode::indexOf(const Item &node) const
             return i;
 
     return 0;
+}
+
+QAbstractItemModel *DefaultNode::model() const
+{
+    return const_cast<DefaultNode *>(this);
 }
 
 const DefaultNode::Geometry &DefaultNode::geometry() const
@@ -240,6 +222,27 @@ void DefaultNode::copyToClipboard(const QModelIndexList &files, bool move)
     }
 }
 
+QModelIndex DefaultNode::currentIndex() const
+{
+    return m_currentIndex;
+}
+
+void DefaultNode::setCurrentIndex(const QModelIndex &index)
+{
+    m_currentIndex = index;
+}
+
+int DefaultNode::rowCount(const QModelIndex &parent) const
+{
+    if (parent.isValid())
+        if (Qt::INode *qtNode = static_cast<Item *>(parent.internalPointer())->node->as<Qt::INode>())
+            return qtNode->size();
+        else
+            return 0;
+    else
+        return size();
+}
+
 int DefaultNode::columnCount(const QModelIndex &parent) const
 {
     return 3;
@@ -280,6 +283,11 @@ QVariant DefaultNode::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+::Qt::ItemFlags DefaultNode::flags(const QModelIndex &index) const
+{
+    return ::Qt::ItemIsSelectable | ::Qt::ItemIsEnabled;
+}
+
 QVariant DefaultNode::headerData(int section, ::Qt::Orientation orientation, int role) const
 {
     if (orientation == ::Qt::Horizontal && role == ::Qt::DisplayRole)
@@ -309,6 +317,86 @@ QVariant DefaultNode::headerData(int section, ::Qt::Orientation orientation, int
 
     return QVariant();
 }
+
+QModelIndex DefaultNode::index(int row, int column, const QModelIndex &parent) const
+{
+    if (hasIndex(row, column, parent))
+        if (parent.isValid())
+            return createIndex(row, column, const_cast<Item *>(&(*static_cast<Item *>(parent.internalPointer())).node->as<Qt::INode>()->at(row)));
+        else
+            return createIndex(row, column, const_cast<Item *>(&at(row)));
+    else
+        return QModelIndex();
+}
+
+QModelIndex DefaultNode::parent(const QModelIndex &child) const
+{
+//    if (child.isValid())
+//        if (Core::INode *coreNode = (*static_cast<Item *>(child.internalPointer())).node->as<Core::INode>())
+//        {
+//            const Interface::Holder &parent = coreNode->parent();
+//
+//            if (parent.isValid())
+//                if (Core::INode *coreParentNode = parent->as<Core::INode>())
+//                {
+//                    const Interface::Holder &grandParent = coreParentNode->parent();
+//
+//                    if (grandParent.isValid())
+//                        if (Qt::INode *qtGrandParent = grandParent->as<Qt::INode>())
+//                            return createIndex(qtGrandParent->indexOf(parent), 0, const_cast<Item *>(&parent));
+//                        else
+//                            return createIndex(indexOf(parent), 0, const_cast<Item *>(&parent));
+//                }
+//        }
+
+    return QModelIndex();
+}
+
+QModelIndex DefaultNode::index(Item *item) const
+{
+    if (Core::INode *coreNode = item->node->as<Core::INode>())
+        if (coreNode->parent().isValid())
+            if (Qt::INode *qtParentNode = coreNode->parent()->as<Qt::INode>())
+                return createIndex(qtParentNode->indexOf(*item), 0, item);
+
+    return createIndex(indexOf(*item), 0, item);
+}
+
+QModelIndex DefaultNode::parent(Item *item) const
+{
+//    if (Core::INode *coreNode = item->node->as<Core::INode>())
+//        if (coreNode->parent().isValid())
+//        {
+//            if (Core::INode *coreParentNode = coreNode->parent()->as<Core::INode>())
+//                if (coreParentNode->parent().isValid())
+//                    if (Qt::INode *qtGrandParentNode = coreParentNode->parent()->as<Qt::INode>())
+//                        return createIndex(qtGrandParentNode->indexOf(coreNode->parent()), 0, const_cast<Item *>(&coreNode->parent()));
+//
+//            return createIndex(indexOf(coreNode->parent()), 0, const_cast<Item *>(&coreNode->parent()));
+//        }
+
+    return QModelIndex();
+}
+
+//QModelIndex DefaultNode::parent(Item *item, size_type &row) const
+//{
+//    if (Item *parent = item->parent().as<Node>())
+//        if (Item *parentParent = parent->parent().as<Node>())
+//        {
+//            row = static_cast<Item *>(parent)->indexOf(item);
+//            return createIndex(static_cast<Item *>(parentParent)->indexOf(parent), 0, parent);
+//        }
+//        else
+//        {
+//            row = static_cast<Item *>(parent)->indexOf(item);
+//            return createIndex(indexOf(parent), 0, parent);
+//        }
+//    else
+//    {
+//        row = indexOf(item);
+//        return QModelIndex();
+//    }
+//}
 
 Interface::Holder DefaultNode::node(const Interface::Holder &file) const
 {

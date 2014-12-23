@@ -20,6 +20,7 @@
 #include "lvfs_core_Node.h"
 
 #include <efc/TasksPool>
+#include <brolly/assert.h>
 
 
 namespace LVFS {
@@ -27,9 +28,41 @@ namespace Core {
 
 static EFC::TasksPool tasksPool(10);
 
+Node::Node(const Interface::Holder &file, const Interface::Holder &parent) :
+    m_ref(0),
+    m_file(file),
+    m_parent(parent)
+{
+    ASSERT(m_file.isValid());
+}
 
 Node::~Node()
 {}
+
+const Interface::Holder &Node::parent() const
+{
+    return m_parent;
+}
+
+const Interface::Holder &Node::file() const
+{
+    return m_file;
+}
+
+int Node::refs() const
+{
+    return m_ref;
+}
+
+void Node::incRef()
+{
+    ++m_ref;
+}
+
+int Node::decRef()
+{
+    return --m_ref;
+}
 
 void Node::handleTask(EFC::Task::Holder &task)
 {

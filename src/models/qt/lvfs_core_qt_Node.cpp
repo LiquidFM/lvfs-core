@@ -21,9 +21,8 @@
 #include "tasks/lvfs_core_qt_RefreshTask.h"
 
 #include <QtCore/QThread>
+#include <QtCore/QTextCodec>
 
-#include <lvfs-core/INodeFactory>
-#include <lvfs/IDirectory>
 #include <brolly/assert.h>
 
 
@@ -34,19 +33,25 @@ namespace Qt {
 static QThread *mainThread = QThread::currentThread();
 
 
-Node::Node(const Interface::Holder &parent) :
+Node::Node(const Interface::Holder &file, const Interface::Holder &parent) :
+    Core::Node(file, parent),
     m_eventsHandler(this),
     m_doListFile(false)
-{
-    m_parent = parent;
-}
+{}
 
 Node::~Node()
 {}
 
-const Interface::Holder &Node::parent() const
+QString Node::toUnicode(const char *string)
 {
-    return m_parent;
+    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+    return codec->toUnicode(string);
+}
+
+QByteArray Node::fromUnicode(const QString &string)
+{
+    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+    return codec->fromUnicode(string);
 }
 
 void Node::doListFile(int depth)

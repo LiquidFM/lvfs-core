@@ -69,8 +69,6 @@ install_header_files (lvfs-core "src/lvfs_core_INode.h:INode"
                                 "src/models/qt/lvfs_core_qt_INode.h:models/Qt/INode"
                                 "src/models/qt/lvfs_core_qt_IView.h:models/Qt/IView"
                                 "src/models/qt/lvfs_core_qt_Node.h:models/Qt/Node"
-                                "src/models/qt/lvfs_core_qt_BaseNode.h:models/Qt/BaseNode"
-                                "src/models/qt/lvfs_core_qt_ModelNode.h:models/Qt/ModelNode"
                                 "src/models/qt/lvfs_core_qt_SortFilterModel.h:models/Qt/SortFilterModel"
                                 "src/models/qt/lvfs_core_qt_StyledItemDelegate.h:models/Qt/StyledItemDelegate")
 install_target (lvfs-core)

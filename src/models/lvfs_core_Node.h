@@ -20,9 +20,8 @@
 #ifndef LVFS_CORE_NODE_H_
 #define LVFS_CORE_NODE_H_
 
-#include <platform/utils.h>
 #include <efc/Task>
-#include <lvfs/Interface>
+#include <lvfs-core/INode>
 
 
 namespace LVFS {
@@ -31,16 +30,26 @@ namespace Core {
 /**
  * Implementation of links counting for Node objects
  */
-class PLATFORM_MAKE_PUBLIC Node
+class PLATFORM_MAKE_PUBLIC Node : public Implements<Core::INode>
 {
 public:
-    inline Node()
-    {}
+    Node(const Interface::Holder &file, const Interface::Holder &parent);
     virtual ~Node();
+
+public: /* Core::INode */
+    virtual const Interface::Holder &parent() const;
+    virtual const Interface::Holder &file() const;
+
+    virtual int refs() const;
+    virtual void incRef();
+    virtual int decRef();
 
 protected:
     void handleTask(EFC::Task::Holder &task);
 
+private:
+    int m_ref;
+    Interface::Holder m_file;
     Interface::Holder m_parent;
 };
 

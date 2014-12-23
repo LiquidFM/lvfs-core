@@ -21,24 +21,23 @@
 #define LVFS_CORE_QT_NODE_H_
 
 #include <efc/List>
+#include <QtCore/QString>
 #include <QtCore/QObject>
-#include <lvfs-core/INode>
-#include <lvfs-core/models/Qt/INode>
-#include <lvfs-core/models/Qt/BaseNode>
+#include <lvfs-core/models/Node>
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-class PLATFORM_MAKE_PUBLIC Node : public Implements<Core::INode, Qt::INode>, public BaseNode
+class PLATFORM_MAKE_PUBLIC Node : public Core::Node
 {
 public:
-    Node(const Interface::Holder &parent);
+    Node(const Interface::Holder &file, const Interface::Holder &parent);
     virtual ~Node();
 
-    /* Core::INode */
-    virtual const Interface::Holder &parent() const;
+    static QString toUnicode(const char *string);
+    static QByteArray fromUnicode(const QString &string);
 
 protected: /* Actions section */
     void doListFile(int depth = 0);
