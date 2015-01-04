@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,13 +55,18 @@ protected:
     static inline void clear(T &container, Adaptor adaptor)
     {
         for (typename T::iterator i = container.begin(); i != container.end();)
-            if (static_cast<Interface::Holder &>(adaptor(i))->as<Core::INode>()->refs() == 0)
+            if (static_cast<Interface::Holder &>(adaptor(i)).isValid())
             {
-                static_cast<Interface::Holder &>(adaptor(i))->as<Core::INode>()->clear();
-                i = container.erase(i);
+                if (static_cast<Interface::Holder &>(adaptor(i))->as<Core::INode>()->refs() == 0)
+                {
+                    static_cast<Interface::Holder &>(adaptor(i))->as<Core::INode>()->clear();
+                    i = container.erase(i);
+                }
+                else
+                    ++i;
             }
             else
-                ++i;
+                i = container.erase(i);
     }
 
 public:

@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #define LVFS_CORE_QT_NODE_H_
 
 #include <efc/List>
+#include <efc/Pair>
 #include <QtCore/QString>
 #include <QtCore/QObject>
 #include <lvfs-core/models/Node>
@@ -33,6 +34,9 @@ namespace Qt {
 class PLATFORM_MAKE_PUBLIC Node : public Core::Node
 {
 public:
+    typedef EFC::List<EFC::Pair<Interface::Holder, Interface::Holder>> Snapshot;
+
+public:
     Node(const Interface::Holder &file, const Interface::Holder &parent);
     virtual ~Node();
 
@@ -41,8 +45,8 @@ public:
 
 protected: /* Actions section */
     void doListFile(int depth = 0);
-    virtual void processListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent) = 0;
-    virtual void doneListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent) = 0;
+    virtual void processListFile(Snapshot &files, bool isFirstEvent) = 0;
+    virtual void doneListFile(Snapshot &files, bool isFirstEvent) = 0;
 
 private:
     class EventsHandler : public QObject

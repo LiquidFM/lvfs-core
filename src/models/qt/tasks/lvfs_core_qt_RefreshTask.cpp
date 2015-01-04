@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,10 +41,11 @@ RefreshTask::RefreshTask(QObject *receiver, const Interface::Holder &node, int d
 
 void RefreshTask::run(const volatile bool &aborted)
 {
-    Snapshot nodes;
+    Snapshot files;
     bool isFirstEvent = true;
     Interface::Holder node;
     Interface::Holder file;
+    INodeFactory *factory;
 
     QTime baseTime = QTime::currentTime();
     QTime currentTime;
@@ -54,45 +55,47 @@ void RefreshTask::run(const volatile bool &aborted)
         {
             currentTime = QTime::currentTime();
             file = (*i);
+            node.reset();
 
-            if (file->as<INodeFactory>() == NULL)
-                if (file->as<IViewFactory>() == NULL)
-                    file.reset(new (std::nothrow) Qt::DefaultNodeViewFactory(file));
+            if (file->as<IDirectory>() != NULL)
+                if (file->as<INodeFactory>() == NULL)
+                    if (file->as<IViewFactory>() == NULL)
+                        file.reset(new (std::nothrow) Qt::DefaultNodeViewFactory(file));
+                    else
+                        file.reset(new (std::nothrow) Qt::DefaultNodeFactory(file));
                 else
-                    file.reset(new (std::nothrow) Qt::DefaultNodeFactory(file));
-            else
-                if (file->as<IViewFactory>() == NULL)
-                    file.reset(new (std::nothrow) Qt::DefaultViewFactory(file));
+                    if (file->as<IViewFactory>() == NULL)
+                        file.reset(new (std::nothrow) Qt::DefaultViewFactory(file));
 
             if (UNLIKELY(!file.isValid()))
             {
-                nodes.clear();
+                files.clear();
                 break;
             }
 
-            node = file->as<INodeFactory>()->createNode(file, m_node);
-
-            if (node.isValid())
+            if (factory = file->as<INodeFactory>())
             {
-                if (m_depth > 0)
-                    node->as<Core::INode>()->refresh(m_depth - 1);
+                node = factory->createNode(file, m_node);
 
-                nodes.push_back(std::move(node));
+                if (node.isValid() && m_depth > 0)
+                    node->as<Core::INode>()->refresh(m_depth - 1);
             }
+
+            files.push_back(std::move(Snapshot::value_type(file, node)));
 
             if (baseTime.msecsTo(currentTime) > 300)
             {
                 baseTime = currentTime;
 
-                if (!nodes.empty())
+                if (!files.empty())
                 {
-                    postEvent(new (std::nothrow) ListFileEvent(this, Event::ProcessListFileEventId, isFirstEvent, nodes, false));
+                    postEvent(new (std::nothrow) ListFileEvent(this, Event::ProcessListFileEventId, isFirstEvent, files, false));
                     isFirstEvent = false;
                 }
             }
         }
 
-    postEvent(new (std::nothrow) ListFileEvent(this, Event::DoneListFileEventId, isFirstEvent, nodes, aborted));
+    postEvent(new (std::nothrow) ListFileEvent(this, Event::DoneListFileEventId, isFirstEvent, files, aborted));
 }
 
 }}}

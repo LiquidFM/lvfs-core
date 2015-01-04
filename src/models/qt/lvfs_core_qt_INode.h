@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ public:
         QIcon icon;
         QString size;
         QDateTime modified;
+        Interface::Holder file;
         Interface::Holder node;
     };
 
@@ -71,7 +72,7 @@ public:
     virtual QModelIndex currentIndex() const = 0;
     virtual void setCurrentIndex(const QModelIndex &index) = 0;
 
-    virtual void copyToClipboard(const QModelIndexList &files, bool move) = 0;
+    virtual void activated(const QModelIndex &file, const Interface::Holder &view) const  = 0;
 };
 
 }}}

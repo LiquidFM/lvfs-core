@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,10 @@
 #ifndef LVFS_CORE_QT_BASETASK_H_
 #define LVFS_CORE_QT_BASETASK_H_
 
-#include <efc/List>
 #include <efc/Task>
 #include <QtCore/QEvent>
 #include <QtCore/QObject>
-#include <lvfs/Interface>
+#include <lvfs-core/models/Qt/Node>
 
 
 namespace LVFS {
@@ -35,7 +34,7 @@ namespace Qt {
 class PLATFORM_MAKE_PRIVATE BaseTask : public EFC::Task
 {
 public:
-    typedef EFC::List<Interface::Holder> Snapshot;
+    typedef Qt::Node::Snapshot Snapshot;
 
     class Event : public QEvent
     {

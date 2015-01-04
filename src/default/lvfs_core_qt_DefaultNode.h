@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@ public: /* Qt::INode */
     virtual const Geometry &geometry() const;
     virtual const Sorting &sorting() const;
 
+    virtual void activated(const QModelIndex &file, const Interface::Holder &view) const;
     virtual void copyToClipboard(const QModelIndexList &files, bool move);
 
     virtual QModelIndex currentIndex() const;
@@ -75,8 +76,8 @@ protected: /* Core::INode */
     virtual void setNode(const Interface::Holder &file, const Interface::Holder &node);
 
 protected: /* Core::Qt::Node */
-    virtual void processListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent);
-    virtual void doneListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent);
+    virtual void processListFile(Snapshot &files, bool isFirstEvent);
+    virtual void doneListFile(Snapshot &files, bool isFirstEvent);
 
 private:
     QModelIndex index(Item *item) const;

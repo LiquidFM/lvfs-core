@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,6 +67,11 @@ DefaultView::~DefaultView()
 QWidget *DefaultView::widget() const
 {
     return const_cast<TreeView *>(&m_view);
+}
+
+const Interface::Holder &DefaultView::mainView() const
+{
+    return m_mainView;
 }
 
 void DefaultView::setMainView(const Interface::Holder &mainView)
@@ -146,10 +151,7 @@ void DefaultView::goUpShortcut()
 
 void DefaultView::goIntoShortcut()
 {
-    QModelIndex index = m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
-
-    if (index.isValid())
-        m_mainView->as<Core::IMainView>()->show(Interface::Holder::fromRawData(this), m_node->as<Qt::INode>()->at(index.row()).node);
+    m_node->as<Qt::INode>()->activated(m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), Interface::Holder::fromRawData(this));
 }
 
 void DefaultView::pathToClipboardShortcut()
@@ -209,7 +211,7 @@ void DefaultView::copyToClipboardShortcut()
         for (int i = 0; i < items.size(); ++i)
             files.push_back(m_sortFilterModel.mapToSource(items.at(i)));
 
-        m_node->as<Qt::INode>()->copyToClipboard(files, false);
+//        m_node->as<Qt::INode>()->copyToClipboard(files, false);
     }
 }
 
@@ -225,7 +227,7 @@ void DefaultView::cutToClipboardShortcut()
         for (int i = 0; i < items.size(); ++i)
             files.push_back(m_sortFilterModel.mapToSource(items.at(i)));
 
-        m_node->as<Qt::INode>()->copyToClipboard(files, true);
+//        m_node->as<Qt::INode>()->copyToClipboard(files, true);
     }
 }
 

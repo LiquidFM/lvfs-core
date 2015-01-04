@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 #include <lvfs/IFile>
 #include <lvfs/IEntry>
 #include <lvfs/IFsFile>
+#include <lvfs/IApplication>
+#include <lvfs/IApplications>
 #include <brolly/assert.h>
 
 #include <QtGui/QIcon>
@@ -30,6 +32,8 @@
 #include <QtCore/QMimeData>
 #include <QtCore/QSet>
 
+#include <lvfs-core/IView>
+#include <lvfs-core/IMainView>
 #include <lvfs-core/models/Qt/IView>
 #include <lvfs-core/tools/strings/readableints.h>
 #include <efc/ScopedPointer>
@@ -188,6 +192,29 @@ const DefaultNode::Sorting &DefaultNode::sorting() const
     return m_sorting;
 }
 
+void DefaultNode::activated(const QModelIndex &file, const Interface::Holder &view) const
+{
+    if (file.isValid())
+        if (m_files[file.row()].node.isValid())
+            view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, m_files[file.row()].node);
+        else
+        {
+            Interface::Holder apps = Module::desktop().applications(m_files[file.row()].file->as<IEntry>()->type());
+
+            if (apps.isValid())
+            {
+                ASSERT(apps->as<IApplications>() != NULL);
+                IApplications::const_iterator iterator = apps->as<IApplications>()->begin();
+
+                if (iterator != apps->as<IApplications>()->end())
+                {
+                    ASSERT((*iterator)->as<IApplication>() != NULL);
+                    (*iterator)->as<IApplication>()->open(m_files[file.row()].file->as<IEntry>());
+                }
+            }
+        }
+}
+
 void DefaultNode::copyToClipboard(const QModelIndexList &files, bool move)
 {
 #if PLATFORM_DE(KDE)
@@ -235,8 +262,11 @@ void DefaultNode::setCurrentIndex(const QModelIndex &index)
 int DefaultNode::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
-        if (Qt::INode *qtNode = static_cast<Item *>(parent.internalPointer())->node->as<Qt::INode>())
-            return qtNode->size();
+        if (static_cast<Item *>(parent.internalPointer())->node.isValid())
+            if (Qt::INode *qtNode = static_cast<Item *>(parent.internalPointer())->node->as<Qt::INode>())
+                return qtNode->size();
+            else
+                return 0;
         else
             return 0;
     else
@@ -419,15 +449,15 @@ void DefaultNode::setNode(const Interface::Holder &file, const Interface::Holder
         beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + 1);
         {
             Item item;
-            Core::INode *coreINode = node->as<Core::INode>();
 
-            item.isDir = strcmp(coreINode->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
-            item.title = toUnicode(coreINode->file()->as<IEntry>()->title());
-            item.schema = toUnicode(coreINode->file()->as<IEntry>()->schema());
-            item.location = toUnicode(coreINode->file()->as<IEntry>()->location());
-            item.icon.addFile(toUnicode(coreINode->file()->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
-            item.size = coreINode->file()->as<IFile>() ? humanReadableSize(coreINode->file()->as<IFile>()->size()) : QString::fromLatin1("<DIR>");
-            item.modified = coreINode->file()->as<IFsFile>() ? QDateTime::fromTime_t(coreINode->file()->as<IFsFile>()->mTime()).toLocalTime() : QDateTime();
+            item.isDir = strcmp(file->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+            item.title = toUnicode(file->as<IEntry>()->title());
+            item.schema = toUnicode(file->as<IEntry>()->schema());
+            item.location = toUnicode(file->as<IEntry>()->location());
+            item.icon.addFile(toUnicode(file->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
+            item.size = file->as<IFile>() ? humanReadableSize(file->as<IFile>()->size()) : QString::fromLatin1("<DIR>");
+            item.modified = file->as<IFsFile>() ? QDateTime::fromTime_t(file->as<IFsFile>()->mTime()).toLocalTime() : QDateTime();
+            item.file = file;
             item.node = node;
 
             m_files.push_back(item);
@@ -436,7 +466,7 @@ void DefaultNode::setNode(const Interface::Holder &file, const Interface::Holder
     }
 }
 
-void DefaultNode::processListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent)
+void DefaultNode::processListFile(Snapshot &files, bool isFirstEvent)
 {
     if (isFirstEvent)
         clear();
@@ -446,21 +476,22 @@ void DefaultNode::processListFile(EFC::List<Interface::Holder> &files, bool isFi
     {
         Item item;
 
-        item.isDir = strcmp((*i)->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
-        item.title = toUnicode((*i)->as<Core::INode>()->file()->as<IEntry>()->title());
-        item.schema = toUnicode((*i)->as<Core::INode>()->file()->as<IEntry>()->schema());
-        item.location = toUnicode((*i)->as<Core::INode>()->file()->as<IEntry>()->location());
-        item.icon.addFile(toUnicode((*i)->as<Core::INode>()->file()->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
-        item.size = (*i)->as<Core::INode>()->file()->as<IFile>() ? humanReadableSize((*i)->as<Core::INode>()->file()->as<IFile>()->size()) : QString::fromLatin1("<DIR>");
-        item.modified = (*i)->as<Core::INode>()->file()->as<IFsFile>() ? QDateTime::fromTime_t((*i)->as<Core::INode>()->file()->as<IFsFile>()->mTime()).toLocalTime() : QDateTime();
-        item.node = (*i);
+        item.isDir = strcmp((*i).first->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+        item.title = toUnicode((*i).first->as<IEntry>()->title());
+        item.schema = toUnicode((*i).first->as<IEntry>()->schema());
+        item.location = toUnicode((*i).first->as<IEntry>()->location());
+        item.icon.addFile(toUnicode((*i).first->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
+        item.size = (*i).first->as<IFile>() ? humanReadableSize((*i).first->as<IFile>()->size()) : QString::fromLatin1("<DIR>");
+        item.modified = (*i).first->as<IFsFile>() ? QDateTime::fromTime_t((*i).first->as<IFsFile>()->mTime()).toLocalTime() : QDateTime();
+        item.file = (*i).first;
+        item.node = (*i).second;
 
         m_files.push_back(item);
     }
     endInsertRows();
 }
 
-void DefaultNode::doneListFile(EFC::List<Interface::Holder> &files, bool isFirstEvent)
+void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
 {
     if (isFirstEvent)
         clear();
@@ -472,14 +503,15 @@ void DefaultNode::doneListFile(EFC::List<Interface::Holder> &files, bool isFirst
         {
             Item item;
 
-            item.isDir = strcmp((*i)->as<Core::INode>()->file()->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
-            item.title = toUnicode((*i)->as<Core::INode>()->file()->as<IEntry>()->title());
-            item.schema = toUnicode((*i)->as<Core::INode>()->file()->as<IEntry>()->schema());
-            item.location = toUnicode((*i)->as<Core::INode>()->file()->as<IEntry>()->location());
-            item.icon.addFile(toUnicode((*i)->as<Core::INode>()->file()->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
-            item.size = (*i)->as<Core::INode>()->file()->as<IFile>() ? humanReadableSize((*i)->as<Core::INode>()->file()->as<IFile>()->size()) : QString::fromLatin1("<DIR>");
-            item.modified = (*i)->as<Core::INode>()->file()->as<IFsFile>() ? QDateTime::fromTime_t((*i)->as<Core::INode>()->file()->as<IFsFile>()->mTime()).toLocalTime() : QDateTime();
-            item.node = (*i);
+            item.isDir = strcmp((*i).first->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+            item.title = toUnicode((*i).first->as<IEntry>()->title());
+            item.schema = toUnicode((*i).first->as<IEntry>()->schema());
+            item.location = toUnicode((*i).first->as<IEntry>()->location());
+            item.icon.addFile(toUnicode((*i).first->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
+            item.size = (*i).first->as<IFile>() ? humanReadableSize((*i).first->as<IFile>()->size()) : QString::fromLatin1("<DIR>");
+            item.modified = (*i).first->as<IFsFile>() ? QDateTime::fromTime_t((*i).first->as<IFsFile>()->mTime()).toLocalTime() : QDateTime();
+            item.file = (*i).first;
+            item.node = (*i).second;
 
             m_files.push_back(item);
         }

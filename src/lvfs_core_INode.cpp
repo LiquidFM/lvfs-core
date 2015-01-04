@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include "default/lvfs_core_qt_DefaultNodeViewFactory.h"
 
 #include <lvfs/IEntry>
+#include <lvfs/IDirectory>
 #include <lvfs-core/INodeFactory>
 #include <lvfs-core/IViewFactory>
 
@@ -98,6 +99,7 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
     {
         Interface::Holder parent;
         Container::iterator items;
+        INodeFactory *factory;
         bool firstTime = true;
         char *d = p;
         char c;
@@ -118,14 +120,15 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
 
         while (file.isValid())
         {
-            if (file->as<INodeFactory>() == NULL)
-                if (file->as<IViewFactory>() == NULL)
-                    file.reset(new (std::nothrow) Qt::DefaultNodeViewFactory(file));
+            if (file->as<IDirectory>() != NULL)
+                if (file->as<INodeFactory>() == NULL)
+                    if (file->as<IViewFactory>() == NULL)
+                        file.reset(new (std::nothrow) Qt::DefaultNodeViewFactory(file));
+                    else
+                        file.reset(new (std::nothrow) Qt::DefaultNodeFactory(file));
                 else
-                    file.reset(new (std::nothrow) Qt::DefaultNodeFactory(file));
-            else
-                if (file->as<IViewFactory>() == NULL)
-                    file.reset(new (std::nothrow) Qt::DefaultViewFactory(file));
+                    if (file->as<IViewFactory>() == NULL)
+                        file.reset(new (std::nothrow) Qt::DefaultViewFactory(file));
 
             if (UNLIKELY(!file.isValid()))
                 return current;
@@ -140,8 +143,8 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
 
                 p[1] = c;
 
-                if (!item.isValid())
-                    item = file->as<INodeFactory>()->createNode(file, parent);
+                if (!item.isValid() && (factory = file->as<INodeFactory>()))
+                    item = factory->createNode(file, parent);
 
                 current = item;
             }
@@ -150,14 +153,14 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
                 ASSERT(parent.isValid());
                 current = parent->as<Core::INode>()->node(file);
 
-                if (!current.isValid())
+                if (!current.isValid() && (factory = file->as<INodeFactory>()))
                 {
-                    current = file->as<INodeFactory>()->createNode(file, parent);
+                    current = factory->createNode(file, parent);
                     parent->as<Core::INode>()->setNode(file, current);
                 }
             }
 
-            if (UNLIKELY(!current.isValid()))
+            if (!current.isValid())
                 return parent;
 
             if (!p)
