@@ -35,7 +35,7 @@ class PLATFORM_MAKE_PUBLIC IView
 public:
     virtual ~IView();
 
-    virtual void select(const QModelIndex &index) = 0;
+    virtual void select(const QModelIndex &index, bool expand = false) = 0;
 };
 
 }}}

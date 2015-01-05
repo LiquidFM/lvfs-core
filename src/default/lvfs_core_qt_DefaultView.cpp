@@ -122,7 +122,7 @@ bool DefaultView::setNode(const Interface::Holder &node)
     return false;
 }
 
-void DefaultView::select(const QModelIndex &index)
+void DefaultView::select(const QModelIndex &index, bool expand)
 {
     QModelIndex toBeSelected = index;
 
@@ -138,6 +138,9 @@ void DefaultView::select(const QModelIndex &index)
         m_view.scrollTo(toBeSelected, QAbstractItemView::PositionAtCenter);
         m_view.selectionModel()->select(toBeSelected, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Columns);
         m_view.selectionModel()->setCurrentIndex(toBeSelected, QItemSelectionModel::ClearAndSelect);
+
+        if (expand)
+            m_view.expand(toBeSelected);
     }
 }
 

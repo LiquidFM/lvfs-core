@@ -54,7 +54,7 @@ public:
     virtual bool setNode(const Interface::Holder &node);
 
     /* Qt::IView */
-    virtual void select(const QModelIndex &index);
+    virtual void select(const QModelIndex &index, bool expand = false);
 
 private:
     void goUpShortcut();
