@@ -17,41 +17,28 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_QT_INODE_H_
-#define LVFS_CORE_QT_INODE_H_
+#ifndef WORKSPACE_LVFS_CORE_SRC_DEFAULT_LVFS_CORE_QT_DEFAULTSORTFILTERMODEL_H_
+#define WORKSPACE_LVFS_CORE_SRC_DEFAULT_LVFS_CORE_QT_DEFAULTSORTFILTERMODEL_H_
 
-#include <efc/Pair>
-#include <efc/List>
-#include <lvfs/Interface>
-#include <QtCore/QAbstractItemModel>
+#include <lvfs-core/models/Qt/SortFilterModel>
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-class PLATFORM_MAKE_PUBLIC INode
+class PLATFORM_MAKE_PRIVATE DefaultSortFilterModel : public SortFilterModel
 {
-    DECLARE_INTERFACE(LVFS::Core::Qt::INode)
+    PLATFORM_MAKE_NONCOPYABLE(DefaultSortFilterModel)
 
 public:
-    typedef EFC::List<qint32>                  Geometry;
-    typedef EFC::Pair<qint32, ::Qt::SortOrder> Sorting;
+    DefaultSortFilterModel(QObject *parent = 0);
+    virtual ~DefaultSortFilterModel();
 
-public:
-    virtual ~INode();
-
-    virtual QAbstractItemModel *model() const = 0;
-
-    virtual const Geometry &geometry() const = 0;
-    virtual const Sorting &sorting() const = 0;
-
-    virtual QModelIndex currentIndex() const = 0;
-    virtual void setCurrentIndex(const QModelIndex &index) = 0;
-
-    virtual void activated(const QModelIndex &index, const Interface::Holder &view) const = 0;
+protected:
+    virtual bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
 };
 
 }}}
 
-#endif /* LVFS_CORE_QT_INODE_H_ */
+#endif /* WORKSPACE_LVFS_CORE_SRC_DEFAULT_LVFS_CORE_QT_DEFAULTSORTFILTERMODEL_H_ */

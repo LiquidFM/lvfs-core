@@ -18,12 +18,7 @@
  */
 
 #include "lvfs_core_qt_SortFilterModel.h"
-#include <lvfs/IEntry>
-#include <lvfs/IDirectory>
-#include <lvfs-core/INode>
-#include <lvfs-core/models/Qt/INode>
 
-#include <lvfs/Module>
 #include <cstring>
 
 
@@ -32,6 +27,9 @@ namespace Core {
 namespace Qt {
 
 SortFilterModel::SortFilterModel(QObject *parent)
+{}
+
+SortFilterModel::~SortFilterModel()
 {}
 
 #include <QtCore/QChar>
@@ -56,37 +54,6 @@ bool SortFilterModel::compareFileNames(const QString &str1, const QString &str2)
 bool SortFilterModel::compareFileNames(const char *str1, const char *str2)
 {
     return strnatcasecmp(str1, str2) < 0;
-}
-
-bool SortFilterModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
-{
-    Qt::INode::Item *leftItem = static_cast<Qt::INode::Item *>(left.internalPointer());
-    Qt::INode::Item *rightItem = static_cast<Qt::INode::Item *>(right.internalPointer());
-
-    if (sortOrder() == ::Qt::AscendingOrder)
-        if (leftItem->isDir)
-            if (rightItem->isDir)
-                return compareFileNames(leftItem->title, rightItem->title);
-            else
-                return true;
-        else
-            if (rightItem->isDir)
-                return false;
-            else
-                return compareFileNames(leftItem->title, rightItem->title);
-    else
-        if (leftItem->isDir)
-            if (rightItem->isDir)
-                return !compareFileNames(leftItem->title, rightItem->title);
-            else
-                return false;
-        else
-            if (rightItem->isDir)
-                return true;
-            else
-                return !compareFileNames(leftItem->title, rightItem->title);
-
-    return true;
 }
 
 }}}

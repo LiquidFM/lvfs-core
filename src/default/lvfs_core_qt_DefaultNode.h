@@ -22,7 +22,9 @@
 
 #include <efc/Set>
 #include <efc/Vector>
-#include <QtCore/QAbstractItemModel>
+#include <QtGui/QIcon>
+#include <QtCore/QString>
+#include <QtCore/QDateTime>
 #include <lvfs-core/models/Qt/INode>
 #include <lvfs-core/models/Qt/Node>
 
@@ -36,6 +38,29 @@ class PLATFORM_MAKE_PRIVATE DefaultNode : public QAbstractItemModel, public Comp
     Q_OBJECT
 
 public:
+    struct Item
+    {
+        Item(Item *parent = 0) :
+            parent(parent)
+        {}
+
+        inline bool operator==(const Item &other) const
+        { return other.file == file; }
+
+        Item *parent;
+        bool isDir;
+        QString title;
+        QString schema;
+        QString location;
+        QIcon icon;
+        QString size;
+        QDateTime modified;
+        Interface::Holder file;
+        Interface::Holder node;
+        EFC::Vector<Item> items;
+    };
+
+public:
     DefaultNode(const Interface::Holder &file, const Interface::Holder &parent);
     virtual ~DefaultNode();
 
@@ -47,10 +72,6 @@ public: /* Core::INode */
     virtual void clear();
 
 public: /* Qt::INode */
-    virtual size_type size() const;
-    virtual const Item &at(size_type index) const;
-    virtual size_type indexOf(const Item &node) const;
-
     virtual QAbstractItemModel *model() const;
 
     virtual const Geometry &geometry() const;

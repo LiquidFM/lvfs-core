@@ -34,12 +34,10 @@ class PLATFORM_MAKE_PUBLIC SortFilterModel : public QSortFilterProxyModel
 
 public:
     SortFilterModel(QObject *parent = 0);
+    virtual ~SortFilterModel();
 
     static bool compareFileNames(const QString &str1, const QString &str2);
     static bool compareFileNames(const char *str1, const char *str2);
-
-protected:
-    virtual bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
 };
 
 }}}

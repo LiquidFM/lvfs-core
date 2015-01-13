@@ -158,25 +158,6 @@ void DefaultNode::clear()
     }
 }
 
-DefaultNode::size_type DefaultNode::size() const
-{
-    return m_files.size();
-}
-
-const DefaultNode::Item &DefaultNode::at(size_type index) const
-{
-    return m_files[index];
-}
-
-DefaultNode::size_type DefaultNode::indexOf(const Item &node) const
-{
-    for (size_type i = 0, size = m_files.size(); i < size; ++i)
-        if (m_files[i].node == node.node)
-            return i;
-
-    return 0;
-}
-
 QAbstractItemModel *DefaultNode::model() const
 {
     return const_cast<DefaultNode *>(this);
@@ -262,15 +243,9 @@ void DefaultNode::setCurrentIndex(const QModelIndex &index)
 int DefaultNode::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
-        if (static_cast<Item *>(parent.internalPointer())->node.isValid())
-            if (Qt::INode *qtNode = static_cast<Item *>(parent.internalPointer())->node->as<Qt::INode>())
-                return qtNode->size();
-            else
-                return 0;
-        else
-            return 0;
+        return static_cast<Item *>(parent.internalPointer())->items.size();
     else
-        return size();
+        return m_files.size();
 }
 
 int DefaultNode::columnCount(const QModelIndex &parent) const
@@ -280,7 +255,7 @@ int DefaultNode::columnCount(const QModelIndex &parent) const
 
 QVariant DefaultNode::data(const QModelIndex &index, int role) const
 {
-    const Item &indexNode(index.isValid() ? *static_cast<Item *>(index.internalPointer()) : at(index.row()));
+    const Item &indexNode(index.isValid() ? *static_cast<Item *>(index.internalPointer()) : m_files.at(index.row()));
 
     switch (role)
     {
@@ -352,9 +327,9 @@ QModelIndex DefaultNode::index(int row, int column, const QModelIndex &parent) c
 {
     if (hasIndex(row, column, parent))
         if (parent.isValid())
-            return createIndex(row, column, const_cast<Item *>(&(*static_cast<Item *>(parent.internalPointer())).node->as<Qt::INode>()->at(row)));
+            return createIndex(row, column, const_cast<Item *>(&(*static_cast<Item *>(parent.internalPointer())).items.at(row)));
         else
-            return createIndex(row, column, const_cast<Item *>(&at(row)));
+            return createIndex(row, column, const_cast<Item *>(&m_files.at(row)));
     else
         return QModelIndex();
 }
@@ -384,12 +359,16 @@ QModelIndex DefaultNode::parent(const QModelIndex &child) const
 
 QModelIndex DefaultNode::index(Item *item) const
 {
-    if (Core::INode *coreNode = item->node->as<Core::INode>())
-        if (coreNode->parent().isValid())
-            if (Qt::INode *qtParentNode = coreNode->parent()->as<Qt::INode>())
-                return createIndex(qtParentNode->indexOf(*item), 0, item);
+    if (item->parent)
+        for (auto i = item->parent->items.begin(), end = item->parent->items.end(); i != end; ++i)
+            if (*i == *item)
+                return createIndex(i - item->parent->items.begin(), 0, item);
 
-    return createIndex(indexOf(*item), 0, item);
+    for (auto i = m_files.begin(), end = m_files.end(); i != end; ++i)
+        if (*i == *item)
+            return createIndex(i - m_files.begin(), 0, item);
+
+    return QModelIndex();
 }
 
 QModelIndex DefaultNode::parent(Item *item) const
