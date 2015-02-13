@@ -78,6 +78,9 @@ public:
 public:
     FilesBaseTask(QObject *receiver);
     FilesBaseTask(QObject *receiver, const Interface::Holder &destination);
+
+protected:
+    static uint64_t calculateSize(const Interface::Holder &file);
 };
 
 }}}

@@ -68,6 +68,8 @@ public: /* Core::INode */
     virtual void refresh(int depth);
     virtual void opened(const Interface::Holder &view);
     virtual void closed(const Interface::Holder &view);
+    virtual void accept(const Interface::Holder &view, Files &files);
+    virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Files &files, bool move = false);
 
     virtual void clear();
 
@@ -76,6 +78,9 @@ public: /* Qt::INode */
 
     virtual const Geometry &geometry() const;
     virtual const Sorting &sorting() const;
+
+    virtual Core::INode::Files mapToFile(const QModelIndex &index) const;
+    virtual Core::INode::Files mapToFile(const QModelIndexList &indices) const;
 
     virtual void activated(const QModelIndex &file, const Interface::Holder &view) const;
     virtual void copyToClipboard(const QModelIndexList &files, bool move);
@@ -99,6 +104,7 @@ protected: /* Core::INode */
 protected: /* Core::Qt::Node */
     virtual void processListFile(Snapshot &files, bool isFirstEvent);
     virtual void doneListFile(Snapshot &files, bool isFirstEvent);
+    virtual void doneCopyFiles(Snapshot &files, bool isFirstEvent);
 
 private:
     QModelIndex index(Item *item) const;

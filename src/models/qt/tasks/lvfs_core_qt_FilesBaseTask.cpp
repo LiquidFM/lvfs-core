@@ -19,6 +19,12 @@
 
 #include "lvfs_core_qt_FilesBaseTask.h"
 
+#include <efc/List>
+#include <efc/Pair>
+#include <lvfs/IFile>
+#include <lvfs/IDirectory>
+#include <lvfs/IProperties>
+
 
 namespace LVFS {
 namespace Core {
@@ -31,5 +37,66 @@ FilesBaseTask::FilesBaseTask(QObject *receiver) :
 FilesBaseTask::FilesBaseTask(QObject *receiver, const Interface::Holder &destination) :
     BaseTask(receiver, destination)
 {}
+
+uint64_t FilesBaseTask::calculateSize(const Interface::Holder &file)
+{
+    typedef EFC::List<EFC::Pair<IDirectory::const_iterator, IDirectory::const_iterator>> Stack;
+
+    if (IDirectory *dir = file->as<IDirectory>())
+        if (::strcmp(file->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
+        {
+            if (IProperties *properties = file->as<IProperties>())
+                return properties->size();
+        }
+        else
+        {
+            Stack stack;
+            uint64_t res = 0;
+            IProperties *properties;
+            Interface::Holder holder;
+            Stack::value_type current(dir->begin(), dir->end());
+
+            do
+            {
+                while (current.first != current.second)
+                {
+                    holder = (*current.first);
+                    ++current.first;
+
+                    if (dir = holder->as<IDirectory>())
+                        if (::strcmp(holder->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
+                        {
+                            if (properties = holder->as<IProperties>())
+                                res += properties->size();
+                        }
+                        else
+                        {
+                            stack.push_back(current);
+                            current.first = dir->begin();
+                            current.second = dir->end();
+                        }
+                    else
+                        if (properties = holder->as<IProperties>())
+                            res += properties->size();
+                }
+
+                if (stack.empty())
+                    break;
+                else
+                {
+                    current = stack.back();
+                    stack.pop_back();
+                }
+            }
+            while (true);
+
+            return res;
+        }
+    else
+        if (IProperties *properties = file->as<IProperties>())
+            return properties->size();
+
+    return 0;
+}
 
 }}}

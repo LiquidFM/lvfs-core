@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,19 +24,19 @@
 #include <QtCore/QObject>
 #include <QtCore/QDateTime>
 #include <QtCore/QModelIndex>
+#include <lvfs/Interface>
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-
 class PLATFORM_MAKE_PRIVATE TaskProgress
 {
 public:
 	TaskProgress(QObject *receiver);
 
-	void init(const QModelIndex &item);
+	void init(const Interface::Holder &file, quint64 total);
 	void update(quint64 progressIncrement);
 	void complete();
 	void clear();
@@ -45,12 +45,13 @@ private:
 	void postEvent();
 
 private:
-	QModelIndex m_item;
+    quint64 m_total;
 	quint64 m_progress;
 	QObject *m_receiver;
 	QDateTime m_baseTime;
 	QDateTime m_currentTime;
 	QDateTime m_startTime;
+	Interface::Holder m_file;
 };
 
 }}}

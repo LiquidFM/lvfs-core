@@ -20,6 +20,7 @@
 #ifndef LVFS_CORE_INODE_H_
 #define LVFS_CORE_INODE_H_
 
+#include <efc/List>
 #include <lvfs/Interface>
 #include <lvfs/Module>
 
@@ -32,6 +33,9 @@ class PLATFORM_MAKE_PUBLIC INode
     DECLARE_INTERFACE(LVFS::Core::INode)
 
 public:
+    typedef EFC::List<Interface::Holder> Files;
+
+public:
     virtual ~INode();
 
     virtual const Interface::Holder &parent() const = 0;
@@ -40,6 +44,9 @@ public:
     virtual void refresh(int depth = 0) = 0;
     virtual void opened(const Interface::Holder &view) = 0;
     virtual void closed(const Interface::Holder &view) = 0;
+
+    virtual void accept(const Interface::Holder &view, Files &files) = 0;
+    virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Files &files, bool move = false) = 0;
 
     virtual int refs() const = 0;
     virtual void incRef() = 0;

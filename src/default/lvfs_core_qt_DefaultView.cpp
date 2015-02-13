@@ -44,6 +44,8 @@ DefaultView::DefaultView() :
     m_view.setModel(&m_sortFilterModel);
 
     m_eventHandler.registerMouseDoubleClickEventHandler(&DefaultView::goIntoShortcut);
+    m_eventHandler.setDefaultHandler(EventHandler::KeyboardEvent, &DefaultView::handleShortcut);
+
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Return, &DefaultView::goIntoShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Enter, &DefaultView::goIntoShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Backspace, &DefaultView::goUpShortcut);
@@ -189,7 +191,30 @@ void DefaultView::calculateSizeShortcut()
 
 void DefaultView::copyShortcut()
 {
+    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
 
+    if (!items.isEmpty())
+    {
+        QModelIndexList indices;
+        indices.reserve(items.size());
+
+        for (int i = 0, row = -1; i < items.size(); row = items.at(i).row(), ++i)
+            if (row != items.at(i).row())
+                indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
+
+        Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(indices);
+
+        if (!files.empty())
+        {
+            Interface::Holder self = Interface::Holder::fromRawData(this);
+            Interface::Holder node = m_mainView->as<IMainView>()->opposite(self)->as<Core::IView>()->node();
+
+            node->as<Core::INode>()->accept(self, files);
+
+            if (!files.empty())
+                m_node->as<Core::INode>()->copy(self, node->as<Core::INode>()->file(), files, false);
+        }
+    }
 }
 
 void DefaultView::moveShortcut()
@@ -237,6 +262,11 @@ void DefaultView::cutToClipboardShortcut()
 void DefaultView::pasteFromClipboardShortcut()
 {
 
+}
+
+bool DefaultView::handleShortcut(QEvent *event)
+{
+    return false;
 }
 
 }}}

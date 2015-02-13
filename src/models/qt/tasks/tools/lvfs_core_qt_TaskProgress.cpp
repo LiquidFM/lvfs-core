@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,13 +17,12 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lvfs_core_qt_taskprogress.h"
-#include "lvfs_core_qt_taskprogressevents.h"
-
+#include "lvfs_core_qt_TaskProgress.h"
 #include <QtGui/QApplication>
 
 #include <efc/ScopedPointer>
 #include <brolly/assert.h>
+#include "lvfs_core_qt_TaskProgressEvents.h"
 
 
 namespace LVFS {
@@ -31,22 +30,25 @@ namespace Core {
 namespace Qt {
 
 TaskProgress::TaskProgress(QObject *receiver) :
-	m_item(),
+    m_total(0),
+    m_progress(0),
 	m_receiver(receiver)
 {}
 
 
-void TaskProgress::init(const QModelIndex &item)
+void TaskProgress::init(const Interface::Holder &file, quint64 total)
 {
-	ASSERT(item.isValid());
-	m_item = item;
+    ASSERT(total > 0);
+	ASSERT(file.isValid());
+	m_file = file;
+	m_total = total;
 	m_progress = 0;
 	m_baseTime = m_currentTime = m_startTime = QDateTime::currentDateTime();
 }
 
 void TaskProgress::update(quint64 progressIncrement)
 {
-    ASSERT(m_item.isValid());
+    ASSERT(m_file.isValid());
 	m_progress += progressIncrement;
 
 	if (m_baseTime.secsTo(m_currentTime = QDateTime::currentDateTime()) > 1)
@@ -60,20 +62,20 @@ void TaskProgress::complete()
 {
 	typedef CompletedProgressEvent Event;
 
-	EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_item, m_startTime.msecsTo(QDateTime::currentDateTime())));
+	EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_file, m_startTime.msecsTo(QDateTime::currentDateTime())));
 	QApplication::postEvent(m_receiver, event.release());
 }
 
 void TaskProgress::clear()
 {
-	m_item = QModelIndex();
+    m_file.reset();
 }
 
 void TaskProgress::postEvent()
 {
 	typedef UpdateProgressEvent Event;
 
-	EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_item, m_progress, m_startTime.msecsTo(m_currentTime)));
+	EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_file, m_progress, m_startTime.msecsTo(m_currentTime)));
 	QApplication::postEvent(m_receiver, event.release());
 }
 

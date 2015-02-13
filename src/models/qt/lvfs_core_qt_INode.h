@@ -23,6 +23,7 @@
 #include <efc/Pair>
 #include <efc/List>
 #include <lvfs/Interface>
+#include <lvfs-core/INode>
 #include <QtCore/QAbstractItemModel>
 
 
@@ -48,6 +49,9 @@ public:
 
     virtual QModelIndex currentIndex() const = 0;
     virtual void setCurrentIndex(const QModelIndex &index) = 0;
+
+    virtual Core::INode::Files mapToFile(const QModelIndex &index) const = 0;
+    virtual Core::INode::Files mapToFile(const QModelIndexList &indices) const = 0;
 
     virtual void activated(const QModelIndex &index, const Interface::Holder &view) const = 0;
 };

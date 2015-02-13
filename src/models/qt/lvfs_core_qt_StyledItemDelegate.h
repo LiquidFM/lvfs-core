@@ -40,6 +40,7 @@ public:
 
 protected:
     void paintBackgroundLines(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    void paintProgressInMb(QPainter *painter, const QStyleOptionViewItem &option) const;
 };
 
 }}}

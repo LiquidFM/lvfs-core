@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,14 +32,14 @@ namespace Qt {
 class PLATFORM_MAKE_PRIVATE UpdateProgressEvent : public BaseTask::Event
 {
 public:
-	UpdateProgressEvent(const QModelIndex &item, quint64 progress, quint64 timeElapsed) :
+	UpdateProgressEvent(const Interface::Holder &item, quint64 progress, quint64 timeElapsed) :
 		BaseTask::Event(NULL, BaseTask::Event::Progress, false),
 		item(item),
 		progress(progress),
 		timeElapsed(timeElapsed)
 	{}
 
-	QModelIndex item;
+	Interface::Holder item;
 	quint64 progress;
 	quint64 timeElapsed;
 };
@@ -48,13 +48,13 @@ public:
 class PLATFORM_MAKE_PRIVATE CompletedProgressEvent : public BaseTask::Event
 {
 public:
-	CompletedProgressEvent(const QModelIndex &item, quint64 timeElapsed) :
+	CompletedProgressEvent(const Interface::Holder &item, quint64 timeElapsed) :
 		BaseTask::Event(NULL, BaseTask::Event::Completed, false),
 		item(item),
 		timeElapsed(timeElapsed)
 	{}
 
-	QModelIndex item;
+	Interface::Holder item;
 	quint64 timeElapsed;
 };
 

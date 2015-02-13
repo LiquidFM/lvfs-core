@@ -19,6 +19,7 @@
 
 #include "lvfs_core_qt_Node.h"
 #include "tasks/lvfs_core_qt_RefreshTask.h"
+#include "tasks/lvfs_core_qt_CopyTask.h"
 
 #include <QtCore/QThread>
 #include <QtCore/QTextCodec>
@@ -59,6 +60,17 @@ void Node::doListFile(int depth)
     if (!m_doListFile)
     {
         EFC::Task::Holder task(new (std::nothrow) RefreshTask(&m_eventsHandler, Interface::Holder::fromRawData(this), depth));
+
+        m_doListFile = true;
+        handleTask(task);
+    }
+}
+
+void Node::doCopyFiles(const Interface::Holder &dest, Files &files, bool move)
+{
+    if (!m_doListFile)
+    {
+        EFC::Task::Holder task(new (std::nothrow) CopyTask(&m_eventsHandler, files, dest, move));
 
         m_doListFile = true;
         handleTask(task);

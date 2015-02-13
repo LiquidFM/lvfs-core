@@ -48,6 +48,9 @@ protected: /* Actions section */
     virtual void processListFile(Snapshot &files, bool isFirstEvent) = 0;
     virtual void doneListFile(Snapshot &files, bool isFirstEvent) = 0;
 
+    void doCopyFiles(const Interface::Holder &dest, Files &files, bool move = false);
+    virtual void doneCopyFiles(Snapshot &files, bool isFirstEvent) = 0;
+
 private:
     class EventsHandler : public QObject
     {

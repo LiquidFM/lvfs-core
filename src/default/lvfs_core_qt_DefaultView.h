@@ -20,6 +20,7 @@
 #ifndef LVFS_CORE_QT_DEFAULTVIEW_H_
 #define LVFS_CORE_QT_DEFAULTVIEW_H_
 
+#include <QtCore/QEvent>
 #include <QtGui/QTreeView>
 #include <lvfs-core/IView>
 #include <lvfs-core/models/Qt/IView>
@@ -29,6 +30,7 @@
 #include <lvfs-core/tools/events/ContextMenuEventSource>
 #include <lvfs-core/tools/events/KeyboardEventHandler>
 #include <lvfs-core/tools/events/KeyboardEventSource>
+#include <lvfs-core/tools/events/EventHandlerDefault>
 #include <lvfs-core/tools/events/MouseEventHandler>
 #include <lvfs-core/tools/events/MouseEventSource>
 
@@ -72,6 +74,7 @@ private:
     void copyToClipboardShortcut();
     void cutToClipboardShortcut();
     void pasteFromClipboardShortcut();
+    bool handleShortcut(QEvent *event);
 
 private:
     inline bool openChildNode(const Interface::Holder &node, const QModelIndex &selected);
@@ -90,7 +93,7 @@ private:
 
     typedef Tools::MouseDoubleClickEventHandler<
                 Tools::KeyboardEventHandler<
-                    Tools::EventHandlerBase<DefaultView>
+                    Tools::EventHandlerDefault<DefaultView>
                 >
             > EventHandler;
 
