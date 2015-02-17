@@ -51,6 +51,10 @@ protected: /* Actions section */
     void doCopyFiles(const Interface::Holder &dest, Files &files, bool move = false);
     virtual void doneCopyFiles(Snapshot &files, bool isFirstEvent) = 0;
 
+    virtual void initProgress(const Interface::Holder &file, quint64 total) = 0;
+    virtual void updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed) = 0;
+    virtual void completeProgress(const Interface::Holder &file, quint64 timeElapsed) = 0;
+
 private:
     class EventsHandler : public QObject
     {

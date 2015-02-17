@@ -38,29 +38,6 @@ class PLATFORM_MAKE_PRIVATE DefaultNode : public QAbstractItemModel, public Comp
     Q_OBJECT
 
 public:
-    struct Item
-    {
-        Item(Item *parent = 0) :
-            parent(parent)
-        {}
-
-        inline bool operator==(const Item &other) const
-        { return other.file == file; }
-
-        Item *parent;
-        bool isDir;
-        QString title;
-        QString schema;
-        QString location;
-        QIcon icon;
-        QString size;
-        QDateTime modified;
-        Interface::Holder file;
-        Interface::Holder node;
-        EFC::Vector<Item> items;
-    };
-
-public:
     DefaultNode(const Interface::Holder &file, const Interface::Holder &parent);
     virtual ~DefaultNode();
 
@@ -81,6 +58,9 @@ public: /* Qt::INode */
 
     virtual Core::INode::Files mapToFile(const QModelIndex &index) const;
     virtual Core::INode::Files mapToFile(const QModelIndexList &indices) const;
+
+    virtual bool isLocked(const QModelIndex &index, quint64 &progress, quint64 &total) const;
+    virtual bool compareItems(const QModelIndex &left, const QModelIndex &right, ::Qt::SortOrder sortOrder) const;
 
     virtual void activated(const QModelIndex &file, const Interface::Holder &view) const;
     virtual void copyToClipboard(const QModelIndexList &files, bool move);
@@ -106,7 +86,49 @@ protected: /* Core::Qt::Node */
     virtual void doneListFile(Snapshot &files, bool isFirstEvent);
     virtual void doneCopyFiles(Snapshot &files, bool isFirstEvent);
 
+    virtual void initProgress(const Interface::Holder &file, quint64 total);
+    virtual void updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed);
+    virtual void completeProgress(const Interface::Holder &file, quint64 timeElapsed);
+
 private:
+    struct Item
+    {
+        Item(Item *parent = 0) :
+            isDir(false),
+            parent(parent),
+            progress(0),
+            totalSize(0)
+        {}
+
+        inline bool operator==(const Item &other) const
+        { return other.file == file; }
+
+        inline bool isLocked() const
+        { return !lockReason.isEmpty(); }
+
+        inline void lock(const QString &reason)
+        { lockReason = reason; }
+
+        inline void unlock()
+        { lockReason.clear(); progress = 0; totalSize = 0; }
+
+        bool isDir;
+        Item *parent;
+        QString title;
+        QString schema;
+        QString location;
+        QIcon icon;
+        QString size;
+        QDateTime modified;
+        Interface::Holder file;
+        Interface::Holder node;
+        EFC::Vector<Item> items;
+
+        QString lockReason;
+        quint64 progress;
+        quint64 totalSize;
+    };
+
     QModelIndex index(Item *item) const;
     QModelIndex parent(Item *item) const;
 //    QModelIndex parent(Item *item, size_type &row) const;

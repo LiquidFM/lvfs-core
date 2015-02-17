@@ -38,12 +38,12 @@ TaskProgress::TaskProgress(QObject *receiver) :
 
 void TaskProgress::init(const Interface::Holder &file, quint64 total)
 {
-    ASSERT(total > 0);
 	ASSERT(file.isValid());
 	m_file = file;
 	m_total = total;
 	m_progress = 0;
 	m_baseTime = m_currentTime = m_startTime = QDateTime::currentDateTime();
+	postInitEvent();
 }
 
 void TaskProgress::update(quint64 progressIncrement)
@@ -53,14 +53,14 @@ void TaskProgress::update(quint64 progressIncrement)
 
 	if (m_baseTime.secsTo(m_currentTime = QDateTime::currentDateTime()) > 1)
 	{
-		postEvent();
+		postUpdateEvent();
 		m_baseTime = m_currentTime;
 	}
 }
 
 void TaskProgress::complete()
 {
-	typedef CompletedProgressEvent Event;
+	typedef CompleteProgressEvent Event;
 
 	EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_file, m_startTime.msecsTo(QDateTime::currentDateTime())));
 	QApplication::postEvent(m_receiver, event.release());
@@ -71,7 +71,15 @@ void TaskProgress::clear()
     m_file.reset();
 }
 
-void TaskProgress::postEvent()
+void TaskProgress::postInitEvent()
+{
+    typedef InitProgressEvent Event;
+
+    EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_file, m_total));
+    QApplication::postEvent(m_receiver, event.release());
+}
+
+void TaskProgress::postUpdateEvent()
 {
 	typedef UpdateProgressEvent Event;
 

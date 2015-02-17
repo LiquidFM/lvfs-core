@@ -20,9 +20,11 @@
 #ifndef LVFS_CORE_QT_STYLEDITEMDELEGATE_H_
 #define LVFS_CORE_QT_STYLEDITEMDELEGATE_H_
 
-#include <platform/utils.h>
 #include <QtGui/QStyledItemDelegate>
 #include <QtGui/QStyleOptionViewItem>
+#include <QtGui/QSortFilterProxyModel>
+#include <platform/utils.h>
+#include <lvfs/Interface>
 
 
 namespace LVFS {
@@ -34,13 +36,17 @@ class PLATFORM_MAKE_PUBLIC StyledItemDelegate : public QStyledItemDelegate
     PLATFORM_MAKE_NONCOPYABLE(StyledItemDelegate)
 
 public:
-    StyledItemDelegate(QObject *parent = 0);
+    StyledItemDelegate(const Interface::Holder &node, const QSortFilterProxyModel &proxy, QObject *parent = 0);
 
     virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 
 protected:
     void paintBackgroundLines(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    void paintProgressInMb(QPainter *painter, const QStyleOptionViewItem &option) const;
+    void paintProgressInMb(QPainter *painter, const QStyleOptionViewItem &option, int progress) const;
+
+private:
+    const Interface::Holder &m_node;
+    const QSortFilterProxyModel &m_proxy;
 };
 
 }}}

@@ -20,6 +20,7 @@
 #include "lvfs_core_qt_Node.h"
 #include "tasks/lvfs_core_qt_RefreshTask.h"
 #include "tasks/lvfs_core_qt_CopyTask.h"
+#include "tasks/tools/lvfs_core_qt_TaskProgressEvents.h"
 
 #include <QtCore/QThread>
 #include <QtCore/QTextCodec>
@@ -90,6 +91,27 @@ bool Node::EventsHandler::event(QEvent *event)
 {
     switch (static_cast<FilesBaseTask::Event::Type>(event->type()))
     {
+        case BaseTask::Event::InitProgress:
+        {
+            event->accept();
+            m_node->initProgress(static_cast<InitProgressEvent *>(event)->item, static_cast<InitProgressEvent *>(event)->total);
+            return true;
+        }
+
+        case BaseTask::Event::UpdateProgress:
+        {
+            event->accept();
+            m_node->updateProgress(static_cast<UpdateProgressEvent *>(event)->item, static_cast<UpdateProgressEvent *>(event)->progress, static_cast<UpdateProgressEvent *>(event)->timeElapsed);
+            return true;
+        }
+
+        case BaseTask::Event::CompleteProgress:
+        {
+            event->accept();
+            m_node->completeProgress(static_cast<CompleteProgressEvent *>(event)->item, static_cast<CompleteProgressEvent *>(event)->timeElapsed);
+            return true;
+        }
+
         case FilesBaseTask::Event::ProcessListFileEventId:
         {
             event->accept();

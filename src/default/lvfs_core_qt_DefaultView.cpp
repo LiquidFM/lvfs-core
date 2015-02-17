@@ -34,7 +34,9 @@ namespace Qt {
 
 DefaultView::DefaultView() :
     m_view(&m_eventHandler),
-    m_eventHandler(this)
+    m_eventHandler(this),
+    m_sortFilterModel(m_node),
+    m_styledItemDelegate(m_node, m_sortFilterModel)
 {
     m_view.setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_view.setContextMenuPolicy(::Qt::DefaultContextMenu);

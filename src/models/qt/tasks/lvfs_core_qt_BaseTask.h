@@ -45,9 +45,10 @@ public:
         {
             Question = User,
             UserInput = User + 1,
-            Progress = User + 2,
-            Completed = User + 3,
-            Action = User + 4,
+            InitProgress = User + 2,
+            UpdateProgress = User + 3,
+            CompleteProgress = User + 4,
+            Action = User + 5,
 
             /* First user event id. */
             User = Action + 1

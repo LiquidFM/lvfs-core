@@ -41,6 +41,33 @@
 #define PLATFORM_DE(PLATFORM_FEATURE) PLATFORM_IS_SET(PLATFORM_DE_##PLATFORM_FEATURE)
 
 
+#include <cstring>
+
+#include <QtCore/QChar>
+#define nat_char QChar
+#define nat_isdigit(a) (a).isDigit()
+#define nat_isspace(a) (a).isSpace()
+#define nat_toupper(a) (a).toUpper()
+#include <lvfs-core/tools/strings/strnatcmp.h>
+
+static inline bool compareFileNames(const QString &str1, const QString &str2)
+{
+    return strnatcasecmp(str1.data(), str2.data()) < 0;
+}
+
+
+#undef nat_char
+#undef nat_isdigit
+#undef nat_isspace
+#undef nat_toupper
+#include <lvfs-core/tools/strings/strnatcmp.h>
+
+static inline bool compareFileNames(const char *str1, const char *str2)
+{
+    return strnatcasecmp(str1, str2) < 0;
+}
+
+
 namespace {
 
 static const QString uriListMimetype = QString::fromLatin1("text/uri-list");
@@ -138,6 +165,16 @@ void DefaultNode::accept(const Interface::Holder &view, Files &files)
 
 void DefaultNode::copy(const Interface::Holder &view, const Interface::Holder &dest, Files &files, bool move)
 {
+    QString reason = move ? tr("Moving...") : tr("Copying...");
+
+    for (auto &i : files)
+        for (auto &q : m_files)
+            if (i == q.file)
+            {
+                q.lock(reason);
+                break;
+            }
+
     doCopyFiles(dest, files, move);
 }
 
@@ -200,6 +237,55 @@ Core::INode::Files DefaultNode::mapToFile(const QModelIndexList &indices) const
             res.push_back(static_cast<Item *>(indices.at(i).internalPointer())->file);
 
     return res;
+}
+
+bool DefaultNode::isLocked(const QModelIndex &index, quint64 &progress, quint64 &total) const
+{
+    if (index.isValid())
+    {
+        Item *leftItem = static_cast<Item *>(index.internalPointer());
+
+        if (leftItem->isLocked())
+        {
+            progress = leftItem->progress;
+            total = leftItem->totalSize;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool DefaultNode::compareItems(const QModelIndex &left, const QModelIndex &right, ::Qt::SortOrder sortOrder) const
+{
+    Item *leftItem = static_cast<Item *>(left.internalPointer());
+    Item *rightItem = static_cast<Item *>(right.internalPointer());
+
+    if (sortOrder == ::Qt::AscendingOrder)
+        if (leftItem->isDir)
+            if (rightItem->isDir)
+                return compareFileNames(leftItem->title, rightItem->title);
+            else
+                return true;
+        else
+            if (rightItem->isDir)
+                return false;
+            else
+                return compareFileNames(leftItem->title, rightItem->title);
+    else
+        if (leftItem->isDir)
+            if (rightItem->isDir)
+                return !compareFileNames(leftItem->title, rightItem->title);
+            else
+                return false;
+        else
+            if (rightItem->isDir)
+                return true;
+            else
+                return !compareFileNames(leftItem->title, rightItem->title);
+
+    return true;
 }
 
 void DefaultNode::activated(const QModelIndex &file, const Interface::Holder &view) const
@@ -309,6 +395,12 @@ QVariant DefaultNode::data(const QModelIndex &index, int role) const
             if (index.column() == 0)
                 return indexNode.icon;
             break;
+
+        case ::Qt::ToolTipRole:
+            if (indexNode.isLocked())
+                return indexNode.lockReason;
+            else
+                break;
 
         default:
             break;
@@ -534,6 +626,48 @@ void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
 void DefaultNode::doneCopyFiles(Snapshot &files, bool isFirstEvent)
 {
 
+}
+
+void DefaultNode::initProgress(const Interface::Holder &file, quint64 total)
+{
+    for (auto i = 0; i < m_files.size(); ++i)
+        if (m_files[i].file == file)
+        {
+            m_files[i].totalSize = total;
+
+            QModelIndex index = createIndex(i, 1, &m_files[i]);
+            emit dataChanged(index, index);
+
+            break;
+        }
+}
+
+void DefaultNode::updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed)
+{
+    for (auto i = 0; i < m_files.size(); ++i)
+        if (m_files[i].file == file)
+        {
+            m_files[i].progress = progress;
+
+            QModelIndex index = createIndex(i, 1, &m_files[i]);
+            emit dataChanged(index, index);
+
+            break;
+        }
+}
+
+void DefaultNode::completeProgress(const Interface::Holder &file, quint64 timeElapsed)
+{
+    for (auto i = 0; i < m_files.size(); ++i)
+        if (m_files[i].file == file)
+        {
+            m_files[i].progress = m_files[i].totalSize;
+
+            QModelIndex index = createIndex(i, 1, &m_files[i]);
+            emit dataChanged(index, index);
+
+            break;
+        }
 }
 
 }}}

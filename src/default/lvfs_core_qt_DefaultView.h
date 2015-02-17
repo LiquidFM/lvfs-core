@@ -24,6 +24,7 @@
 #include <QtGui/QTreeView>
 #include <lvfs-core/IView>
 #include <lvfs-core/models/Qt/IView>
+#include <lvfs-core/models/Qt/SortFilterModel>
 #include <lvfs-core/models/Qt/StyledItemDelegate>
 
 #include <lvfs-core/tools/events/ContextMenuEventHandler>
@@ -33,8 +34,6 @@
 #include <lvfs-core/tools/events/EventHandlerDefault>
 #include <lvfs-core/tools/events/MouseEventHandler>
 #include <lvfs-core/tools/events/MouseEventSource>
-
-#include "lvfs_core_qt_DefaultSortFilterModel.h"
 
 
 namespace LVFS {
@@ -104,7 +103,7 @@ private:
 private:
     TreeView m_view;
     EventHandler m_eventHandler;
-    DefaultSortFilterModel m_sortFilterModel;
+    SortFilterModel m_sortFilterModel;
     StyledItemDelegate m_styledItemDelegate;
 };
 

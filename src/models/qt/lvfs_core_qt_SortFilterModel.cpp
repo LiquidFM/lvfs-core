@@ -19,6 +19,7 @@
 
 #include "lvfs_core_qt_SortFilterModel.h"
 
+#include <lvfs-core/models/Qt/INode>
 #include <cstring>
 
 
@@ -26,7 +27,9 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-SortFilterModel::SortFilterModel(QObject *parent)
+SortFilterModel::SortFilterModel(const Interface::Holder &node, QObject *parent) :
+    QSortFilterProxyModel(parent),
+    m_node(node)
 {}
 
 SortFilterModel::~SortFilterModel()
@@ -54,6 +57,11 @@ bool SortFilterModel::compareFileNames(const QString &str1, const QString &str2)
 bool SortFilterModel::compareFileNames(const char *str1, const char *str2)
 {
     return strnatcasecmp(str1, str2) < 0;
+}
+
+bool SortFilterModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
+{
+    return m_node->as<Qt::INode>()->compareItems(left, right, sortOrder());
 }
 
 }}}

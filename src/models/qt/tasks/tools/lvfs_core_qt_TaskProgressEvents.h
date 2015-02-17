@@ -29,11 +29,24 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
+class PLATFORM_MAKE_PRIVATE InitProgressEvent : public BaseTask::Event
+{
+public:
+    InitProgressEvent(const Interface::Holder &item, quint64 total) :
+        BaseTask::Event(NULL, BaseTask::Event::InitProgress, false),
+        item(item),
+        total(total)
+    {}
+
+    Interface::Holder item;
+    quint64 total;
+};
+
 class PLATFORM_MAKE_PRIVATE UpdateProgressEvent : public BaseTask::Event
 {
 public:
 	UpdateProgressEvent(const Interface::Holder &item, quint64 progress, quint64 timeElapsed) :
-		BaseTask::Event(NULL, BaseTask::Event::Progress, false),
+		BaseTask::Event(NULL, BaseTask::Event::UpdateProgress, false),
 		item(item),
 		progress(progress),
 		timeElapsed(timeElapsed)
@@ -45,11 +58,11 @@ public:
 };
 
 
-class PLATFORM_MAKE_PRIVATE CompletedProgressEvent : public BaseTask::Event
+class PLATFORM_MAKE_PRIVATE CompleteProgressEvent : public BaseTask::Event
 {
 public:
-	CompletedProgressEvent(const Interface::Holder &item, quint64 timeElapsed) :
-		BaseTask::Event(NULL, BaseTask::Event::Completed, false),
+	CompleteProgressEvent(const Interface::Holder &item, quint64 timeElapsed) :
+		BaseTask::Event(NULL, BaseTask::Event::CompleteProgress, false),
 		item(item),
 		timeElapsed(timeElapsed)
 	{}

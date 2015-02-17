@@ -126,6 +126,9 @@ protected:
     };
 
 private:
+    static void progress(void *arg, off64_t processed);
+
+private:
     bool m_move;
     Snapshot m_snapshot;
 

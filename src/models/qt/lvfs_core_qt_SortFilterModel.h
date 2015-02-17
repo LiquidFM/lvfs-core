@@ -22,6 +22,7 @@
 
 #include <QtGui/QSortFilterProxyModel>
 #include <platform/utils.h>
+#include <lvfs/Interface>
 
 
 namespace LVFS {
@@ -33,11 +34,17 @@ class PLATFORM_MAKE_PUBLIC SortFilterModel : public QSortFilterProxyModel
     PLATFORM_MAKE_NONCOPYABLE(SortFilterModel)
 
 public:
-    SortFilterModel(QObject *parent = 0);
+    SortFilterModel(const Interface::Holder &node, QObject *parent = 0);
     virtual ~SortFilterModel();
 
     static bool compareFileNames(const QString &str1, const QString &str2);
     static bool compareFileNames(const char *str1, const char *str2);
+
+protected:
+    virtual bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
+
+private:
+    const Interface::Holder &m_node;
 };
 
 }}}

@@ -42,7 +42,8 @@ public:
 	void clear();
 
 private:
-	void postEvent();
+    void postInitEvent();
+	void postUpdateEvent();
 
 private:
     quint64 m_total;

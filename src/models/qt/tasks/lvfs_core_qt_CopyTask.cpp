@@ -29,12 +29,6 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-static void progress(void *arg, off64_t processed)
-{
-
-}
-
-
 CopyTask::CopyTask(QObject *receiver, Snapshot &snapshot, const Interface::Holder &dest, bool move) :
     FilesBaseTask(receiver, dest),
     m_move(move),
@@ -199,6 +193,11 @@ bool CopyTask::OverwriteFile::operator()(Tryier::Flag &flag, const volatile bool
     }
 
     return false;
+}
+
+void CopyTask::progress(void *arg, off64_t processed)
+{
+    static_cast<CopyTask *>(arg)->m_progress.update(processed);
 }
 
 }}}

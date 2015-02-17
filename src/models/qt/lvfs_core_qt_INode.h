@@ -53,6 +53,9 @@ public:
     virtual Core::INode::Files mapToFile(const QModelIndex &index) const = 0;
     virtual Core::INode::Files mapToFile(const QModelIndexList &indices) const = 0;
 
+    virtual bool isLocked(const QModelIndex &index, quint64 &progress, quint64 &total) const = 0;
+    virtual bool compareItems(const QModelIndex &left, const QModelIndex &right, ::Qt::SortOrder sortOrder) const = 0;
+
     virtual void activated(const QModelIndex &index, const Interface::Holder &view) const = 0;
 };
 

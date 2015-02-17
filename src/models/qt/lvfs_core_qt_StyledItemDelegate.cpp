@@ -18,21 +18,30 @@
  */
 
 #include "lvfs_core_qt_StyledItemDelegate.h"
-#include <QtGui/QApplication>
 
+#include <lvfs-core/models/Qt/INode>
+#include <QtGui/QApplication>
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-StyledItemDelegate::StyledItemDelegate(QObject *parent) :
-    QStyledItemDelegate(parent)
+StyledItemDelegate::StyledItemDelegate(const Interface::Holder &node, const QSortFilterProxyModel &proxy, QObject *parent) :
+    QStyledItemDelegate(parent),
+    m_node(node),
+    m_proxy(proxy)
 {}
 
 void StyledItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    paintBackgroundLines(painter, option, index);
+    quint64 total;
+    quint64 progress;
+
+    if (index.column() == 1 && m_node->as<Qt::INode>()->isLocked(m_proxy.mapToSource(index), progress, total))
+        paintProgressInMb(painter, option, total ? progress * 100 / total : 100);
+    else
+        paintBackgroundLines(painter, option, index);
 }
 
 void StyledItemDelegate::paintBackgroundLines(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
@@ -51,32 +60,32 @@ void StyledItemDelegate::paintBackgroundLines(QPainter *painter, const QStyleOpt
         QApplication::style()->drawControl(QStyle::CE_ItemViewItem, &opt, painter, 0);
 }
 
-void StyledItemDelegate::paintProgressInMb(QPainter *painter, const QStyleOptionViewItem &option) const
+void StyledItemDelegate::paintProgressInMb(QPainter *painter, const QStyleOptionViewItem &option, int progress) const
 {
-//    if (entry->isCompleted())
-//    {
-//        QStyleOptionProgressBarV2 progressBarOption;
-//        progressBarOption.rect = option.rect;
-//        progressBarOption.minimum = 0;
-//        progressBarOption.maximum = 100;
-//        progressBarOption.progress = 100;
+    if (progress == 100)
+    {
+        QStyleOptionProgressBarV2 progressBarOption;
+        progressBarOption.rect = option.rect;
+        progressBarOption.minimum = 0;
+        progressBarOption.maximum = 100;
+        progressBarOption.progress = 100;
 //        progressBarOption.text = Tools::humanReadableTime(entry->timeElapsed());
 //        progressBarOption.textAlignment = Qt::AlignCenter;
 //        progressBarOption.textVisible = true;
-//
-//        if (const QStyleOptionViewItemV3 *v3 = qstyleoption_cast<const QStyleOptionViewItemV3 *>(&option))
-//            v3->widget->style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
-//        else
-//            Application::style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
-//    }
-//    else
-//    {
-//        QStyleOptionProgressBarV2 progressBarOption;
-//        progressBarOption.rect = option.rect;
-//        progressBarOption.minimum = 0;
-//        progressBarOption.maximum = 100;
-//        progressBarOption.progress = entry->progress();
-//
+
+        if (const QStyleOptionViewItemV3 *v3 = qstyleoption_cast<const QStyleOptionViewItemV3 *>(&option))
+            v3->widget->style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
+        else
+            QApplication::style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
+    }
+    else
+    {
+        QStyleOptionProgressBarV2 progressBarOption;
+        progressBarOption.rect = option.rect;
+        progressBarOption.minimum = 0;
+        progressBarOption.maximum = 100;
+        progressBarOption.progress = progress;
+
 //        progressBarOption.text =
 //                Tools::humanReadableShortSize(entry->done()).
 //                append(QString::fromLatin1(" / ")).
@@ -85,12 +94,12 @@ void StyledItemDelegate::paintProgressInMb(QPainter *painter, const QStyleOption
 //                append(Tools::humanReadableTime((entry->total() / entry->done()) * entry->timeElapsed()));
 //        progressBarOption.textAlignment = ::Qt::AlignCenter;
 //        progressBarOption.textVisible = true;
-//
-//        if (const QStyleOptionViewItemV3 *v3 = qstyleoption_cast<const QStyleOptionViewItemV3 *>(&option))
-//            v3->widget->style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
-//        else
-//            Application::style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
-//    }
+
+        if (const QStyleOptionViewItemV3 *v3 = qstyleoption_cast<const QStyleOptionViewItemV3 *>(&option))
+            v3->widget->style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
+        else
+            QApplication::style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
+    }
 }
 
 }}}
