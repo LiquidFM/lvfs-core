@@ -231,7 +231,7 @@ void DefaultView::copyShortcut()
             node->as<Core::INode>()->accept(self, files);
 
             if (!files.empty())
-                m_node->as<Core::INode>()->copy(self, node->as<Core::INode>()->file(), files, false);
+                m_node->as<Core::INode>()->copy(self, node, files, false);
         }
     }
 }

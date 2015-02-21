@@ -89,13 +89,13 @@ void RefreshTask::run(volatile bool &aborted)
 
                 if (!files.empty())
                 {
-                    postEvent(new (std::nothrow) Event(this, Event::ProcessListFileEventId, isFirstEvent, files, false));
+                    postEvent(new (std::nothrow) Event(this, Event::ProcessListFileEventId, false, files, isFirstEvent));
                     isFirstEvent = false;
                 }
             }
         }
 
-    postEvent(new (std::nothrow) Event(this, Event::DoneListFileEventId, isFirstEvent, files, aborted));
+    postEvent(new (std::nothrow) Event(this, Event::DoneListFileEventId, aborted, files, isFirstEvent));
 }
 
 }}}

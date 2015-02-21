@@ -103,13 +103,8 @@ void Node::doListFile(int depth)
 
 void Node::doCopyFiles(const Interface::Holder &dest, Files &files, bool move)
 {
-    if (!m_doListFile)
-    {
-        EFC::Task::Holder task(new (std::nothrow) CopyTask(&m_eventsHandler, files, dest, move));
-
-        m_doListFile = true;
-        handleTask(task, static_cast<CopyTask *>(task.get())->files());
-    }
+    EFC::Task::Holder task(new (std::nothrow) CopyTask(&m_eventsHandler, files, dest, move));
+    handleTask(task, static_cast<CopyTask *>(task.get())->files());
 }
 
 Node::EventsHandler::EventsHandler(Node *node) :
@@ -184,7 +179,7 @@ bool Node::EventsHandler::event(QEvent *event)
         {
             event->accept();
             m_node->doneTask(static_cast<Task::Event *>(event)->task);
-            m_node->doneCopyFiles(static_cast<CopyTask::Event *>(event)->files);
+            m_node->doneCopyFiles(static_cast<CopyTask::Event *>(event)->destination, static_cast<CopyTask::Event *>(event)->files);
             return true;
         }
 

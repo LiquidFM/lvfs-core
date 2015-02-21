@@ -52,6 +52,7 @@ void CopyTask::run(volatile bool &aborted)
     typedef EFC::List<StackEntry> Stack;
 
     IDirectory::Progress callback = { this, progress, aborted };
+    Interface::Holder dest = destination()->as<Core::INode>()->file();
     Interface::Holder holder;
     IDirectory *dir;
 
@@ -67,11 +68,11 @@ void CopyTask::run(volatile bool &aborted)
     {
         m_progress.init(*it, calculateSize(*it));
 
-        if (m_overwrite->askFor(OverwriteFile(m_methods, destination(), *it)))
+        if (m_overwrite->askFor(OverwriteFile(m_methods, dest, *it)))
             if (::strcmp((*it)->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
-                destination()->as<IDirectory>()->copy(callback, *it, m_move);
+                dest->as<IDirectory>()->copy(callback, *it, m_move);
             else if ((dir = (*it)->as<IDirectory>()) &&
-                     m_tryier->tryTo(CreateDestinationFolder(m_methods, destination(), *it, holder)))
+                     m_tryier->tryTo(CreateDestinationFolder(m_methods, dest, *it, holder)))
             {
                 Stack stack;
                 Stack::value_type current({ dir->begin(), dir->end(), holder });

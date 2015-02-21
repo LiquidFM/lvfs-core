@@ -617,8 +617,10 @@ void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
             i->as<Qt::IView>()->select(currentIndex());
 }
 
-void DefaultNode::doneCopyFiles(Files &files)
+void DefaultNode::doneCopyFiles(const Interface::Holder &dest, Files &files)
 {
+    dest->as<Core::INode>()->refresh();
+
     for (auto i = files.begin(); i != files.end(); i = files.erase(i))
         for (auto q = 0; q < m_files.size(); ++q)
             if ((*i) == m_files[q].file)
