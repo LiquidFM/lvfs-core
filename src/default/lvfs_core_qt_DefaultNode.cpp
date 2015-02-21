@@ -150,16 +150,6 @@ void DefaultNode::refresh(int depth)
     doListFile(depth);
 }
 
-void DefaultNode::opened(const Interface::Holder &view)
-{
-    m_views.insert(view);
-}
-
-void DefaultNode::closed(const Interface::Holder &view)
-{
-    m_views.erase(view);
-}
-
 void DefaultNode::accept(const Interface::Holder &view, Files &files)
 {}
 
@@ -171,7 +161,7 @@ void DefaultNode::copy(const Interface::Holder &view, const Interface::Holder &d
         for (auto &q : m_files)
             if (i == q.file)
             {
-                q.lock(reason);
+                q.lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()));
                 break;
             }
 
@@ -394,7 +384,10 @@ QVariant DefaultNode::data(const QModelIndex &index, int role) const
 
         case ::Qt::DecorationRole:
             if (index.column() == 0)
-                return indexNode.icon;
+                if (indexNode.isLocked())
+                    return indexNode.lockIcon;
+                else
+                    return indexNode.icon;
             break;
 
         case ::Qt::ToolTipRole:
@@ -620,7 +613,7 @@ void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
     }
 
     if (!m_files.empty())
-        for (auto i : m_views)
+        for (auto i : views())
             i->as<Qt::IView>()->select(currentIndex());
 }
 
@@ -632,8 +625,7 @@ void DefaultNode::doneCopyFiles(Files &files)
             {
                 m_files[q].unlock();
 
-                QModelIndex index = createIndex(q, 1, &m_files[q]);
-                emit dataChanged(index, index);
+                emit dataChanged(createIndex(q, 0, &m_files[q]), createIndex(q, 1, &m_files[q]));
 
                 break;
             }

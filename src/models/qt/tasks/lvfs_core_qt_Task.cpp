@@ -17,7 +17,7 @@
  */
 
 #include "lvfs_core_qt_Task.h"
-#include "tools/lvfs_core_qt_taskdialog.h"
+#include "tools/lvfs_core_qt_InteractiveEvents.h"
 
 #include <QtGui/QApplication>
 #include <QtCore/QThread>
@@ -54,7 +54,7 @@ void Task::postEvent(Event *event) const
 qint32 Task::askUser(const QString &title, const QString &question, qint32 buttons, const volatile bool &aborted) const
 {
     QuestionEvent::Result result;
-    postEvent(new QuestionEvent(title, question, buttons, &result));
+    postEvent(new QuestionEvent(title, question, buttons, result));
     result.waitFor(aborted);
     return result.answer();
 }
@@ -62,7 +62,7 @@ qint32 Task::askUser(const QString &title, const QString &question, qint32 butto
 qint32 Task::askForUserInput(const QString &title, const QString &question, qint32 buttons, QString &value, const volatile bool &aborted) const
 {
     UserInputEvent::Result result;
-    postEvent(new UserInputEvent(title, question, buttons, &result));
+    postEvent(new UserInputEvent(title, question, buttons, result));
     result.waitFor(aborted);
     value = result.value();
     return result.answer();

@@ -20,10 +20,12 @@
 #include "lvfs_core_qt_Node.h"
 #include "tasks/lvfs_core_qt_RefreshTask.h"
 #include "tasks/lvfs_core_qt_CopyTask.h"
-#include "tasks/tools/lvfs_core_qt_TaskProgressEvents.h"
+#include "tasks/tools/lvfs_core_qt_InteractiveEvents.h"
 
+#include <QtGui/QWidget>
 #include <QtCore/QThread>
 #include <QtCore/QTextCodec>
+#include <QtGui/QApplication>
 
 #include <brolly/assert.h>
 
@@ -46,6 +48,16 @@ Node::~Node()
     cancelTasks();
 }
 
+void Node::opened(const Interface::Holder &view)
+{
+    m_views.insert(view);
+}
+
+void Node::closed(const Interface::Holder &view)
+{
+    m_views.erase(view);
+}
+
 QString Node::toUnicode(const char *string)
 {
     QTextCodec *codec = QTextCodec::codecForName("UTF-8");
@@ -56,6 +68,26 @@ QByteArray Node::fromUnicode(const QString &string)
 {
     QTextCodec *codec = QTextCodec::codecForName("UTF-8");
     return codec->fromUnicode(string);
+}
+
+QIcon Node::standardIcon(QStyle::StandardPixmap icon, QWidget *widget)
+{
+    QStyle *style = widget ? widget->style() : QApplication::style();
+    return style->standardIcon(icon, NULL, widget);
+}
+
+QPixmap Node::standardIcon(QStyle::StandardPixmap icon, QStyle::PixelMetric metric, QWidget *widget)
+{
+    QStyle *style = widget ? widget->style() : QApplication::style();
+    QIcon tmpIcon = style->standardIcon(icon, 0, widget);
+
+    if (tmpIcon.isNull())
+        return QPixmap();
+    else
+    {
+        int iconSize = style->pixelMetric(metric, NULL, widget);
+        return tmpIcon.pixmap(iconSize, iconSize);
+    }
 }
 
 void Node::doListFile(int depth)
@@ -114,6 +146,20 @@ bool Node::EventsHandler::event(QEvent *event)
             event->accept();
             m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->completeProgress(static_cast<CompleteProgressEvent *>(event)->item, static_cast<CompleteProgressEvent *>(event)->timeElapsed);
+            return true;
+        }
+
+        case Task::Event::Question:
+        {
+            event->accept();
+            static_cast<QuestionEvent *>(event)->showDialog(QApplication::focusWidget());
+            return true;
+        }
+
+        case Task::Event::UserInput:
+        {
+            event->accept();
+            static_cast<UserInputEvent *>(event)->showDialog(QApplication::focusWidget());
             return true;
         }
 

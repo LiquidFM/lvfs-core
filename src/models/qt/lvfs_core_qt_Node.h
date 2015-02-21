@@ -20,8 +20,10 @@
 #ifndef LVFS_CORE_QT_NODE_H_
 #define LVFS_CORE_QT_NODE_H_
 
+#include <efc/Set>
 #include <efc/List>
 #include <efc/Pair>
+#include <QtGui/QStyle>
 #include <QtCore/QString>
 #include <QtCore/QObject>
 #include <lvfs-core/models/Node>
@@ -34,14 +36,26 @@ namespace Qt {
 class PLATFORM_MAKE_PUBLIC Node : public Core::Node
 {
 public:
+    typedef EFC::Set<Interface::Holder>                                Views;
     typedef EFC::List<EFC::Pair<Interface::Holder, Interface::Holder>> Snapshot;
 
 public:
     Node(const Interface::Holder &file, const Interface::Holder &parent);
     virtual ~Node();
 
+public: /* Core::INode */
+    virtual void opened(const Interface::Holder &view);
+    virtual void closed(const Interface::Holder &view);
+
+public:
     static QString toUnicode(const char *string);
     static QByteArray fromUnicode(const QString &string);
+
+    static QIcon standardIcon(QStyle::StandardPixmap icon, QWidget *widget);
+    static QPixmap standardIcon(QStyle::StandardPixmap icon, QStyle::PixelMetric metric, QWidget *widget);
+
+protected:
+    inline const Views &views() const { return m_views; }
 
 protected: /* Actions section */
     void doListFile(int depth = 0);
@@ -69,6 +83,7 @@ private:
     };
 
 private:
+    EFC::Set<Interface::Holder> m_views;
     EventsHandler m_eventsHandler;
     bool m_doListFile;
 };

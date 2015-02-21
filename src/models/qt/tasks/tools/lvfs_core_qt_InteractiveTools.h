@@ -17,15 +17,43 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_QT_TRYIER_H_
-#define LVFS_CORE_QT_TRYIER_H_
+#ifndef LVFS_CORE_QT_INTERACTIVETOOLS_H_
+#define LVFS_CORE_QT_INTERACTIVETOOLS_H_
 
-#include "../lvfs_core_qt_Task.h"
+#include <platform/utils.h>
+#include <QtCore/QObject>
+#include <QtCore/QDateTime>
+#include <lvfs/Interface>
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
+
+class PLATFORM_MAKE_PRIVATE TaskProgress
+{
+public:
+    TaskProgress(QObject *receiver);
+
+    void init(const Interface::Holder &file, quint64 total);
+    void update(quint64 progressIncrement);
+    void complete();
+    void clear();
+
+private:
+    void postInitEvent();
+    void postUpdateEvent();
+
+private:
+    quint64 m_total;
+    quint64 m_progress;
+    QObject *m_receiver;
+    QDateTime m_baseTime;
+    QDateTime m_currentTime;
+    QDateTime m_startTime;
+    Interface::Holder m_file;
+};
+
 
 class PLATFORM_MAKE_PRIVATE Tryier
 {
@@ -50,9 +78,9 @@ public:
     };
 
 public:
-	inline Tryier(const volatile bool &aborted) :
-		m_aborted(aborted)
-	{}
+    inline Tryier(const volatile bool &aborted) :
+        m_aborted(aborted)
+    {}
 
     template <typename F>
     inline bool askFor(F functor)
@@ -69,28 +97,28 @@ public:
     }
 
     template <typename F>
-	inline bool tryTo(F functor)
-	{
+    inline bool tryTo(F functor)
+    {
         bool res;
 
         do
-			if (res = functor())
-				break;
-			else
-	            if (m_flag.isInitialized())
-	                break;
-				else
-					res = functor(m_flag, m_aborted);
-		while (res && !m_aborted);
+            if (res = functor())
+                break;
+            else
+                if (m_flag.isInitialized())
+                    break;
+                else
+                    res = functor(m_flag, m_aborted);
+        while (res && !m_aborted);
 
-		return res;
-	}
+        return res;
+    }
 
 private:
     Flag m_flag;
-	const volatile bool &m_aborted;
+    const volatile bool &m_aborted;
 };
 
 }}}
 
-#endif /* LVFS_CORE_QT_TRYIER_H_ */
+#endif /* LVFS_CORE_QT_INTERACTIVETOOLS_H_ */

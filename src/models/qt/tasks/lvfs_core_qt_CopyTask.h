@@ -23,8 +23,7 @@
 #include <QtCore/QCoreApplication>
 #include <lvfs-core/models/Qt/Node>
 #include "lvfs_core_qt_FilesBaseTask.h"
-#include "tools/lvfs_core_qt_Tryier.h"
-#include "tools/lvfs_core_qt_TaskProgress.h"
+#include "tools/lvfs_core_qt_InteractiveTools.h"
 
 
 namespace LVFS {

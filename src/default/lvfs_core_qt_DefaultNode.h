@@ -43,8 +43,6 @@ public:
 
 public: /* Core::INode */
     virtual void refresh(int depth);
-    virtual void opened(const Interface::Holder &view);
-    virtual void closed(const Interface::Holder &view);
     virtual void accept(const Interface::Holder &view, Files &files);
     virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Files &files, bool move = false);
 
@@ -106,8 +104,8 @@ private:
         inline bool isLocked() const
         { return !lockReason.isEmpty(); }
 
-        inline void lock(const QString &reason)
-        { lockReason = reason; }
+        inline void lock(const QString &reason, const QIcon &icon)
+        { lockReason = reason; lockIcon = icon; }
 
         inline void unlock()
         { lockReason.clear(); progress = 0; totalSize = 0; }
@@ -124,6 +122,7 @@ private:
         Interface::Holder node;
         EFC::Vector<Item> items;
 
+        QIcon lockIcon;
         QString lockReason;
         quint64 progress;
         quint64 totalSize;
@@ -135,7 +134,6 @@ private:
 
 private:
     EFC::Vector<Item> m_files;
-    EFC::Set<Interface::Holder> m_views;
     QModelIndex m_currentIndex;
     Geometry m_geometry;
     Sorting m_sorting;

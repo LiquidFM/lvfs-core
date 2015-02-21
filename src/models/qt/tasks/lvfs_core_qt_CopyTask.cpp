@@ -162,7 +162,7 @@ bool CopyTask::OverwriteFile::operator()(Tryier::Flag &flag, const volatile bool
 {
     qint32 answer = askUser(
                         tr("Failed to copy..."),
-                        tr("File \"%1\" from \"%2\" already exists in \"%3\".").
+                        tr("File \"%1\" from\n\"%2\"\nalready exists in\n\"%3\".").
                             arg(Qt::Node::toUnicode(m_source->as<IEntry>()->title())).
                             arg(Qt::Node::toUnicode(m_source->as<IEntry>()->location())).
                             arg(Qt::Node::toUnicode(m_destination->as<IEntry>()->location())).
