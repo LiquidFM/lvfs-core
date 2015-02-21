@@ -49,7 +49,7 @@ protected: /* Actions section */
     virtual void doneListFile(Snapshot &files, bool isFirstEvent) = 0;
 
     void doCopyFiles(const Interface::Holder &dest, Files &files, bool move = false);
-    virtual void doneCopyFiles(Snapshot &files, bool isFirstEvent) = 0;
+    virtual void doneCopyFiles(Files &files) = 0;
 
     virtual void initProgress(const Interface::Holder &file, quint64 total) = 0;
     virtual void updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed) = 0;

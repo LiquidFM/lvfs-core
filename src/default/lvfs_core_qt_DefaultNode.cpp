@@ -232,9 +232,10 @@ Core::INode::Files DefaultNode::mapToFile(const QModelIndexList &indices) const
     ASSERT(!indices.isEmpty());
     Core::INode::Files res;
 
-    for (QModelIndexList::size_type i = 0; i < indices.size(); ++i)
+    for (int i = 0, row = -1; i < indices.size(); row = indices.at(i).row(), ++i)
         if (LIKELY(indices.at(i).isValid()))
-            res.push_back(static_cast<Item *>(indices.at(i).internalPointer())->file);
+            if (row != indices.at(i).row())
+                res.push_back(static_cast<Item *>(indices.at(i).internalPointer())->file);
 
     return res;
 }
@@ -623,9 +624,19 @@ void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
             i->as<Qt::IView>()->select(currentIndex());
 }
 
-void DefaultNode::doneCopyFiles(Snapshot &files, bool isFirstEvent)
+void DefaultNode::doneCopyFiles(Files &files)
 {
+    for (auto i = files.begin(); i != files.end(); i = files.erase(i))
+        for (auto q = 0; q < m_files.size(); ++q)
+            if ((*i) == m_files[q].file)
+            {
+                m_files[q].unlock();
 
+                QModelIndex index = createIndex(q, 1, &m_files[q]);
+                emit dataChanged(index, index);
+
+                break;
+            }
 }
 
 void DefaultNode::initProgress(const Interface::Holder &file, quint64 total)

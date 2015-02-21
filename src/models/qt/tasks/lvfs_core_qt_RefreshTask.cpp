@@ -39,7 +39,7 @@ RefreshTask::RefreshTask(QObject *receiver, const Interface::Holder &node, int d
     m_depth(depth)
 {}
 
-void RefreshTask::run(const volatile bool &aborted)
+void RefreshTask::run(volatile bool &aborted)
 {
     Snapshot files;
     bool isFirstEvent = true;
@@ -89,13 +89,13 @@ void RefreshTask::run(const volatile bool &aborted)
 
                 if (!files.empty())
                 {
-                    postEvent(new (std::nothrow) ListFileEvent(this, Event::ProcessListFileEventId, isFirstEvent, files, false));
+                    postEvent(new (std::nothrow) Event(this, Event::ProcessListFileEventId, isFirstEvent, files, false));
                     isFirstEvent = false;
                 }
             }
         }
 
-    postEvent(new (std::nothrow) ListFileEvent(this, Event::DoneListFileEventId, isFirstEvent, files, aborted));
+    postEvent(new (std::nothrow) Event(this, Event::DoneListFileEventId, isFirstEvent, files, aborted));
 }
 
 }}}

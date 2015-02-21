@@ -42,7 +42,9 @@ Node::Node(const Interface::Holder &file, const Interface::Holder &parent) :
 {}
 
 Node::~Node()
-{}
+{
+    cancelTasks();
+}
 
 QString Node::toUnicode(const char *string)
 {
@@ -63,7 +65,7 @@ void Node::doListFile(int depth)
         EFC::Task::Holder task(new (std::nothrow) RefreshTask(&m_eventsHandler, Interface::Holder::fromRawData(this), depth));
 
         m_doListFile = true;
-        handleTask(task);
+        handleTask(task, file());
     }
 }
 
@@ -74,7 +76,7 @@ void Node::doCopyFiles(const Interface::Holder &dest, Files &files, bool move)
         EFC::Task::Holder task(new (std::nothrow) CopyTask(&m_eventsHandler, files, dest, move));
 
         m_doListFile = true;
-        handleTask(task);
+        handleTask(task, static_cast<CopyTask *>(task.get())->files());
     }
 }
 
@@ -91,23 +93,26 @@ bool Node::EventsHandler::event(QEvent *event)
 {
     switch (static_cast<FilesBaseTask::Event::Type>(event->type()))
     {
-        case BaseTask::Event::InitProgress:
+        case Task::Event::InitProgress:
         {
             event->accept();
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->initProgress(static_cast<InitProgressEvent *>(event)->item, static_cast<InitProgressEvent *>(event)->total);
             return true;
         }
 
-        case BaseTask::Event::UpdateProgress:
+        case Task::Event::UpdateProgress:
         {
             event->accept();
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->updateProgress(static_cast<UpdateProgressEvent *>(event)->item, static_cast<UpdateProgressEvent *>(event)->progress, static_cast<UpdateProgressEvent *>(event)->timeElapsed);
             return true;
         }
 
-        case BaseTask::Event::CompleteProgress:
+        case Task::Event::CompleteProgress:
         {
             event->accept();
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->completeProgress(static_cast<CompleteProgressEvent *>(event)->item, static_cast<CompleteProgressEvent *>(event)->timeElapsed);
             return true;
         }
@@ -115,15 +120,25 @@ bool Node::EventsHandler::event(QEvent *event)
         case FilesBaseTask::Event::ProcessListFileEventId:
         {
             event->accept();
-            m_node->processListFile(static_cast<RefreshTask::ListFileEvent *>(event)->snapshot, static_cast<RefreshTask::ListFileEvent *>(event)->isFirstEvent);
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
+            m_node->processListFile(static_cast<RefreshTask::Event *>(event)->snapshot, static_cast<RefreshTask::Event *>(event)->isFirstEvent);
             return true;
         }
 
         case FilesBaseTask::Event::DoneListFileEventId:
         {
             event->accept();
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->m_doListFile = false;
-            m_node->doneListFile(static_cast<RefreshTask::ListFileEvent *>(event)->snapshot, static_cast<RefreshTask::ListFileEvent *>(event)->isFirstEvent);
+            m_node->doneListFile(static_cast<RefreshTask::Event *>(event)->snapshot, static_cast<RefreshTask::Event *>(event)->isFirstEvent);
+            return true;
+        }
+
+        case FilesBaseTask::Event::DoneCopyFilesEventId:
+        {
+            event->accept();
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
+            m_node->doneCopyFiles(static_cast<CopyTask::Event *>(event)->files);
             return true;
         }
 

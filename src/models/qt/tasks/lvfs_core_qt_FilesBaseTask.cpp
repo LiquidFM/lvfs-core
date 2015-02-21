@@ -24,6 +24,7 @@
 #include <lvfs/IFile>
 #include <lvfs/IDirectory>
 #include <lvfs/IProperties>
+#include <lvfs/Module>
 
 
 namespace LVFS {
@@ -31,11 +32,11 @@ namespace Core {
 namespace Qt {
 
 FilesBaseTask::FilesBaseTask(QObject *receiver) :
-    BaseTask(receiver)
+    Task(receiver)
 {}
 
 FilesBaseTask::FilesBaseTask(QObject *receiver, const Interface::Holder &destination) :
-    BaseTask(receiver, destination)
+    Task(receiver, destination)
 {}
 
 uint64_t FilesBaseTask::calculateSize(const Interface::Holder &file)

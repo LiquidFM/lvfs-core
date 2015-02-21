@@ -37,7 +37,10 @@ Node::Node(const Interface::Holder &file, const Interface::Holder &parent) :
 }
 
 Node::~Node()
-{}
+{
+    /* All tasks should be canceled before derived class destroyed */
+    ASSERT(m_tasks.empty());
+}
 
 const Interface::Holder &Node::parent() const
 {
@@ -47,6 +50,12 @@ const Interface::Holder &Node::parent() const
 const Interface::Holder &Node::file() const
 {
     return m_file;
+}
+
+void Node::cancel(const Files &files)
+{
+    for (auto &i : files)
+        cancelTask(i);
 }
 
 int Node::refs() const
@@ -64,9 +73,50 @@ int Node::decRef()
     return --m_ref;
 }
 
-void Node::handleTask(EFC::Task::Holder &task)
+void Node::handleTask(EFC::Task::Holder &task, const Interface::Holder &file)
 {
+    m_tasks[task.get()].push_back(file);
+    m_items[file] = task.get();
     tasksPool.handle(task);
+}
+
+void Node::handleTask(EFC::Task::Holder &task, const Files &files)
+{
+    m_tasks[task.get()] = files;
+
+    for (auto &i : files)
+        m_items[i] = task.get();
+
+    tasksPool.handle(task);
+}
+
+void Node::cancelTask(const Interface::Holder &file)
+{
+    auto i = m_items.find(file);
+
+    if (i != m_items.end())
+        tasksPool.cancel(i->second, false);
+}
+
+void Node::doneTask(EFC::Task *task)
+{
+    auto i = m_tasks.find(task);
+
+    if (i != m_tasks.end())
+    {
+        for (auto &q : i->second)
+            m_items.erase(q);
+
+        m_tasks.erase(i);
+    }
+}
+
+void Node::cancelTasks()
+{
+    m_items.clear();
+
+    for (auto i = m_tasks.begin(); i != m_tasks.end(); i = m_tasks.erase(i))
+        tasksPool.cancel(i->first, true);
 }
 
 }}

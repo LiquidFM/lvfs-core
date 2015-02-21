@@ -22,18 +22,18 @@
 
 #include <platform/utils.h>
 #include <QtCore/QModelIndex>
-#include "../lvfs_core_qt_BaseTask.h"
+#include "../lvfs_core_qt_Task.h"
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-class PLATFORM_MAKE_PRIVATE InitProgressEvent : public BaseTask::Event
+class PLATFORM_MAKE_PRIVATE InitProgressEvent : public Task::Event
 {
 public:
     InitProgressEvent(const Interface::Holder &item, quint64 total) :
-        BaseTask::Event(NULL, BaseTask::Event::InitProgress, false),
+        Task::Event(NULL, Task::Event::InitProgress, false),
         item(item),
         total(total)
     {}
@@ -42,11 +42,11 @@ public:
     quint64 total;
 };
 
-class PLATFORM_MAKE_PRIVATE UpdateProgressEvent : public BaseTask::Event
+class PLATFORM_MAKE_PRIVATE UpdateProgressEvent : public Task::Event
 {
 public:
 	UpdateProgressEvent(const Interface::Holder &item, quint64 progress, quint64 timeElapsed) :
-		BaseTask::Event(NULL, BaseTask::Event::UpdateProgress, false),
+		Task::Event(NULL, Task::Event::UpdateProgress, false),
 		item(item),
 		progress(progress),
 		timeElapsed(timeElapsed)
@@ -58,11 +58,11 @@ public:
 };
 
 
-class PLATFORM_MAKE_PRIVATE CompleteProgressEvent : public BaseTask::Event
+class PLATFORM_MAKE_PRIVATE CompleteProgressEvent : public Task::Event
 {
 public:
 	CompleteProgressEvent(const Interface::Holder &item, quint64 timeElapsed) :
-		BaseTask::Event(NULL, BaseTask::Event::CompleteProgress, false),
+		Task::Event(NULL, Task::Event::CompleteProgress, false),
 		item(item),
 		timeElapsed(timeElapsed)
 	{}

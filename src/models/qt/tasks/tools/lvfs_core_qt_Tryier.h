@@ -20,7 +20,7 @@
 #ifndef LVFS_CORE_QT_TRYIER_H_
 #define LVFS_CORE_QT_TRYIER_H_
 
-#include "../lvfs_core_qt_BaseTask.h"
+#include "../lvfs_core_qt_Task.h"
 
 
 namespace LVFS {

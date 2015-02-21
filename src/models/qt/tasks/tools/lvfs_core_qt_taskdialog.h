@@ -26,14 +26,14 @@
 #include <QtGui/QMessageBox>
 #include <brolly/assert.h>
 
-#include "../lvfs_core_qt_BaseTask.h"
+#include "../lvfs_core_qt_Task.h"
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-class PLATFORM_MAKE_PRIVATE QuestionEvent: public BaseTask::Event
+class PLATFORM_MAKE_PRIVATE QuestionEvent: public Task::Event
 {
 public:
 	class Result
@@ -84,7 +84,7 @@ private:
 };
 
 
-class PLATFORM_MAKE_PRIVATE UserInputEvent: public BaseTask::Event
+class PLATFORM_MAKE_PRIVATE UserInputEvent: public Task::Event
 {
 public:
 	class Result

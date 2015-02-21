@@ -21,6 +21,7 @@
 #define WORKSPACE_LVFS_CORE_SRC_MODELS_QT_TASKS_LVFS_CORE_QT_COPYTASK_H_
 
 #include <QtCore/QCoreApplication>
+#include <lvfs-core/models/Qt/Node>
 #include "lvfs_core_qt_FilesBaseTask.h"
 #include "tools/lvfs_core_qt_Tryier.h"
 #include "tools/lvfs_core_qt_TaskProgress.h"
@@ -35,26 +36,27 @@ class PLATFORM_MAKE_PRIVATE CopyTask : public FilesBaseTask
     Q_DECLARE_TR_FUNCTIONS(CopyTask)
 
 public:
-    typedef EFC::List<Interface::Holder> Snapshot;
+    typedef Qt::Node::Files Files;
+
+    class Event : public FilesBaseTask::ExtendedEvent
+    {
+    public:
+        Event(Task *task, Type type, bool canceled, const Interface::Holder &dest, Files &files) :
+            FilesBaseTask::ExtendedEvent(task, type, canceled, dest),
+            files(std::move(files))
+        {}
+
+        Files files;
+    };
 
 public:
-//    class ExtendedEvent : public FilesBaseTask::ExtendedEvent
-//    {
-//    public:
-//        ExtendedEvent(BaseTask *task, Type type, const Interface::Holder &dest, bool canceled, Snapshot &snapshot, bool move) :
-//            FilesBaseTask::ExtendedEvent(task, type, dest, canceled, snapshot),
-//            move(move)
-//        {}
-//
-//        bool move;
-//    };
-
-public:
-    CopyTask(QObject *receiver, Snapshot &snapshot, const Interface::Holder &dest, bool move);
+    CopyTask(QObject *receiver, Files &files, const Interface::Holder &dest, bool move);
     virtual ~CopyTask();
 
+    const Files &files() const { return m_files; }
+
 protected:
-    virtual void run(const volatile bool &aborted);
+    virtual void run(volatile bool &aborted);
 
 protected:
     class BaseFunctor
@@ -67,7 +69,7 @@ protected:
         {
             CopyTask *object;
             AskUser askUser;
-            Cancel cancel;
+            volatile bool *aborted;
         };
 
     public:
@@ -77,7 +79,7 @@ protected:
 
     protected:
         void cancel() const
-        { (m_methods.object->*m_methods.cancel)(); }
+        { *m_methods.aborted = true; }
         qint32 askUser(const QString &title, const QString &question, qint32 buttons, const volatile bool &aborted) const
         { return (m_methods.object->*m_methods.askUser)(title, question, buttons, aborted); }
 
@@ -130,7 +132,7 @@ private:
 
 private:
     bool m_move;
-    Snapshot m_snapshot;
+    Files m_files;
 
     Tryier *m_tryier;
     Tryier *m_overwrite;

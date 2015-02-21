@@ -16,7 +16,7 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lvfs_core_qt_BaseTask.h"
+#include "lvfs_core_qt_Task.h"
 #include "tools/lvfs_core_qt_taskdialog.h"
 
 #include <QtGui/QApplication>
@@ -29,31 +29,29 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-BaseTask::BaseTask(QObject *receiver) :
-    Task(),
-    m_receiver(receiver),
-    m_canceled(false)
+Task::Task(QObject *receiver) :
+    EFC::Task(),
+    m_receiver(receiver)
 {
     ASSERT(m_receiver != NULL);
 }
 
-BaseTask::BaseTask(QObject *receiver, const Interface::Holder &destination) :
-    Task(),
+Task::Task(QObject *receiver, const Interface::Holder &dest) :
+    EFC::Task(),
     m_receiver(receiver),
-    m_canceled(false),
-    m_destination(destination)
+    m_destination(dest)
 {
     ASSERT(m_receiver != NULL);
     ASSERT(m_destination.isValid());
     ASSERT(m_receiver->thread() == QThread::currentThread());
 }
 
-void BaseTask::postEvent(Event *event) const
+void Task::postEvent(Event *event) const
 {
     QApplication::postEvent(m_receiver, event);
 }
 
-qint32 BaseTask::askUser(const QString &title, const QString &question, qint32 buttons, const volatile bool &aborted) const
+qint32 Task::askUser(const QString &title, const QString &question, qint32 buttons, const volatile bool &aborted) const
 {
     QuestionEvent::Result result;
     postEvent(new QuestionEvent(title, question, buttons, &result));
@@ -61,7 +59,7 @@ qint32 BaseTask::askUser(const QString &title, const QString &question, qint32 b
     return result.answer();
 }
 
-qint32 BaseTask::askForUserInput(const QString &title, const QString &question, qint32 buttons, QString &value, const volatile bool &aborted) const
+qint32 Task::askForUserInput(const QString &title, const QString &question, qint32 buttons, QString &value, const volatile bool &aborted) const
 {
     UserInputEvent::Result result;
     postEvent(new UserInputEvent(title, question, buttons, &result));

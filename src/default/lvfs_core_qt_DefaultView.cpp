@@ -51,6 +51,7 @@ DefaultView::DefaultView() :
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Return, &DefaultView::goIntoShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Enter, &DefaultView::goIntoShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Backspace, &DefaultView::goUpShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Escape, &DefaultView::cancelShortcut);
     m_eventHandler.registerShortcut(::Qt::ALT + ::Qt::CTRL, ::Qt::Key_X, &DefaultView::pathToClipboardShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F2, &DefaultView::renameShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F8, &DefaultView::createFileShortcut);
@@ -161,6 +162,23 @@ void DefaultView::goIntoShortcut()
     m_node->as<Qt::INode>()->activated(m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), Interface::Holder::fromRawData(this));
 }
 
+void DefaultView::cancelShortcut()
+{
+    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
+
+    if (!items.isEmpty())
+    {
+        QModelIndexList indices;
+        indices.reserve(items.size());
+
+        for (int i = 0; i < items.size(); ++i)
+            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
+
+        Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(indices);
+        m_node->as<Core::INode>()->cancel(files);
+    }
+}
+
 void DefaultView::pathToClipboardShortcut()
 {
 
@@ -200,9 +218,8 @@ void DefaultView::copyShortcut()
         QModelIndexList indices;
         indices.reserve(items.size());
 
-        for (int i = 0, row = -1; i < items.size(); row = items.at(i).row(), ++i)
-            if (row != items.at(i).row())
-                indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
+        for (int i = 0; i < items.size(); ++i)
+            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
 
         Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(indices);
 

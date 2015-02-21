@@ -20,46 +20,44 @@
 #ifndef LVFS_CORE_QT_FILESBASETASK_H_
 #define LVFS_CORE_QT_FILESBASETASK_H_
 
-#include "lvfs_core_qt_BaseTask.h"
+#include "lvfs_core_qt_Task.h"
 
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
-class PLATFORM_MAKE_PRIVATE FilesBaseTask : public BaseTask
+class PLATFORM_MAKE_PRIVATE FilesBaseTask : public Task
 {
 public:
-    class Event : public BaseTask::Event
+    class Event : public Task::Event
     {
         PLATFORM_MAKE_NONCOPYABLE(Event)
 
     public:
         enum Type
         {
-            ProcessListFileEventId = BaseTask::Event::User,
-            DoneListFileEventId = BaseTask::Event::User + 1,
+            ProcessListFileEventId = Task::Event::User,
+            DoneListFileEventId = Task::Event::User + 1,
+            DoneCopyFilesEventId = Task::Event::User + 2,
 
-            ScanFilesForSize = BaseTask::Event::User + 1,
-            ScanFilesForRemove = BaseTask::Event::User + 2,
-            ScanFilesForCopy = BaseTask::Event::User + 3,
-            RemoveFiles = BaseTask::Event::User + 4,
-            CopyFiles = BaseTask::Event::User + 5,
-            SearchFiles_NewFile = BaseTask::Event::User + 6,
-            SearchFiles_Done = BaseTask::Event::User + 7,
-            ScanClipboardFiles_Update = BaseTask::Event::User + 8
+            ScanFilesForSize = Task::Event::User + 1,
+            ScanFilesForRemove = Task::Event::User + 2,
+            ScanFilesForCopy = Task::Event::User + 3,
+            RemoveFiles = Task::Event::User + 4,
+            CopyFiles = Task::Event::User + 5,
+            SearchFiles_NewFile = Task::Event::User + 6,
+            SearchFiles_Done = Task::Event::User + 7,
+            ScanClipboardFiles_Update = Task::Event::User + 8
         };
 
     public:
-        Event(BaseTask *task, Type type, bool canceled, Snapshot &snapshot) :
-            BaseTask::Event(task, static_cast<BaseTask::Event::Type>(type), canceled),
-            snapshot(std::move(snapshot))
+        Event(Task *task, Type type, bool canceled) :
+            Task::Event(task, static_cast<Task::Event::Type>(type), canceled)
         {}
-
-        Snapshot snapshot;
     };
 
-    class ExtendedEvent : public BaseTask::ExtendedEvent
+    class ExtendedEvent : public Task::ExtendedEvent
     {
         PLATFORM_MAKE_NONCOPYABLE(ExtendedEvent)
 
@@ -67,12 +65,9 @@ public:
         typedef FilesBaseTask::Event::Type Type;
 
     public:
-        ExtendedEvent(BaseTask *task, Type type, const Interface::Holder &destination, bool canceled, Snapshot &snapshot) :
-            BaseTask::ExtendedEvent(task, static_cast<BaseTask::Event::Type>(type), destination, canceled),
-            snapshot(std::move(snapshot))
+        ExtendedEvent(Task *task, Type type, bool canceled, const Interface::Holder &dest) :
+            Task::ExtendedEvent(task, static_cast<Task::Event::Type>(type), canceled, dest)
         {}
-
-        Snapshot snapshot;
     };
 
 public:

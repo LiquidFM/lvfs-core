@@ -84,7 +84,7 @@ protected: /* Core::INode */
 protected: /* Core::Qt::Node */
     virtual void processListFile(Snapshot &files, bool isFirstEvent);
     virtual void doneListFile(Snapshot &files, bool isFirstEvent);
-    virtual void doneCopyFiles(Snapshot &files, bool isFirstEvent);
+    virtual void doneCopyFiles(Files &files);
 
     virtual void initProgress(const Interface::Holder &file, quint64 total);
     virtual void updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed);

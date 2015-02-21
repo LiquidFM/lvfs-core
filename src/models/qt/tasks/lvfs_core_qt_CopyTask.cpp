@@ -29,19 +29,19 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-CopyTask::CopyTask(QObject *receiver, Snapshot &snapshot, const Interface::Holder &dest, bool move) :
+CopyTask::CopyTask(QObject *receiver, Files &files, const Interface::Holder &dest, bool move) :
     FilesBaseTask(receiver, dest),
     m_move(move),
-    m_snapshot(std::move(snapshot)),
+    m_files(std::move(files)),
     m_tryier(NULL),
     m_progress(receiver),
-    m_methods({ this, &CopyTask::askUser, &CopyTask::cancel })
+    m_methods({ this, &CopyTask::askUser, NULL })
 {}
 
 CopyTask::~CopyTask()
 {}
 
-void CopyTask::run(const volatile bool &aborted)
+void CopyTask::run(volatile bool &aborted)
 {
     struct StackEntry
     {
@@ -61,7 +61,9 @@ void CopyTask::run(const volatile bool &aborted)
     Tryier overwrite(aborted);
     m_overwrite = &overwrite;
 
-    for (Snapshot::const_iterator it = m_snapshot.begin(), end = m_snapshot.end(); it != end && !aborted; ++it)
+    m_methods.aborted = &aborted;
+
+    for (Files::const_iterator it = m_files.begin(), end = m_files.end(); it != end && !aborted; ++it)
     {
         m_progress.init(*it, calculateSize(*it));
 
@@ -110,7 +112,7 @@ void CopyTask::run(const volatile bool &aborted)
         m_progress.complete();
     }
 
-//    postEvent(new ExtendedEvent(this, Event::CopyFiles, destination(), aborted, m_snapshot, m_move));
+    postEvent(new (std::nothrow) Event(this, FilesBaseTask::Event::DoneCopyFilesEventId, aborted, destination(), m_files));
 }
 
 bool CopyTask::CreateDestinationFolder::operator()()

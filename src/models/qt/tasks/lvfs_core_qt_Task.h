@@ -17,13 +17,13 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LVFS_CORE_QT_BASETASK_H_
-#define LVFS_CORE_QT_BASETASK_H_
+#ifndef LVFS_CORE_QT_TASK_H_
+#define LVFS_CORE_QT_TASK_H_
 
 #include <efc/Task>
 #include <QtCore/QEvent>
 #include <QtCore/QObject>
-#include <lvfs-core/models/Qt/Node>
+#include <lvfs/Interface>
 
 
 namespace LVFS {
@@ -31,11 +31,9 @@ namespace Core {
 namespace Qt {
 
 
-class PLATFORM_MAKE_PRIVATE BaseTask : public EFC::Task
+class PLATFORM_MAKE_PRIVATE Task : public EFC::Task
 {
 public:
-    typedef Qt::Node::Snapshot Snapshot;
-
     class Event : public QEvent
     {
         PLATFORM_MAKE_NONCOPYABLE(Event)
@@ -55,11 +53,11 @@ public:
         };
 
     public:
-        BaseTask *task;
+        Task *task;
         bool canceled;
 
     protected:
-        Event(BaseTask *task, Type type, bool canceled) :
+        Event(Task *task, Type type, bool canceled) :
             QEvent(static_cast<QEvent::Type>(type)),
             task(task),
             canceled(canceled)
@@ -74,17 +72,16 @@ public:
         Interface::Holder destination;
 
     protected:
-        ExtendedEvent(BaseTask *task, Type type, const Interface::Holder &destination, bool canceled) :
-            BaseTask::Event(task, type, canceled),
-            destination(destination)
+        ExtendedEvent(Task *task, Type type, bool canceled, const Interface::Holder &dest) :
+            Task::Event(task, type, canceled),
+            destination(dest)
         {}
     };
 
 public:
-    BaseTask(QObject *receiver);
-    BaseTask(QObject *receiver, const Interface::Holder &destination);
+    Task(QObject *receiver);
+    Task(QObject *receiver, const Interface::Holder &dest);
 
-    void cancel() { m_canceled = true; }
     const Interface::Holder &destination() const { return m_destination; }
 
 protected:
@@ -96,14 +93,10 @@ protected:
     qint32 askForUserInput(const QString &title, const QString &question, qint32 buttons, QString &value, const volatile bool &aborted) const;
 
 private:
-    void taskHandled();
-
-private:
     QObject *m_receiver;
-    bool m_canceled;
     Interface::Holder m_destination;
 };
 
 }}}
 
-#endif /* LVFS_CORE_QT_BASETASK_H_ */
+#endif /* LVFS_CORE_QT_TASK_H_ */

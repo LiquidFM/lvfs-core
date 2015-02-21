@@ -20,6 +20,7 @@
 #ifndef LVFS_CORE_QT_REFRESHTASK_H_
 #define LVFS_CORE_QT_REFRESHTASK_H_
 
+#include <lvfs-core/models/Qt/Node>
 #include "lvfs_core_qt_FilesBaseTask.h"
 
 
@@ -30,14 +31,18 @@ namespace Qt {
 class PLATFORM_MAKE_PRIVATE RefreshTask : public FilesBaseTask
 {
 public:
-    class ListFileEvent : public Event
+    typedef Qt::Node::Snapshot Snapshot;
+
+    class Event : public FilesBaseTask::Event
     {
     public:
-        ListFileEvent(BaseTask *task, Type type, bool isFirstEvent, Snapshot &snapshot, bool canceled) :
-            Event(task, type, canceled, snapshot),
+        Event(Task *task, Type type, bool canceled, Snapshot &snapshot, bool isFirstEvent) :
+            FilesBaseTask::Event(task, type, canceled),
+            snapshot(std::move(snapshot)),
             isFirstEvent(isFirstEvent)
         {}
 
+        Snapshot snapshot;
         bool isFirstEvent;
     };
 
@@ -45,7 +50,7 @@ public:
     RefreshTask(QObject *receiver, const Interface::Holder &node, int depth);
 
 protected:
-    virtual void run(const volatile bool &aborted);
+    virtual void run(volatile bool &aborted);
 
 private:
     Interface::Holder m_node;
