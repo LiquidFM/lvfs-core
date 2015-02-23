@@ -35,6 +35,8 @@
 #include <lvfs-core/IMainView>
 #include <lvfs-core/models/Qt/IView>
 #include <lvfs-core/tools/strings/readableints.h>
+
+#include <efc/Set>
 #include <efc/ScopedPointer>
 
 #include <platform/platform.h>
@@ -220,12 +222,12 @@ Core::INode::Files DefaultNode::mapToFile(const QModelIndex &index) const
 Core::INode::Files DefaultNode::mapToFile(const QModelIndexList &indices) const
 {
     ASSERT(!indices.isEmpty());
+    EFC::Set<Interface::Holder> set;
     Core::INode::Files res;
 
-    for (int i = 0, row = -1; i < indices.size(); row = indices.at(i).row(), ++i)
-        if (LIKELY(indices.at(i).isValid()))
-            if (row != indices.at(i).row())
-                res.push_back(static_cast<Item *>(indices.at(i).internalPointer())->file);
+    for (int i = 0; i < indices.size(); ++i)
+        if (set.insert(static_cast<Item *>(indices.at(i).internalPointer())->file).second)
+            res.push_back(static_cast<Item *>(indices.at(i).internalPointer())->file);
 
     return res;
 }
