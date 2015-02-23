@@ -22,7 +22,6 @@
 
 #include <efc/Map>
 #include <efc/List>
-#include <efc/Task>
 #include <lvfs-core/INode>
 
 

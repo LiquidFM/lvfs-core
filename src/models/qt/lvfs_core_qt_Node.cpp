@@ -44,9 +44,7 @@ Node::Node(const Interface::Holder &file, const Interface::Holder &parent) :
 {}
 
 Node::~Node()
-{
-    cancelTasks();
-}
+{}
 
 void Node::opened(const Interface::Holder &view)
 {

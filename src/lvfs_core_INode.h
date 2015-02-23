@@ -21,12 +21,16 @@
 #define LVFS_CORE_INODE_H_
 
 #include <efc/List>
+#include <efc/Task>
 #include <lvfs/Interface>
 #include <lvfs/Module>
 
 
 namespace LVFS {
 namespace Core {
+
+class Node;
+
 
 class PLATFORM_MAKE_PUBLIC INode
 {
@@ -54,6 +58,10 @@ public:
     virtual int decRef() = 0;
     virtual void clear() = 0;
 
+public:
+    static Interface::Holder open(const char *uri, Module::Error &error);
+    static void cleanup();
+
 protected:
     virtual Interface::Holder node(const Interface::Holder &file) const = 0;
     virtual void setNode(const Interface::Holder &file, const Interface::Holder &node) = 0;
@@ -77,9 +85,10 @@ protected:
                 i = container.erase(i);
     }
 
-public:
-    static Interface::Holder open(const char *uri, Module::Error &error);
-    static void cleanup();
+private:
+    friend class Node;
+    static void handleTask(EFC::Task::Holder &task);
+    static void cancelTask(const EFC::Task *task, bool wait);
 };
 
 }}

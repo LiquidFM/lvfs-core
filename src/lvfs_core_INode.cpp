@@ -31,6 +31,7 @@
 
 #include <efc/Map>
 #include <efc/String>
+#include <efc/TasksPool>
 #include <brolly/assert.h>
 
 #include <cstring>
@@ -40,6 +41,7 @@
 
 
 int DefaultNode_count;
+static EFC::TasksPool tasksPool(10);
 
 
 namespace LVFS {
@@ -219,7 +221,11 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
             }
             else
             {
-                file = Module::open(buffer, error);
+                if (*p)
+                    file = Module::open(buffer, error);
+                else
+                    return current;
+
                 p = NULL;
             }
         }
@@ -230,10 +236,22 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
 
 void INode::cleanup()
 {
+    tasksPool.clear();
+
     for (Container::iterator i = root.items.begin(); i != root.items.end(); i = root.items.erase(i))
         i->second->as<Core::INode>()->clear();
 
     printf("!!!!!!!!!!!!!!There is %d nodes\n", DefaultNode_count);
+}
+
+void INode::handleTask(EFC::Task::Holder &task)
+{
+    tasksPool.handle(task);
+}
+
+void INode::cancelTask(const EFC::Task *task, bool wait)
+{
+    tasksPool.cancel(task, wait);
 }
 
 }}

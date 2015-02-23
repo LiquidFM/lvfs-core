@@ -19,14 +19,11 @@
 
 #include "lvfs_core_Node.h"
 
-#include <efc/TasksPool>
 #include <brolly/assert.h>
 
 
 namespace LVFS {
 namespace Core {
-
-static EFC::TasksPool tasksPool(10);
 
 Node::Node(const Interface::Holder &file, const Interface::Holder &parent) :
     m_ref(0),
@@ -38,7 +35,6 @@ Node::Node(const Interface::Holder &file, const Interface::Holder &parent) :
 
 Node::~Node()
 {
-    /* All tasks should be canceled before derived class destroyed */
     ASSERT(m_tasks.empty());
 }
 
@@ -77,7 +73,11 @@ void Node::handleTask(EFC::Task::Holder &task, const Interface::Holder &file)
 {
     m_tasks[task.get()].push_back(file);
     m_items[file] = task.get();
-    tasksPool.handle(task);
+
+    for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+        n->as<Core::INode>()->incRef();
+
+    Core::INode::handleTask(task);
 }
 
 void Node::handleTask(EFC::Task::Holder &task, const Files &files)
@@ -87,7 +87,10 @@ void Node::handleTask(EFC::Task::Holder &task, const Files &files)
     for (auto &i : files)
         m_items[i] = task.get();
 
-    tasksPool.handle(task);
+    for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+        n->as<Core::INode>()->incRef();
+
+    Core::INode::handleTask(task);
 }
 
 void Node::cancelTask(const Interface::Holder &file)
@@ -95,7 +98,7 @@ void Node::cancelTask(const Interface::Holder &file)
     auto i = m_items.find(file);
 
     if (i != m_items.end())
-        tasksPool.cancel(i->second, false);
+        Core::INode::cancelTask(i->second, false);
 }
 
 void Node::doneTask(EFC::Task *task)
@@ -108,6 +111,10 @@ void Node::doneTask(EFC::Task *task)
             m_items.erase(q);
 
         m_tasks.erase(i);
+
+        for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+            if (n->as<Core::INode>()->decRef() == 0)
+                n->as<Core::INode>()->clear();
     }
 }
 
@@ -116,7 +123,13 @@ void Node::cancelTasks()
     m_items.clear();
 
     for (auto i = m_tasks.begin(); i != m_tasks.end(); i = m_tasks.erase(i))
-        tasksPool.cancel(i->first, true);
+    {
+        Core::INode::cancelTask(i->first, true);
+
+        for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+            if (n->as<Core::INode>()->decRef() == 0)
+                n->as<Core::INode>()->clear();
+    }
 }
 
 }}

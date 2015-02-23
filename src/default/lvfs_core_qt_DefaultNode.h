@@ -95,7 +95,8 @@ private:
             isDir(false),
             parent(parent),
             progress(0),
-            totalSize(0)
+            totalSize(0),
+            refreshDest(false)
         {}
 
         inline bool operator==(const Item &other) const
@@ -104,11 +105,11 @@ private:
         inline bool isLocked() const
         { return !lockReason.isEmpty(); }
 
-        inline void lock(const QString &reason, const QIcon &icon)
-        { lockReason = reason; lockIcon = icon; }
+        inline void lock(const QString &reason, const QIcon &icon, const Interface::Holder &dest)
+        { lockReason = reason; lockIcon = icon; destNode = dest; refreshDest = true; }
 
         inline void unlock()
-        { lockReason.clear(); progress = 0; totalSize = 0; }
+        { lockIcon = QIcon(); lockReason.clear(); progress = 0; totalSize = 0; destNode.reset(); }
 
         bool isDir;
         Item *parent;
@@ -126,7 +127,12 @@ private:
         QString lockReason;
         quint64 progress;
         quint64 totalSize;
+        bool refreshDest;
+        Interface::Holder destNode;
     };
+
+    void safeClear(Snapshot &files);
+    void unsafeClear();
 
     QModelIndex index(Item *item) const;
     QModelIndex parent(Item *item) const;

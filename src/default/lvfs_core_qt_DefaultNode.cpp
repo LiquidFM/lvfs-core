@@ -163,7 +163,7 @@ void DefaultNode::copy(const Interface::Holder &view, const Interface::Holder &d
         for (auto &q : m_files)
             if (i == q.file)
             {
-                q.lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()));
+                q.lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()), dest);
                 break;
             }
 
@@ -172,26 +172,7 @@ void DefaultNode::copy(const Interface::Holder &view, const Interface::Holder &d
 
 void DefaultNode::clear()
 {
-    if (!m_files.empty())
-    {
-        struct LocalAdaptor
-        {
-            inline Interface::Holder &operator()(EFC::Vector<Item>::iterator &iterator)
-            { return iterator->node; }
-        };
-
-        beginRemoveRows(QModelIndex(), 0, m_files.size() - 1);
-        Core::INode::clear(m_files, LocalAdaptor());
-        EFC::Vector<Item> files(std::move(m_files));
-        endRemoveRows();
-
-        if (!files.empty())
-        {
-            beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
-            m_files = std::move(files);
-            endInsertRows();
-        }
-    }
+    unsafeClear();
 }
 
 QAbstractItemModel *DefaultNode::model() const
@@ -234,17 +215,15 @@ Core::INode::Files DefaultNode::mapToFile(const QModelIndexList &indices) const
 
 bool DefaultNode::isLocked(const QModelIndex &index, quint64 &progress, quint64 &total) const
 {
-    if (index.isValid())
+    ASSERT(index.isValid());
+    Item *leftItem = static_cast<Item *>(index.internalPointer());
+
+    if (leftItem->isLocked())
     {
-        Item *leftItem = static_cast<Item *>(index.internalPointer());
+        progress = leftItem->progress;
+        total = leftItem->totalSize;
 
-        if (leftItem->isLocked())
-        {
-            progress = leftItem->progress;
-            total = leftItem->totalSize;
-
-            return true;
-        }
+        return true;
     }
 
     return false;
@@ -474,56 +453,6 @@ QModelIndex DefaultNode::parent(const QModelIndex &child) const
     return QModelIndex();
 }
 
-QModelIndex DefaultNode::index(Item *item) const
-{
-    if (item->parent)
-        for (auto i = item->parent->items.begin(), end = item->parent->items.end(); i != end; ++i)
-            if (*i == *item)
-                return createIndex(i - item->parent->items.begin(), 0, item);
-
-    for (auto i = m_files.begin(), end = m_files.end(); i != end; ++i)
-        if (*i == *item)
-            return createIndex(i - m_files.begin(), 0, item);
-
-    return QModelIndex();
-}
-
-QModelIndex DefaultNode::parent(Item *item) const
-{
-//    if (Core::INode *coreNode = item->node->as<Core::INode>())
-//        if (coreNode->parent().isValid())
-//        {
-//            if (Core::INode *coreParentNode = coreNode->parent()->as<Core::INode>())
-//                if (coreParentNode->parent().isValid())
-//                    if (Qt::INode *qtGrandParentNode = coreParentNode->parent()->as<Qt::INode>())
-//                        return createIndex(qtGrandParentNode->indexOf(coreNode->parent()), 0, const_cast<Item *>(&coreNode->parent()));
-//
-//            return createIndex(indexOf(coreNode->parent()), 0, const_cast<Item *>(&coreNode->parent()));
-//        }
-
-    return QModelIndex();
-}
-
-//QModelIndex DefaultNode::parent(Item *item, size_type &row) const
-//{
-//    if (Item *parent = item->parent().as<Node>())
-//        if (Item *parentParent = parent->parent().as<Node>())
-//        {
-//            row = static_cast<Item *>(parent)->indexOf(item);
-//            return createIndex(static_cast<Item *>(parentParent)->indexOf(parent), 0, parent);
-//        }
-//        else
-//        {
-//            row = static_cast<Item *>(parent)->indexOf(item);
-//            return createIndex(indexOf(parent), 0, parent);
-//        }
-//    else
-//    {
-//        row = indexOf(item);
-//        return QModelIndex();
-//    }
-//}
-
 Interface::Holder DefaultNode::node(const Interface::Holder &file) const
 {
     ASSERT(file.isValid());
@@ -565,10 +494,10 @@ void DefaultNode::setNode(const Interface::Holder &file, const Interface::Holder
 void DefaultNode::processListFile(Snapshot &files, bool isFirstEvent)
 {
     if (isFirstEvent)
-        clear();
+        safeClear(files);
 
     beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
-    for (auto i = files.begin(), end = files.end(); i != end; i = files.erase(i))
+    for (auto i = files.begin(); i != files.end(); i = files.erase(i))
     {
         Item item;
 
@@ -590,12 +519,12 @@ void DefaultNode::processListFile(Snapshot &files, bool isFirstEvent)
 void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
 {
     if (isFirstEvent)
-        clear();
+        safeClear(files);
 
     if (!files.empty())
     {
         beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
-        for (auto i = files.begin(), end = files.end(); i != end; i = files.erase(i))
+        for (auto i = files.begin(); i != files.end(); i = files.erase(i))
         {
             Item item;
 
@@ -659,6 +588,12 @@ void DefaultNode::updateProgress(const Interface::Holder &file, quint64 progress
             QModelIndex index = createIndex(i, 1, &m_files[i]);
             emit dataChanged(index, index);
 
+            if (m_files[i].refreshDest)
+            {
+                m_files[i].refreshDest = false;
+                m_files[i].destNode->as<Core::INode>()->refresh();
+            }
+
             break;
         }
 }
@@ -676,5 +611,131 @@ void DefaultNode::completeProgress(const Interface::Holder &file, quint64 timeEl
             break;
         }
 }
+
+void DefaultNode::safeClear(Snapshot &files)
+{
+    if (!m_files.empty())
+    {
+        struct LocalAdaptor
+        {
+            inline Interface::Holder &operator()(EFC::Vector<Item>::iterator &iterator)
+            { return iterator->node; }
+        };
+
+        EFC::Vector<Item> tmp_files;
+        tmp_files.reserve(m_files.size());
+
+        beginRemoveRows(QModelIndex(), 0, m_files.size() - 1);
+        {
+            for (auto q = m_files.begin(); q != m_files.end();)
+                if (q->isLocked())
+                {
+                    tmp_files.push_back(std::move(*q));
+                    q = m_files.erase(q);
+                }
+                else
+                    ++q;
+
+            Core::INode::clear(m_files, LocalAdaptor());
+            std::move(m_files.begin(), m_files.end(), std::back_inserter(tmp_files));
+            m_files.clear();
+        }
+        endRemoveRows();
+
+        if (!tmp_files.empty())
+        {
+            beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + tmp_files.size() - 1);
+            m_files = std::move(tmp_files);
+            endInsertRows();
+
+            for (auto i = files.begin(), tmp = i; i != files.end(); tmp = i)
+            {
+                for (auto q = m_files.begin(), end = m_files.end(); q != end; ++q)
+                    if (::strcmp(i->first->as<IEntry>()->title(), q->file->as<IEntry>()->title()) == 0)
+                    {
+                        i = files.erase(i);
+                        break;
+                    }
+
+                if (tmp == i)
+                    ++i;
+            }
+        }
+    }
+}
+
+void DefaultNode::unsafeClear()
+{
+    if (!m_files.empty())
+    {
+        struct LocalAdaptor
+        {
+            inline Interface::Holder &operator()(EFC::Vector<Item>::iterator &iterator)
+            { return iterator->node; }
+        };
+
+        beginRemoveRows(QModelIndex(), 0, m_files.size() - 1);
+        Core::INode::clear(m_files, LocalAdaptor());
+        EFC::Vector<Item> files(std::move(m_files));
+        endRemoveRows();
+
+        if (!files.empty())
+        {
+            beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
+            m_files = std::move(files);
+            endInsertRows();
+        }
+    }
+}
+
+QModelIndex DefaultNode::index(Item *item) const
+{
+    if (item->parent)
+        for (auto i = item->parent->items.begin(), end = item->parent->items.end(); i != end; ++i)
+            if (*i == *item)
+                return createIndex(i - item->parent->items.begin(), 0, item);
+
+    for (auto i = m_files.begin(), end = m_files.end(); i != end; ++i)
+        if (*i == *item)
+            return createIndex(i - m_files.begin(), 0, item);
+
+    return QModelIndex();
+}
+
+QModelIndex DefaultNode::parent(Item *item) const
+{
+//    if (Core::INode *coreNode = item->node->as<Core::INode>())
+//        if (coreNode->parent().isValid())
+//        {
+//            if (Core::INode *coreParentNode = coreNode->parent()->as<Core::INode>())
+//                if (coreParentNode->parent().isValid())
+//                    if (Qt::INode *qtGrandParentNode = coreParentNode->parent()->as<Qt::INode>())
+//                        return createIndex(qtGrandParentNode->indexOf(coreNode->parent()), 0, const_cast<Item *>(&coreNode->parent()));
+//
+//            return createIndex(indexOf(coreNode->parent()), 0, const_cast<Item *>(&coreNode->parent()));
+//        }
+
+    return QModelIndex();
+}
+
+//QModelIndex DefaultNode::parent(Item *item, size_type &row) const
+//{
+//    if (Item *parent = item->parent().as<Node>())
+//        if (Item *parentParent = parent->parent().as<Node>())
+//        {
+//            row = static_cast<Item *>(parent)->indexOf(item);
+//            return createIndex(static_cast<Item *>(parentParent)->indexOf(parent), 0, parent);
+//        }
+//        else
+//        {
+//            row = static_cast<Item *>(parent)->indexOf(item);
+//            return createIndex(indexOf(parent), 0, parent);
+//        }
+//    else
+//    {
+//        row = indexOf(item);
+//        return QModelIndex();
+//    }
+//}
 
 }}}
