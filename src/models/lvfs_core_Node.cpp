@@ -71,26 +71,32 @@ int Node::decRef()
 
 void Node::handleTask(EFC::Task::Holder &task, const Interface::Holder &file)
 {
-    m_tasks[task.get()].push_back(file);
-    m_items[file] = task.get();
+    TaskId taskId = task.get();
 
-    for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
-        n->as<Core::INode>()->incRef();
+    if (Core::INode::handleTask(task))
+    {
+        m_tasks[taskId].push_back(file);
+        m_items[file] = taskId;
 
-    Core::INode::handleTask(task);
+        for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+            n->as<Core::INode>()->incRef();
+    }
 }
 
 void Node::handleTask(EFC::Task::Holder &task, const Files &files)
 {
-    m_tasks[task.get()] = files;
+    TaskId taskId = task.get();
 
-    for (auto &i : files)
-        m_items[i] = task.get();
+    if (Core::INode::handleTask(task))
+    {
+        m_tasks[taskId] = files;
 
-    for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
-        n->as<Core::INode>()->incRef();
+        for (auto &i : files)
+            m_items[i] = taskId;
 
-    Core::INode::handleTask(task);
+        for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+            n->as<Core::INode>()->incRef();
+    }
 }
 
 void Node::cancelTask(const Interface::Holder &file)
@@ -101,7 +107,7 @@ void Node::cancelTask(const Interface::Holder &file)
         Core::INode::cancelTask(i->second, false);
 }
 
-void Node::doneTask(EFC::Task *task)
+void Node::doneTask(TaskId task)
 {
     auto i = m_tasks.find(task);
 

@@ -121,24 +121,24 @@ bool Node::EventsHandler::event(QEvent *event)
         case Task::Event::InitProgress:
         {
             event->accept();
-            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->initProgress(static_cast<InitProgressEvent *>(event)->item, static_cast<InitProgressEvent *>(event)->total);
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             return true;
         }
 
         case Task::Event::UpdateProgress:
         {
             event->accept();
-            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->updateProgress(static_cast<UpdateProgressEvent *>(event)->item, static_cast<UpdateProgressEvent *>(event)->progress, static_cast<UpdateProgressEvent *>(event)->timeElapsed);
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             return true;
         }
 
         case Task::Event::CompleteProgress:
         {
             event->accept();
-            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->completeProgress(static_cast<CompleteProgressEvent *>(event)->item, static_cast<CompleteProgressEvent *>(event)->timeElapsed);
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             return true;
         }
 
@@ -159,25 +159,25 @@ bool Node::EventsHandler::event(QEvent *event)
         case FilesBaseTask::Event::ProcessListFileEventId:
         {
             event->accept();
-            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->processListFile(static_cast<RefreshTask::Event *>(event)->snapshot, static_cast<RefreshTask::Event *>(event)->isFirstEvent);
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             return true;
         }
 
         case FilesBaseTask::Event::DoneListFileEventId:
         {
             event->accept();
-            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->m_doListFile = false;
             m_node->doneListFile(static_cast<RefreshTask::Event *>(event)->snapshot, static_cast<RefreshTask::Event *>(event)->isFirstEvent);
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             return true;
         }
 
         case FilesBaseTask::Event::DoneCopyFilesEventId:
         {
             event->accept();
-            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             m_node->doneCopyFiles(static_cast<CopyTask::Event *>(event)->destination, static_cast<CopyTask::Event *>(event)->files);
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
             return true;
         }
 

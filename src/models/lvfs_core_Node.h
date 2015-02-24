@@ -48,13 +48,14 @@ public: /* Core::INode */
     virtual int decRef();
 
 protected:
-    typedef EFC::Map<EFC::Task *, Files>             Tasks;
-    typedef EFC::Map<Interface::Holder, EFC::Task *> Items;
+    typedef EFC::Task *                         TaskId;
+    typedef EFC::Map<TaskId, Files>             Tasks;
+    typedef EFC::Map<Interface::Holder, TaskId> Items;
 
     void handleTask(EFC::Task::Holder &task, const Interface::Holder &file);
     void handleTask(EFC::Task::Holder &task, const Files &files);
     void cancelTask(const Interface::Holder &file);
-    void doneTask(EFC::Task *task);
+    void doneTask(TaskId task);
     void cancelTasks();
 
 private:

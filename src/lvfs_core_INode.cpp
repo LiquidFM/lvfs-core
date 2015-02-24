@@ -236,17 +236,20 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
 
 void INode::cleanup()
 {
-    tasksPool.clear();
+    tasksPool.terminate();
 
     for (Container::iterator i = root.items.begin(); i != root.items.end(); i = root.items.erase(i))
         i->second->as<Core::INode>()->clear();
+}
 
+void INode::lastCheck()
+{
     printf("!!!!!!!!!!!!!!There is %d nodes\n", DefaultNode_count);
 }
 
-void INode::handleTask(EFC::Task::Holder &task)
+bool INode::handleTask(EFC::Task::Holder &task)
 {
-    tasksPool.handle(task);
+    return tasksPool.handle(task);
 }
 
 void INode::cancelTask(const EFC::Task *task, bool wait)

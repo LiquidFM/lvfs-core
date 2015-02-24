@@ -61,6 +61,7 @@ public:
 public:
     static Interface::Holder open(const char *uri, Module::Error &error);
     static void cleanup();
+    static void lastCheck();
 
 protected:
     virtual Interface::Holder node(const Interface::Holder &file) const = 0;
@@ -87,7 +88,7 @@ protected:
 
 private:
     friend class Node;
-    static void handleTask(EFC::Task::Holder &task);
+    static bool handleTask(EFC::Task::Holder &task);
     static void cancelTask(const EFC::Task *task, bool wait);
 };
 
