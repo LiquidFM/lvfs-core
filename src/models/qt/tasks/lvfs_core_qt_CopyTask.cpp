@@ -78,7 +78,7 @@ void CopyTask::run(volatile bool &aborted)
 
                 do
                 {
-                    while (current.first != current.second)
+                    while (current.first != current.second && !aborted)
                     {
                         holder = (*current.first);
                         ++current.first;
@@ -97,6 +97,9 @@ void CopyTask::run(volatile bool &aborted)
                             current.dest = holder;
                         }
                     }
+
+                    if (aborted)
+                        break;
 
                     if (stack.empty())
                         break;

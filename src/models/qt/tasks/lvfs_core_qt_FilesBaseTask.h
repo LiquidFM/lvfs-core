@@ -40,6 +40,7 @@ public:
             ProcessListFileEventId = Task::Event::User,
             DoneListFileEventId = Task::Event::User + 1,
             DoneCopyFilesEventId = Task::Event::User + 2,
+            DoneRemoveFilesEventId = Task::Event::User + 3,
 
             ScanFilesForSize = Task::Event::User + 1,
             ScanFilesForRemove = Task::Event::User + 2,
@@ -73,6 +74,42 @@ public:
 public:
     FilesBaseTask(QObject *receiver);
     FilesBaseTask(QObject *receiver, const Interface::Holder &destination);
+
+protected:
+    class BaseFunctor
+    {
+    public:
+        typedef void (FilesBaseTask::*Cancel)();
+        typedef qint32 (FilesBaseTask::*AskUser)(const QString &, const QString &, qint32, const volatile bool &) const;
+
+        struct Methods
+        {
+            FilesBaseTask *task;
+            AskUser askUser;
+            volatile bool *aborted;
+        };
+
+    public:
+        BaseFunctor(const Methods &methods) :
+            m_methods(methods)
+        {}
+
+    protected:
+        FilesBaseTask *task() const
+        { return m_methods.task; }
+
+        const volatile bool &aborted() const
+        { return *m_methods.aborted; }
+
+        void cancel() const
+        { *m_methods.aborted = true; }
+
+        qint32 askUser(const QString &title, const QString &question, qint32 buttons, const volatile bool &aborted) const
+        { return (m_methods.task->*m_methods.askUser)(title, question, buttons, aborted); }
+
+    private:
+        const Methods &m_methods;
+    };
 
 protected:
     static uint64_t calculateSize(const Interface::Holder &file);

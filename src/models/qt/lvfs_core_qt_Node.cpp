@@ -20,6 +20,7 @@
 #include "lvfs_core_qt_Node.h"
 #include "tasks/lvfs_core_qt_RefreshTask.h"
 #include "tasks/lvfs_core_qt_CopyTask.h"
+#include "tasks/lvfs_core_qt_RemoveTask.h"
 #include "tasks/tools/lvfs_core_qt_InteractiveEvents.h"
 
 #include <QtGui/QWidget>
@@ -105,6 +106,12 @@ void Node::doCopyFiles(const Interface::Holder &dest, Files &files, bool move)
     handleTask(task, static_cast<CopyTask *>(task.get())->files());
 }
 
+void Node::doRemoveFiles(Files &files)
+{
+    EFC::Task::Holder task(new (std::nothrow) RemoveTask(&m_eventsHandler, file(), files));
+    handleTask(task, static_cast<RemoveTask *>(task.get())->files());
+}
+
 Node::EventsHandler::EventsHandler(Node *node) :
     m_node(node)
 {
@@ -177,6 +184,14 @@ bool Node::EventsHandler::event(QEvent *event)
         {
             event->accept();
             m_node->doneCopyFiles(static_cast<CopyTask::Event *>(event)->destination, static_cast<CopyTask::Event *>(event)->files, static_cast<CopyTask::Event *>(event)->move);
+            m_node->doneTask(static_cast<Task::Event *>(event)->task);
+            return true;
+        }
+
+        case FilesBaseTask::Event::DoneRemoveFilesEventId:
+        {
+            event->accept();
+            m_node->doneRemoveFiles(static_cast<RemoveTask::Event *>(event)->files);
             m_node->doneTask(static_cast<Task::Event *>(event)->task);
             return true;
         }

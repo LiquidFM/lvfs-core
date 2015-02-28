@@ -45,6 +45,7 @@ public: /* Core::INode */
     virtual void refresh(int depth = 0);
     virtual void accept(const Interface::Holder &view, Files &files);
     virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Files &files, bool move = false);
+    virtual void remove(const Interface::Holder &view, Files &files);
 
     virtual void clear();
 
@@ -83,6 +84,7 @@ protected: /* Core::Qt::Node */
     virtual void processListFile(Snapshot &files, bool isFirstEvent);
     virtual void doneListFile(Snapshot &files, bool isFirstEvent);
     virtual void doneCopyFiles(const Interface::Holder &dest, Files &files, bool move);
+    virtual void doneRemoveFiles(Files &files);
 
     virtual void initProgress(const Interface::Holder &file, quint64 total);
     virtual void updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed);
@@ -104,6 +106,9 @@ private:
 
         inline bool isLocked() const
         { return !lockReason.isEmpty(); }
+
+        inline void lock(const QString &reason, const QIcon &icon)
+        { lockReason = reason; lockIcon = icon; }
 
         inline void lock(const QString &reason, const QIcon &icon, const Interface::Holder &dest)
         { lockReason = reason; lockIcon = icon; destNode = dest; refreshDest = true; }

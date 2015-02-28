@@ -160,14 +160,31 @@ void DefaultNode::copy(const Interface::Holder &view, const Interface::Holder &d
     QString reason = move ? tr("Moving...") : tr("Copying...");
 
     for (auto &i : files)
-        for (auto &q : m_files)
-            if (i == q.file)
+        for (auto q = 0; q < m_files.size(); ++q)
+            if (i == m_files[q].file)
             {
-                q.lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()), dest);
+                m_files[q].lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()), dest);
+                emit dataChanged(createIndex(q, 0, &m_files[q]), createIndex(q, 1, &m_files[q]));
                 break;
             }
 
     doCopyFiles(dest, files, move);
+}
+
+void DefaultNode::remove(const Interface::Holder &view, Files &files)
+{
+    QString reason = tr("Removing...");
+
+    for (auto &i : files)
+        for (auto q = 0; q < m_files.size(); ++q)
+            if (i == m_files[q].file)
+            {
+                m_files[q].lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()));
+                emit dataChanged(createIndex(q, 0, &m_files[q]), createIndex(q, 1, &m_files[q]));
+                break;
+            }
+
+    doRemoveFiles(files);
 }
 
 void DefaultNode::clear()
@@ -565,6 +582,22 @@ void DefaultNode::doneCopyFiles(const Interface::Holder &dest, Files &files, boo
 
     if (move)
         refresh();
+}
+
+void DefaultNode::doneRemoveFiles(Files &files)
+{
+    for (auto i = files.begin(); i != files.end(); i = files.erase(i))
+        for (auto q = 0; q < m_files.size(); ++q)
+            if ((*i) == m_files[q].file)
+            {
+                m_files[q].unlock();
+
+                emit dataChanged(createIndex(q, 0, &m_files[q]), createIndex(q, 1, &m_files[q]));
+
+                break;
+            }
+
+    refresh();
 }
 
 void DefaultNode::initProgress(const Interface::Holder &file, quint64 total)

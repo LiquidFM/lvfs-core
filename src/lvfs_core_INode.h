@@ -51,6 +51,7 @@ public:
 
     virtual void accept(const Interface::Holder &view, Files &files) = 0;
     virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Files &files, bool move = false) = 0;
+    virtual void remove(const Interface::Holder &view, Files &files) = 0;
     virtual void cancel(const Files &files) = 0;
 
     virtual int refs() const = 0;

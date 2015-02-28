@@ -23,8 +23,12 @@
 #include <lvfs-core/INode>
 #include <lvfs-core/IMainView>
 #include <lvfs-core/models/Qt/INode>
+#include <lvfs-core/models/Qt/Node>
 
 #include <brolly/assert.h>
+
+#include <QtGui/QMessageBox>
+
 #include <cstdlib>
 
 
@@ -201,7 +205,37 @@ void DefaultView::createDirectoryShortcut()
 
 void DefaultView::removeShortcut()
 {
+    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
 
+    if (!items.isEmpty())
+    {
+        QModelIndexList indices;
+        indices.reserve(items.size());
+
+        for (int i = 0; i < items.size(); ++i)
+            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
+
+        Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(indices);
+
+        if (!files.empty())
+        {
+            QStringList list;
+
+            list.reserve(files.size());
+            for (auto &i : files)
+                list.push_back(Qt::Node::toUnicode(i->as<IEntry>()->title()));
+
+            int answer = QMessageBox::question(widget(),
+                                               tr("Removing..."),
+                                               tr("Would you like remove files:").
+                                                   append(QChar(L'\n')).
+                                                   append(list.join(QChar(L'\n'))),
+                                               QMessageBox::Yes | QMessageBox::No);
+
+            if (answer == QMessageBox::Yes)
+                m_node->as<Core::INode>()->remove(Interface::Holder::fromRawData(this), files);
+        }
+    }
 }
 
 void DefaultView::calculateSizeShortcut()

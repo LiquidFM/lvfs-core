@@ -17,8 +17,8 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WORKSPACE_LVFS_CORE_SRC_MODELS_QT_TASKS_LVFS_CORE_QT_COPYTASK_H_
-#define WORKSPACE_LVFS_CORE_SRC_MODELS_QT_TASKS_LVFS_CORE_QT_COPYTASK_H_
+#ifndef LVFS_CORE_QT_COPYTASK_H_
+#define LVFS_CORE_QT_COPYTASK_H_
 
 #include <QtCore/QCoreApplication>
 #include <lvfs-core/models/Qt/Node>
@@ -60,41 +60,6 @@ protected:
     virtual void run(volatile bool &aborted);
 
 protected:
-    class BaseFunctor
-    {
-    public:
-        typedef void (CopyTask::*Cancel)();
-        typedef qint32 (CopyTask::*AskUser)(const QString &, const QString &, qint32, const volatile bool &) const;
-
-        struct Methods
-        {
-            CopyTask *task;
-            AskUser askUser;
-            volatile bool *aborted;
-        };
-
-    public:
-        BaseFunctor(const Methods &methods) :
-            m_methods(methods)
-        {}
-
-    protected:
-        CopyTask *task() const
-        { return m_methods.task; }
-
-        const volatile bool &aborted() const
-        { return *m_methods.aborted; }
-
-        void cancel() const
-        { *m_methods.aborted = true; }
-
-        qint32 askUser(const QString &title, const QString &question, qint32 buttons, const volatile bool &aborted) const
-        { return (m_methods.task->*m_methods.askUser)(title, question, buttons, aborted); }
-
-    private:
-        const Methods &m_methods;
-    };
-
     class CreateDestinationFolder : public BaseFunctor
     {
         Q_DECLARE_TR_FUNCTIONS(CopyTask::CreateDestinationFolder)
@@ -181,4 +146,4 @@ private:
 
 }}}
 
-#endif /* WORKSPACE_LVFS_CORE_SRC_MODELS_QT_TASKS_LVFS_CORE_QT_COPYTASK_H_ */
+#endif /* LVFS_CORE_QT_COPYTASK_H_ */

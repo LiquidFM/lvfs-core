@@ -65,6 +65,9 @@ protected: /* Actions section */
     void doCopyFiles(const Interface::Holder &dest, Files &files, bool move = false);
     virtual void doneCopyFiles(const Interface::Holder &dest, Files &files, bool move) = 0;
 
+    void doRemoveFiles(Files &files);
+    virtual void doneRemoveFiles(Files &files) = 0;
+
     virtual void initProgress(const Interface::Holder &file, quint64 total) = 0;
     virtual void updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed) = 0;
     virtual void completeProgress(const Interface::Holder &file, quint64 timeElapsed) = 0;

@@ -22,6 +22,8 @@
 
 #include <QtCore/QEvent>
 #include <QtGui/QTreeView>
+#include <QtCore/QCoreApplication>
+
 #include <lvfs-core/IView>
 #include <lvfs-core/models/Qt/IView>
 #include <lvfs-core/models/Qt/SortFilterModel>
@@ -42,6 +44,8 @@ namespace Qt {
 
 class PLATFORM_MAKE_PRIVATE DefaultView : public Implements<Core::IView, Qt::IView>
 {
+    Q_DECLARE_TR_FUNCTIONS(DefaultView)
+
 public:
     DefaultView();
     virtual ~DefaultView();
