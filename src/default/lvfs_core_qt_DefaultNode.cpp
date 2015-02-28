@@ -548,7 +548,7 @@ void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
             i->as<Qt::IView>()->select(currentIndex());
 }
 
-void DefaultNode::doneCopyFiles(const Interface::Holder &dest, Files &files)
+void DefaultNode::doneCopyFiles(const Interface::Holder &dest, Files &files, bool move)
 {
     dest->as<Core::INode>()->refresh();
 
@@ -562,6 +562,9 @@ void DefaultNode::doneCopyFiles(const Interface::Holder &dest, Files &files)
 
                 break;
             }
+
+    if (move)
+        refresh();
 }
 
 void DefaultNode::initProgress(const Interface::Holder &file, quint64 total)

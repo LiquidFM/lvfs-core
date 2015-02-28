@@ -42,7 +42,7 @@ public:
     virtual ~DefaultNode();
 
 public: /* Core::INode */
-    virtual void refresh(int depth);
+    virtual void refresh(int depth = 0);
     virtual void accept(const Interface::Holder &view, Files &files);
     virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Files &files, bool move = false);
 
@@ -82,7 +82,7 @@ protected: /* Core::INode */
 protected: /* Core::Qt::Node */
     virtual void processListFile(Snapshot &files, bool isFirstEvent);
     virtual void doneListFile(Snapshot &files, bool isFirstEvent);
-    virtual void doneCopyFiles(const Interface::Holder &dest, Files &files);
+    virtual void doneCopyFiles(const Interface::Holder &dest, Files &files, bool move);
 
     virtual void initProgress(const Interface::Holder &file, quint64 total);
     virtual void updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed);

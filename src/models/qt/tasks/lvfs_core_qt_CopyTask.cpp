@@ -112,7 +112,7 @@ void CopyTask::run(volatile bool &aborted)
         m_progress.complete();
     }
 
-    postEvent(new (std::nothrow) Event(this, FilesBaseTask::Event::DoneCopyFilesEventId, aborted, destination(), m_files));
+    postEvent(new (std::nothrow) Event(this, FilesBaseTask::Event::DoneCopyFilesEventId, aborted, destination(), m_files, m_move));
 }
 
 bool CopyTask::CreateDestinationFolder::operator()()

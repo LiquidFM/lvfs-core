@@ -211,34 +211,12 @@ void DefaultView::calculateSizeShortcut()
 
 void DefaultView::copyShortcut()
 {
-    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
-
-    if (!items.isEmpty())
-    {
-        QModelIndexList indices;
-        indices.reserve(items.size());
-
-        for (int i = 0; i < items.size(); ++i)
-            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
-
-        Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(indices);
-
-        if (!files.empty())
-        {
-            Interface::Holder self = Interface::Holder::fromRawData(this);
-            Interface::Holder node = m_mainView->as<IMainView>()->opposite(self)->as<Core::IView>()->node();
-
-            node->as<Core::INode>()->accept(self, files);
-
-            if (!files.empty())
-                m_node->as<Core::INode>()->copy(self, node, files, false);
-        }
-    }
+    copyMoveShortcut(false);
 }
 
 void DefaultView::moveShortcut()
 {
-
+    copyMoveShortcut(true);
 }
 
 void DefaultView::searchShortcut()
@@ -286,6 +264,33 @@ void DefaultView::pasteFromClipboardShortcut()
 bool DefaultView::handleShortcut(QEvent *event)
 {
     return false;
+}
+
+void DefaultView::copyMoveShortcut(bool move)
+{
+    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
+
+    if (!items.isEmpty())
+    {
+        QModelIndexList indices;
+        indices.reserve(items.size());
+
+        for (int i = 0; i < items.size(); ++i)
+            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
+
+        Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(indices);
+
+        if (!files.empty())
+        {
+            Interface::Holder self = Interface::Holder::fromRawData(this);
+            Interface::Holder node = m_mainView->as<IMainView>()->opposite(self)->as<Core::IView>()->node();
+
+            node->as<Core::INode>()->accept(self, files);
+
+            if (!files.empty())
+                m_node->as<Core::INode>()->copy(self, node, files, move);
+        }
+    }
 }
 
 }}}

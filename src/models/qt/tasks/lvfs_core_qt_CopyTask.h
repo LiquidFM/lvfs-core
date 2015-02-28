@@ -40,12 +40,14 @@ public:
     class Event : public FilesBaseTask::ExtendedEvent
     {
     public:
-        Event(Task *task, Type type, bool canceled, const Interface::Holder &dest, Files &files) :
+        Event(Task *task, Type type, bool canceled, const Interface::Holder &dest, Files &files, bool move) :
             FilesBaseTask::ExtendedEvent(task, type, canceled, dest),
-            files(std::move(files))
+            files(std::move(files)),
+            move(move)
         {}
 
         Files files;
+        bool move;
     };
 
 public:

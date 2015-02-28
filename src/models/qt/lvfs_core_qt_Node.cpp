@@ -176,7 +176,7 @@ bool Node::EventsHandler::event(QEvent *event)
         case FilesBaseTask::Event::DoneCopyFilesEventId:
         {
             event->accept();
-            m_node->doneCopyFiles(static_cast<CopyTask::Event *>(event)->destination, static_cast<CopyTask::Event *>(event)->files);
+            m_node->doneCopyFiles(static_cast<CopyTask::Event *>(event)->destination, static_cast<CopyTask::Event *>(event)->files, static_cast<CopyTask::Event *>(event)->move);
             m_node->doneTask(static_cast<Task::Event *>(event)->task);
             return true;
         }

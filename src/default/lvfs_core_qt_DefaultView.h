@@ -77,8 +77,7 @@ private:
     bool handleShortcut(QEvent *event);
 
 private:
-    inline bool openChildNode(const Interface::Holder &node, const QModelIndex &selected);
-    inline bool openParentNode(const Interface::Holder &node, const QModelIndex &selected);
+    void copyMoveShortcut(bool move);
 
 private:
     typedef Tools::MouseDoubleClickEventSource<
