@@ -51,7 +51,6 @@ void CopyTask::run(volatile bool &aborted)
     };
     typedef EFC::List<StackEntry> Stack;
 
-    IDirectory::Progress callback = { this, progress, aborted };
     Interface::Holder dest = destination()->as<Core::INode>()->file();
     Interface::Holder holder;
     IDirectory *dir;
@@ -70,7 +69,7 @@ void CopyTask::run(volatile bool &aborted)
 
         if (m_overwrite->askFor(OverwriteFile(m_methods, dest, *it)))
             if (::strcmp((*it)->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
-                dest->as<IDirectory>()->copy(callback, *it, m_move);
+                m_tryier->tryTo(CopyFile(m_methods, dest, *it, m_move));
             else if ((dir = (*it)->as<IDirectory>()) &&
                      m_tryier->tryTo(CreateDestinationFolder(m_methods, dest, *it, holder)))
             {
@@ -87,7 +86,7 @@ void CopyTask::run(volatile bool &aborted)
                         if (::strcmp(holder->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
                         {
                             if (m_overwrite->askFor(OverwriteFile(m_methods, current.dest, holder)))
-                                current.dest->as<IDirectory>()->copy(callback, holder, m_move);
+                                m_tryier->tryTo(CopyFile(m_methods, current.dest, holder, m_move));
                         }
                         else if ((dir = holder->as<IDirectory>()) &&
                                 m_tryier->tryTo(CreateDestinationFolder(m_methods, current.dest, holder, holder)))
@@ -127,6 +126,48 @@ bool CopyTask::CreateDestinationFolder::operator()(Tryier::Flag &flag, const vol
     qint32 answer = askUser(tr("Failed to copy..."),
                             tr("Cannot create destination folder \"%1\"").
                                 arg(Qt::Node::toUnicode(m_entry->as<IEntry>()->title())).
+                                append(QChar(L'\n')).
+                                append(tr("Skip it?")),
+                            QMessageBox::Yes |
+                            QMessageBox::YesToAll |
+                            QMessageBox::Retry |
+                            QMessageBox::Cancel,
+                            aborted);
+
+    switch (answer)
+    {
+        case QMessageBox::Yes:
+            return false;
+
+        case QMessageBox::YesToAll:
+            return flag = false;
+
+        case QMessageBox::Retry:
+            return true;
+
+        case QMessageBox::Cancel:
+            cancel();
+            break;
+    }
+
+    return false;
+}
+
+bool CopyTask::CopyFile::operator()()
+{
+    IDirectory::Progress callback = { task(), progress, aborted() };
+    return m_dest->as<IDirectory>()->copy(callback, m_source, m_move);
+}
+
+bool CopyTask::CopyFile::operator()(Tryier::Flag &flag, const volatile bool &aborted) const
+{
+    qint32 answer = askUser(tr("Failed to copy..."),
+                            tr("Failed to copy \"%1\"").
+                                arg(Qt::Node::toUnicode(m_source->as<IEntry>()->title())).
+                                append(QChar(L'\n')).
+                                append(tr("to \"%1\"").arg(Qt::Node::toUnicode(m_dest->as<IEntry>()->location()))).
+                                append(QChar(L'\n')).
+                                append(tr("Error: \"%1\"").arg(Qt::Node::toUnicode(m_dest->as<IDirectory>()->lastError().description()))).
                                 append(QChar(L'\n')).
                                 append(tr("Skip it?")),
                             QMessageBox::Yes |

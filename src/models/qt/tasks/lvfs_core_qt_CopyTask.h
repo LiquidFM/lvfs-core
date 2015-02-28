@@ -66,7 +66,7 @@ protected:
 
         struct Methods
         {
-            CopyTask *object;
+            CopyTask *task;
             AskUser askUser;
             volatile bool *aborted;
         };
@@ -77,10 +77,17 @@ protected:
         {}
 
     protected:
+        CopyTask *task() const
+        { return m_methods.task; }
+
+        const volatile bool &aborted() const
+        { return *m_methods.aborted; }
+
         void cancel() const
         { *m_methods.aborted = true; }
+
         qint32 askUser(const QString &title, const QString &question, qint32 buttons, const volatile bool &aborted) const
-        { return (m_methods.object->*m_methods.askUser)(title, question, buttons, aborted); }
+        { return (m_methods.task->*m_methods.askUser)(title, question, buttons, aborted); }
 
     private:
         const Methods &m_methods;
@@ -91,7 +98,10 @@ protected:
         Q_DECLARE_TR_FUNCTIONS(CopyTask::CreateDestinationFolder)
 
     public:
-        CreateDestinationFolder(const Methods &methods, const Interface::Holder &container, const Interface::Holder &entry, Interface::Holder &result) :
+        CreateDestinationFolder(const Methods &methods,
+                                const Interface::Holder &container,
+                                const Interface::Holder &entry,
+                                Interface::Holder &result) :
             BaseFunctor(methods),
             m_container(container),
             m_entry(entry),
@@ -107,12 +117,38 @@ protected:
         Interface::Holder &m_result;
     };
 
+    class CopyFile : public BaseFunctor
+    {
+        Q_DECLARE_TR_FUNCTIONS(CopyTask::CopyFile)
+
+    public:
+        CopyFile(const Methods &methods,
+                 const Interface::Holder &dest,
+                 const Interface::Holder &source,
+                 bool move) :
+            BaseFunctor(methods),
+            m_dest(dest),
+            m_source(source),
+            m_move(move)
+        {}
+
+        inline bool operator()();
+        inline bool operator()(Tryier::Flag &flag, const volatile bool &aborted) const;
+
+    private:
+        const Interface::Holder &m_dest;
+        const Interface::Holder &m_source;
+        bool m_move;
+    };
+
     class OverwriteFile : public BaseFunctor
     {
         Q_DECLARE_TR_FUNCTIONS(CopyTask::OverwriteFile)
 
     public:
-        OverwriteFile(const Methods &methods, const Interface::Holder &destination, const Interface::Holder &source) :
+        OverwriteFile(const Methods &methods,
+                      const Interface::Holder &destination,
+                      const Interface::Holder &source) :
             BaseFunctor(methods),
             m_source(source),
             m_destination(destination)
