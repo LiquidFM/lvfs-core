@@ -20,7 +20,10 @@
 #ifndef LVFS_CORE_QT_FILESBASETASK_H_
 #define LVFS_CORE_QT_FILESBASETASK_H_
 
+#include <QtCore/QCoreApplication>
+#include <lvfs-core/models/Qt/Node>
 #include "lvfs_core_qt_Task.h"
+#include "tools/lvfs_core_qt_InteractiveTools.h"
 
 
 namespace LVFS {
@@ -111,8 +114,33 @@ protected:
         const Methods &m_methods;
     };
 
+    class RemoveFile : public BaseFunctor
+    {
+        Q_DECLARE_TR_FUNCTIONS(RemoveTask::RemoveFile)
+
+    public:
+        RemoveFile(const Methods &methods,
+                   const Interface::Holder &container,
+                   const Interface::Holder &file) :
+            BaseFunctor(methods),
+            m_container(container),
+            m_file(file)
+        {}
+
+        bool operator()();
+        bool operator()(Tryier::Flag &flag, const volatile bool &aborted) const;
+
+    private:
+        const Interface::Holder &m_container;
+        const Interface::Holder &m_file;
+    };
+
 protected:
     static uint64_t calculateSize(const Interface::Holder &file);
+    static void progress(void *arg, off64_t processed);
+
+protected:
+    TaskProgress m_progress;
 };
 
 }}}

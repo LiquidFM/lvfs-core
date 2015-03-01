@@ -26,18 +26,69 @@
 #include <lvfs/IProperties>
 #include <lvfs/Module>
 
+#include <QtGui/QMessageBox>
+
 
 namespace LVFS {
 namespace Core {
 namespace Qt {
 
 FilesBaseTask::FilesBaseTask(QObject *receiver) :
-    Task(receiver)
+    Task(receiver),
+    m_progress(receiver)
 {}
 
 FilesBaseTask::FilesBaseTask(QObject *receiver, const Interface::Holder &destination) :
-    Task(receiver, destination)
+    Task(receiver, destination),
+    m_progress(receiver)
 {}
+
+bool FilesBaseTask::RemoveFile::operator()()
+{
+    if (m_container->as<IDirectory>()->remove(m_file))
+    {
+        if (IProperties *properties = m_file->as<IProperties>())
+            progress(task(), properties->size());
+
+        return true;
+    }
+
+    return false;
+}
+
+bool FilesBaseTask::RemoveFile::operator()(Tryier::Flag &flag, const volatile bool &aborted) const
+{
+    qint32 answer = askUser(tr("Failed to remove..."),
+                            tr("Failed to remove \"%1\"").
+                                arg(Qt::Node::toUnicode(m_file->as<IEntry>()->title())).
+                                append(QChar(L'\n')).
+                                append(tr("Error: \"%1\"").arg(Qt::Node::toUnicode(m_container->as<IDirectory>()->lastError().description()))).
+                                append(QChar(L'\n')).
+                                append(tr("Skip it?")),
+                            QMessageBox::Yes |
+                            QMessageBox::YesToAll |
+                            QMessageBox::Retry |
+                            QMessageBox::Cancel,
+                            aborted);
+
+    switch (answer)
+    {
+        case QMessageBox::Yes:
+            return false;
+
+        case QMessageBox::YesToAll:
+            return flag = false;
+
+        case QMessageBox::Retry:
+            return true;
+
+        case QMessageBox::Cancel:
+            cancel();
+            break;
+    }
+
+    return false;
+}
 
 uint64_t FilesBaseTask::calculateSize(const Interface::Holder &file)
 {
@@ -98,6 +149,11 @@ uint64_t FilesBaseTask::calculateSize(const Interface::Holder &file)
             return properties->size();
 
     return 0;
+}
+
+void FilesBaseTask::progress(void *arg, off64_t processed)
+{
+    static_cast<FilesBaseTask *>(arg)->m_progress.update(processed);
 }
 
 }}}

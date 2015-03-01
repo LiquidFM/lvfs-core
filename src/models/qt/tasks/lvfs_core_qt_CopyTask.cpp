@@ -34,7 +34,6 @@ CopyTask::CopyTask(QObject *receiver, Files &files, const Interface::Holder &des
     m_move(move),
     m_files(std::move(files)),
     m_tryier(NULL),
-    m_progress(receiver),
     m_methods({ this, &CopyTask::askUser, NULL })
 {}
 
@@ -48,6 +47,7 @@ void CopyTask::run(volatile bool &aborted)
         IDirectory::const_iterator first;
         IDirectory::const_iterator second;
         Interface::Holder dest;
+        int notCopied;
     };
     typedef EFC::List<StackEntry> Stack;
 
@@ -74,7 +74,7 @@ void CopyTask::run(volatile bool &aborted)
                      m_tryier->tryTo(CreateDestinationFolder(m_methods, dest, *it, holder)))
             {
                 Stack stack;
-                Stack::value_type current({ dir->begin(), dir->end(), holder });
+                Stack::value_type current({ dir->begin(), dir->end(), holder, 0 });
 
                 do
                 {
@@ -86,7 +86,7 @@ void CopyTask::run(volatile bool &aborted)
                         if (::strcmp(holder->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
                         {
                             if (m_overwrite->askFor(OverwriteFile(m_methods, current.dest, holder)))
-                                m_tryier->tryTo(CopyFile(m_methods, current.dest, holder, m_move));
+                                current.notCopied += !m_tryier->tryTo(CopyFile(m_methods, current.dest, holder, m_move));
                         }
                         else if ((dir = holder->as<IDirectory>()) &&
                                 m_tryier->tryTo(CreateDestinationFolder(m_methods, current.dest, holder, holder)))
@@ -95,6 +95,7 @@ void CopyTask::run(volatile bool &aborted)
                             current.first = dir->begin();
                             current.second = dir->end();
                             current.dest = holder;
+                            current.notCopied = 0;
                         }
                     }
 
@@ -102,9 +103,17 @@ void CopyTask::run(volatile bool &aborted)
                         break;
 
                     if (stack.empty())
+                    {
+                        if (m_move && current.notCopied == 0)
+                            m_tryier->tryTo(RemoveFile(m_methods, destination(), current.dest));
+
                         break;
+                    }
                     else
                     {
+                        if (m_move && current.notCopied == 0)
+                            if (m_tryier->tryTo(RemoveFile(m_methods, stack.back().dest, current.dest)))
+
                         current = stack.back();
                         stack.pop_back();
                     }
@@ -240,11 +249,6 @@ bool CopyTask::OverwriteFile::operator()(Tryier::Flag &flag, const volatile bool
     }
 
     return false;
-}
-
-void CopyTask::progress(void *arg, off64_t processed)
-{
-    static_cast<CopyTask *>(arg)->m_progress.update(processed);
 }
 
 }}}

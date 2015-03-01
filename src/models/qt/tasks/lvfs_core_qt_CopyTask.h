@@ -20,10 +20,7 @@
 #ifndef LVFS_CORE_QT_COPYTASK_H_
 #define LVFS_CORE_QT_COPYTASK_H_
 
-#include <QtCore/QCoreApplication>
-#include <lvfs-core/models/Qt/Node>
 #include "lvfs_core_qt_FilesBaseTask.h"
-#include "tools/lvfs_core_qt_InteractiveTools.h"
 
 
 namespace LVFS {
@@ -130,15 +127,11 @@ protected:
     };
 
 private:
-    static void progress(void *arg, off64_t processed);
-
-private:
     bool m_move;
     Files m_files;
 
     Tryier *m_tryier;
     Tryier *m_overwrite;
-    TaskProgress m_progress;
     BaseFunctor::Methods m_methods;
 
     Interface::Holder m_destFile;

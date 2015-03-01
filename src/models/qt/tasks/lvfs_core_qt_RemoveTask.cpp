@@ -23,8 +23,6 @@
 #include <lvfs/IDirectory>
 #include <lvfs/IProperties>
 
-#include <QtGui/QMessageBox>
-
 
 namespace LVFS {
 namespace Core {
@@ -35,7 +33,6 @@ RemoveTask::RemoveTask(QObject *receiver, const Interface::Holder &container, Fi
     m_container(container),
     m_files(std::move(files)),
     m_tryier(NULL),
-    m_progress(receiver),
     m_methods({ this, &RemoveTask::askUser, NULL })
 {}
 
@@ -111,58 +108,6 @@ void RemoveTask::run(volatile bool &aborted)
     }
 
     postEvent(new (std::nothrow) Event(this, FilesBaseTask::Event::DoneRemoveFilesEventId, aborted, m_files));
-}
-
-bool RemoveTask::RemoveFile::operator()()
-{
-    if (m_container->as<IDirectory>()->remove(m_file))
-    {
-        if (IProperties *properties = m_file->as<IProperties>())
-            progress(task(), properties->size());
-
-        return true;
-    }
-
-    return false;
-}
-
-bool RemoveTask::RemoveFile::operator()(Tryier::Flag &flag, const volatile bool &aborted) const
-{
-    qint32 answer = askUser(tr("Failed to remove..."),
-                            tr("Failed to remove \"%1\"").
-                                arg(Qt::Node::toUnicode(m_file->as<IEntry>()->title())).
-                                append(QChar(L'\n')).
-                                append(tr("Error: \"%1\"").arg(Qt::Node::toUnicode(m_container->as<IDirectory>()->lastError().description()))).
-                                append(QChar(L'\n')).
-                                append(tr("Skip it?")),
-                            QMessageBox::Yes |
-                            QMessageBox::YesToAll |
-                            QMessageBox::Retry |
-                            QMessageBox::Cancel,
-                            aborted);
-
-    switch (answer)
-    {
-        case QMessageBox::Yes:
-            return false;
-
-        case QMessageBox::YesToAll:
-            return flag = false;
-
-        case QMessageBox::Retry:
-            return true;
-
-        case QMessageBox::Cancel:
-            cancel();
-            break;
-    }
-
-    return false;
-}
-
-void RemoveTask::progress(void *arg, off64_t processed)
-{
-    static_cast<RemoveTask *>(arg)->m_progress.update(processed);
 }
 
 }}}
