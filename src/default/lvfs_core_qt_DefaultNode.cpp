@@ -192,6 +192,44 @@ void DefaultNode::clear()
     unsafeClear();
 }
 
+Interface::Holder DefaultNode::node(const Interface::Holder &file) const
+{
+    ASSERT(file.isValid());
+    const char *title = file->as<IEntry>()->title();
+
+    for (auto i = m_files.begin(); i != m_files.end(); ++i)
+        if (strcmp(i->node->as<Core::INode>()->file()->as<IEntry>()->title(), title) == 0)
+            return i->node;
+
+    return Interface::Holder();
+}
+
+void DefaultNode::setNode(const Interface::Holder &file, const Interface::Holder &node)
+{
+    ASSERT(file.isValid());
+
+    if (node.isValid())
+    {
+        beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + 1);
+        {
+            Item item;
+
+            item.isDir = strcmp(file->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+            item.title = toUnicode(file->as<IEntry>()->title());
+            item.schema = toUnicode(file->as<IEntry>()->schema());
+            item.location = toUnicode(file->as<IEntry>()->location());
+            item.icon.addFile(toUnicode(file->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
+            item.size = file->as<IProperties>() ? humanReadableSize(file->as<IProperties>()->size()) : QString::fromLatin1("<DIR>");
+            item.modified = file->as<IProperties>() ? QDateTime::fromTime_t(file->as<IProperties>()->mTime()).toLocalTime() : QDateTime();
+            item.file = file;
+            item.node = node;
+
+            m_files.push_back(item);
+        }
+        endInsertRows();
+    }
+}
+
 QAbstractItemModel *DefaultNode::model() const
 {
     return const_cast<DefaultNode *>(this);
@@ -470,44 +508,6 @@ QModelIndex DefaultNode::parent(const QModelIndex &child) const
     return QModelIndex();
 }
 
-Interface::Holder DefaultNode::node(const Interface::Holder &file) const
-{
-    ASSERT(file.isValid());
-    const char *title = file->as<IEntry>()->title();
-
-    for (auto i = m_files.begin(); i != m_files.end(); ++i)
-        if (strcmp(i->node->as<Core::INode>()->file()->as<IEntry>()->title(), title) == 0)
-            return i->node;
-
-    return Interface::Holder();
-}
-
-void DefaultNode::setNode(const Interface::Holder &file, const Interface::Holder &node)
-{
-    ASSERT(file.isValid());
-
-    if (node.isValid())
-    {
-        beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + 1);
-        {
-            Item item;
-
-            item.isDir = strcmp(file->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
-            item.title = toUnicode(file->as<IEntry>()->title());
-            item.schema = toUnicode(file->as<IEntry>()->schema());
-            item.location = toUnicode(file->as<IEntry>()->location());
-            item.icon.addFile(toUnicode(file->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
-            item.size = file->as<IProperties>() ? humanReadableSize(file->as<IProperties>()->size()) : QString::fromLatin1("<DIR>");
-            item.modified = file->as<IProperties>() ? QDateTime::fromTime_t(file->as<IProperties>()->mTime()).toLocalTime() : QDateTime();
-            item.file = file;
-            item.node = node;
-
-            m_files.push_back(item);
-        }
-        endInsertRows();
-    }
-}
-
 void DefaultNode::processListFile(Snapshot &files, bool isFirstEvent)
 {
     if (isFirstEvent)
@@ -706,7 +706,7 @@ void DefaultNode::unsafeClear()
     {
         struct LocalAdaptor
         {
-            inline Interface::Holder &operator()(EFC::Vector<Item>::iterator &iterator)
+            inline const Interface::Holder &operator()(EFC::Vector<Item>::iterator &iterator) const
             { return iterator->node; }
         };
 

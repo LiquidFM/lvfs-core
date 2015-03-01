@@ -49,6 +49,9 @@ public: /* Core::INode */
 
     virtual void clear();
 
+    virtual Interface::Holder node(const Interface::Holder &file) const;
+    virtual void setNode(const Interface::Holder &file, const Interface::Holder &node);
+
 public: /* Qt::INode */
     virtual QAbstractItemModel *model() const;
 
@@ -75,10 +78,6 @@ public: /* QAbstractItemModel */
     virtual QVariant headerData(int section, ::Qt::Orientation orientation, int role = ::Qt::DisplayRole) const;
     virtual QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     virtual QModelIndex parent(const QModelIndex &child) const;
-
-protected: /* Core::INode */
-    virtual Interface::Holder node(const Interface::Holder &file) const;
-    virtual void setNode(const Interface::Holder &file, const Interface::Holder &node);
 
 protected: /* Core::Qt::Node */
     virtual void processListFile(Snapshot &files, bool isFirstEvent);

@@ -59,32 +59,42 @@ public:
     virtual int decRef() = 0;
     virtual void clear() = 0;
 
+    virtual Interface::Holder node(const Interface::Holder &file) const = 0;
+    virtual void setNode(const Interface::Holder &file, const Interface::Holder &node) = 0;
+
 public:
     static Interface::Holder open(const char *uri, Module::Error &error);
     static void cleanup();
     static void lastCheck();
 
 protected:
-    virtual Interface::Holder node(const Interface::Holder &file) const = 0;
-    virtual void setNode(const Interface::Holder &file, const Interface::Holder &node) = 0;
+    template<typename T>
+    struct ClearDeleter
+    {
+        inline typename T::iterator operator()(T &container, typename T::iterator &iterator) const
+        { return container.erase(iterator); }
+    };
 
-protected:
-    template <typename T, typename Adaptor>
-    static inline void clear(T &container, Adaptor adaptor)
+    template <typename T, typename Adaptor, typename Deleter = ClearDeleter<T>>
+    static inline void clear(T &container, Adaptor adaptor, Deleter deleter = Deleter())
     {
         for (typename T::iterator i = container.begin(); i != container.end();)
-            if (static_cast<Interface::Holder &>(adaptor(i)).isValid())
+        {
+            const Interface::Holder &item = static_cast<const Interface::Holder &>(adaptor(i));
+
+            if (item.isValid())
             {
-                if (static_cast<Interface::Holder &>(adaptor(i))->as<Core::INode>()->refs() == 0)
+                if (item->as<Core::INode>()->refs() == 0)
                 {
-                    static_cast<Interface::Holder &>(adaptor(i))->as<Core::INode>()->clear();
-                    i = container.erase(i);
+                    item->as<Core::INode>()->clear();
+                    i = deleter(container, i);
                 }
                 else
                     ++i;
             }
             else
-                i = container.erase(i);
+                i = deleter(container, i);
+        }
     }
 
 private:
