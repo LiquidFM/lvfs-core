@@ -17,24 +17,32 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lvfs_core_qt_DefaultNodeFactory.h"
-#include "lvfs_core_qt_DefaultNode.h"
+#ifndef LVFS_CORE_PROTOCOLPLUGIN_H_
+#define LVFS_CORE_PROTOCOLPLUGIN_H_
+
+#include <lvfs/plugins/IProtocolPlugin>
 
 
 namespace LVFS {
 namespace Core {
-namespace Qt {
 
-DefaultNodeFactory::DefaultNodeFactory(const Interface::Holder &original) :
-    ExtendsBy<Core::INodeFactory>(original)
-{}
-
-DefaultNodeFactory::~DefaultNodeFactory()
-{}
-
-Interface::Holder DefaultNodeFactory::createNode(const Interface::Holder &file, const Interface::Holder &parent) const
+class PLATFORM_MAKE_PRIVATE Plugin : public Implements<IProtocolPlugin>
 {
-    return Interface::Holder(new (std::nothrow) DefaultNode(file, parent));
-}
+    PLATFORM_MAKE_NONCOPYABLE(Plugin)
+    PLATFORM_MAKE_NONMOVEABLE(Plugin)
+    PLATFORM_MAKE_STACK_ONLY
 
-}}}
+public:
+    Plugin();
+    virtual ~Plugin();
+
+    virtual Interface::Holder open(const char *uri) const;
+    virtual const Error &lastError() const;
+
+private:
+    mutable Error m_error;
+};
+
+}}
+
+#endif /* LVFS_CORE_PROTOCOLPLUGIN_H_ */

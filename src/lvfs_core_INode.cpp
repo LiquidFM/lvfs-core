@@ -20,9 +20,6 @@
 #include "lvfs_core_INode.h"
 #include "default/lvfs_core_qt_DefaultNode.h"
 #include "default/lvfs_core_qt_DefaultView.h"
-#include "default/lvfs_core_qt_DefaultNodeFactory.h"
-#include "default/lvfs_core_qt_DefaultViewFactory.h"
-#include "default/lvfs_core_qt_DefaultNodeViewFactory.h"
 
 #include <lvfs/IEntry>
 #include <lvfs/IDirectory>
@@ -122,16 +119,6 @@ Interface::Holder INode::open(const char *uri, Module::Error &error)
 
         while (file.isValid())
         {
-            if (file->as<IDirectory>() != NULL)
-                if (file->as<INodeFactory>() == NULL)
-                    if (file->as<IViewFactory>() == NULL)
-                        file.reset(new (std::nothrow) Qt::DefaultNodeViewFactory(file));
-                    else
-                        file.reset(new (std::nothrow) Qt::DefaultNodeFactory(file));
-                else
-                    if (file->as<IViewFactory>() == NULL)
-                        file.reset(new (std::nothrow) Qt::DefaultViewFactory(file));
-
             if (UNLIKELY(!file.isValid()))
                 return current;
 

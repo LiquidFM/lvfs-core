@@ -18,9 +18,6 @@
  */
 
 #include "lvfs_core_qt_RefreshTask.h"
-#include "../../../default/lvfs_core_qt_DefaultNodeFactory.h"
-#include "../../../default/lvfs_core_qt_DefaultViewFactory.h"
-#include "../../../default/lvfs_core_qt_DefaultNodeViewFactory.h"
 
 #include <QtCore/QDateTime>
 
@@ -56,16 +53,6 @@ void RefreshTask::run(volatile bool &aborted)
             currentTime = QTime::currentTime();
             file = (*i);
             node.reset();
-
-            if (file->as<IDirectory>() != NULL)
-                if (file->as<INodeFactory>() == NULL)
-                    if (file->as<IViewFactory>() == NULL)
-                        file.reset(new (std::nothrow) Qt::DefaultNodeViewFactory(file));
-                    else
-                        file.reset(new (std::nothrow) Qt::DefaultNodeFactory(file));
-                else
-                    if (file->as<IViewFactory>() == NULL)
-                        file.reset(new (std::nothrow) Qt::DefaultViewFactory(file));
 
             if (UNLIKELY(!file.isValid()))
             {

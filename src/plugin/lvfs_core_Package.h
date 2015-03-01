@@ -17,30 +17,30 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lvfs_core_qt_DefaultNodeViewFactory.h"
-#include "lvfs_core_qt_DefaultNode.h"
-#include "lvfs_core_qt_DefaultView.h"
+#ifndef LVFS_CORE_PACKAGE_H_
+#define LVFS_CORE_PACKAGE_H_
+
+#include <lvfs/plugins/Package>
 
 
 namespace LVFS {
 namespace Core {
-namespace Qt {
 
-DefaultNodeViewFactory::DefaultNodeViewFactory(const Interface::Holder &original) :
-    ExtendsBy<Core::INodeFactory, Core::IViewFactory>(original)
-{}
-
-DefaultNodeViewFactory::~DefaultNodeViewFactory()
-{}
-
-Interface::Holder DefaultNodeViewFactory::createNode(const Interface::Holder &file, const Interface::Holder &parent) const
+class PLATFORM_MAKE_PRIVATE Package : public ::LVFS::Package
 {
-    return Interface::Holder(new (std::nothrow) DefaultNode(file, parent));
-}
+    PLATFORM_MAKE_NONCOPYABLE(Package)
+    PLATFORM_MAKE_NONMOVEABLE(Package)
+    PLATFORM_MAKE_STACK_ONLY
 
-Interface::Holder DefaultNodeViewFactory::createView() const
-{
-    return Interface::Holder(new (std::nothrow) DefaultView());
-}
+public:
+    Package();
+    virtual ~Package();
 
-}}}
+    virtual const char *name() const;
+    virtual const Plugin **contentPlugins() const;
+    virtual const Plugin **protocolPlugins() const;
+};
+
+}}
+
+#endif /* LVFS_CORE_PACKAGE_H_ */

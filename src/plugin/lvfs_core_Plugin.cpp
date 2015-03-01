@@ -17,25 +17,27 @@
  * along with lvfs-core. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WORKSPACE_LVFS_CORE_SRC_DEFAULT_LVFS_CORE_QT_DEFAULTNODEFACTORY_H_
-#define WORKSPACE_LVFS_CORE_SRC_DEFAULT_LVFS_CORE_QT_DEFAULTNODEFACTORY_H_
-
-#include <lvfs-core/INodeFactory>
+#include "lvfs_core_Plugin.h"
+#include "lvfs_core_Entry.h"
 
 
 namespace LVFS {
 namespace Core {
-namespace Qt {
 
-class PLATFORM_MAKE_PRIVATE DefaultNodeFactory : public ExtendsBy<Core::INodeFactory>
+Plugin::Plugin()
+{}
+
+Plugin::~Plugin()
+{}
+
+Interface::Holder Plugin::open(const char *uri) const
 {
-public:
-    DefaultNodeFactory(const Interface::Holder &original);
-    virtual ~DefaultNodeFactory();
+    return Entry::open(uri, m_error);
+}
 
-    virtual Interface::Holder createNode(const Interface::Holder &file, const Interface::Holder &parent) const;
-};
+const Error &Plugin::lastError() const
+{
+    return m_error;
+}
 
-}}}
-
-#endif /* WORKSPACE_LVFS_CORE_SRC_DEFAULT_LVFS_CORE_QT_DEFAULTNODEFACTORY_H_ */
+}}
