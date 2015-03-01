@@ -45,11 +45,11 @@ class Iterator : public Directory::const_iterator
 {
 public:
     Iterator() :
-        Directory::const_iterator(new (std::nothrow) Imp())
+        const_iterator(new (std::nothrow) Imp())
     {}
 
     Iterator(const char *path) :
-        Directory::const_iterator(new (std::nothrow) Imp(path))
+        const_iterator(new (std::nothrow) Imp(path))
     {}
 
 protected:
@@ -59,7 +59,7 @@ protected:
         char b[offsetof(struct dirent, d_name) + NAME_MAX + 1];
     };
 
-    class Imp : public Directory::const_iterator::Implementation
+    class Imp : public const_iterator::Implementation
     {
         PLATFORM_MAKE_NONCOPYABLE(Imp)
         PLATFORM_MAKE_NONMOVEABLE(Imp)
@@ -120,7 +120,7 @@ protected:
                     continue;
                 else
                 {
-                    char path[PATH_MAX];
+                    char path[Module::MaxUriLength];
 
                     if (UNLIKELY(std::snprintf(path, sizeof(path), "%s/%s", m_path, m_entry->d_name) < 0))
                     {
@@ -148,7 +148,7 @@ protected:
         Buffer m_buffer;
         struct dirent *m_entry;
         Interface::Holder m_file;
-        char m_path[PATH_MAX];
+        char m_path[Module::MaxUriLength];
     };
 };
 
@@ -210,7 +210,7 @@ Directory::const_iterator Directory::end() const
 bool Directory::exists(const char *name) const
 {
     ASSERT(name != NULL);
-    char path[PATH_MAX];
+    char path[Module::MaxUriLength];
 
     if (UNLIKELY(std::snprintf(path, sizeof(path), "%s/%s", m_filePath, name) < 0))
         return false;
@@ -227,7 +227,7 @@ bool Directory::exists(const char *name) const
 Interface::Holder Directory::entry(const char *name, const IType *type, bool create)
 {
     ASSERT(name != NULL);
-    char path[PATH_MAX];
+    char path[Module::MaxUriLength];
 
     if (UNLIKELY(std::snprintf(path, sizeof(path), "%s/%s", m_filePath, name) < 0))
         return Interface::Holder();
@@ -247,7 +247,7 @@ bool Directory::copy(const Progress &callback, const Interface::Holder &file, bo
     if (::strcmp(file->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0)
         return false;
 
-    char path[PATH_MAX];
+    char path[Module::MaxUriLength];
 
     if (UNLIKELY(std::snprintf(path, sizeof(path), "%s/%s", m_filePath, file->as<IEntry>()->title()) < 0))
         return false;
@@ -329,7 +329,7 @@ bool Directory::rename(const Interface::Holder &file, const char *name)
 bool Directory::remove(const Interface::Holder &file)
 {
     ASSERT(file.isValid());
-    char path[PATH_MAX];
+    char path[Module::MaxUriLength];
 
 #if PLATFORM_OS(WINDOWS)
     DWORD attr = GetFileAttributesW((const wchar_t*)filePath.utf16());

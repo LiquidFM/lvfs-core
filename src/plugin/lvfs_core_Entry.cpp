@@ -115,7 +115,7 @@ int Entry::permissions() const
 Interface::Holder Entry::open(const char *uri, Error &error)
 {
     ASSERT(uri != NULL);
-    char file[PATH_MAX];
+    char file[Module::MaxUriLength];
 
     if (uri[0] == '/')
         ::strncpy(file, uri, sizeof(file));
@@ -142,10 +142,10 @@ Interface::Holder Entry::open(const char *uri, Error &error)
             return Interface::Holder(new (std::nothrow) Directory(file, st));
         else if (S_ISLNK(st.st_mode))
         {
-            char buff[PATH_MAX] = {};
+            char buff[Module::MaxUriLength] = {};
             struct stat st2;
 
-            if (::readlink(file, buff, PATH_MAX) != 0)
+            if (::readlink(file, buff, Module::MaxUriLength) != 0)
                 error = errno;
             else
                 if (char *realName = ::canonicalize_file_name(buff))

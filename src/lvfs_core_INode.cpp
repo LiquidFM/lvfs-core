@@ -68,7 +68,7 @@ INode::~INode()
 
 Interface::Holder INode::open(const char *uri, Module::Error &error)
 {
-    char buffer[PATH_MAX + Module::MaxSchemaLength + Module::SchemaDelimiterLength];
+    char buffer[Module::MaxUriLength];
     Interface::Holder current;
     char *p;
 
