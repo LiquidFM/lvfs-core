@@ -206,12 +206,11 @@ bool Directory::exists(const char *name) const
     if (UNLIKELY(std::snprintf(path, sizeof(path), "%s/%s", m_filePath, name) < 0))
         return false;
 
-    int fd = ::open(path, O_RDONLY);
+    struct stat st;
 
-    if (fd == -1)
+    if (::lstat(path, &st) != 0)
         return false;
 
-    ::close(fd);
     return true;
 }
 
@@ -222,6 +221,33 @@ Interface::Holder Directory::entry(const char *name, const IType *type, bool cre
 
     if (UNLIKELY(std::snprintf(path, sizeof(path), "%s/%s", m_filePath, name) < 0))
         return Interface::Holder();
+
+    if (create)
+    {
+        if (type == NULL)
+            return Interface::Holder();
+
+        if (::strcmp(type->name(), Module::DirectoryTypeName) == 0)
+        {
+            if (::mkdir(path, S_IRWXU | (S_IRGRP | S_IXGRP) | (S_IROTH | S_IXOTH)) != 0)
+            {
+                m_lastError = errno;
+                return Interface::Holder();
+            }
+        }
+        else
+        {
+            int dest_file = ::creat(path, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+
+            if (dest_file == -1)
+            {
+                m_lastError = errno;
+                return Interface::Holder();
+            }
+
+            ::close(dest_file);
+        }
+    }
 
     Interface::Holder file = Entry::open(path, m_lastError);
 
@@ -263,7 +289,7 @@ bool Directory::copy(const Progress &callback, const Interface::Holder &file, bo
     if (UNLIKELY(buffer == NULL))
         return false;
 
-    int dest_file = ::creat(path, S_IRUSR | S_IWUSR);
+    int dest_file = ::creat(path, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
     if (dest_file == -1)
     {

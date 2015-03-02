@@ -210,11 +210,11 @@ void DefaultNode::setNode(const Interface::Holder &file, const Interface::Holder
 
     if (node.isValid())
     {
-        beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + 1);
+        beginInsertRows(QModelIndex(), m_files.size(), m_files.size());
         {
             Item item;
 
-            item.isDir = strcmp(file->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+            item.isDir = ::strcmp(file->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
             item.title = toUnicode(file->as<IEntry>()->title());
             item.schema = toUnicode(file->as<IEntry>()->schema());
             item.location = toUnicode(file->as<IEntry>()->location());
@@ -518,7 +518,7 @@ void DefaultNode::processListFile(Snapshot &files, bool isFirstEvent)
     {
         Item item;
 
-        item.isDir = strcmp((*i).first->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+        item.isDir = ::strcmp((*i).first->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
         item.title = toUnicode((*i).first->as<IEntry>()->title());
         item.schema = toUnicode((*i).first->as<IEntry>()->schema());
         item.location = toUnicode((*i).first->as<IEntry>()->location());
@@ -545,7 +545,7 @@ void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
         {
             Item item;
 
-            item.isDir = strcmp((*i).first->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
+            item.isDir = ::strcmp((*i).first->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
             item.title = toUnicode((*i).first->as<IEntry>()->title());
             item.schema = toUnicode((*i).first->as<IEntry>()->schema());
             item.location = toUnicode((*i).first->as<IEntry>()->location());

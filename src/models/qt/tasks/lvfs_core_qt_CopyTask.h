@@ -48,7 +48,7 @@ public:
     };
 
 public:
-    CopyTask(QObject *receiver, Files &files, const Interface::Holder &dest, bool move);
+    CopyTask(QObject *receiver, Files &files, const Interface::Holder &source, const Interface::Holder &dest, bool move);
     virtual ~CopyTask();
 
     const Files &files() const { return m_files; }
@@ -129,12 +129,11 @@ protected:
 private:
     bool m_move;
     Files m_files;
+    Interface::Holder m_source;
 
     Tryier *m_tryier;
     Tryier *m_overwrite;
     BaseFunctor::Methods m_methods;
-
-    Interface::Holder m_destFile;
 };
 
 }}}

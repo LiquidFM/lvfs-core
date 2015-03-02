@@ -29,11 +29,12 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-CopyTask::CopyTask(QObject *receiver, Files &files, const Interface::Holder &dest, bool move) :
+CopyTask::CopyTask(QObject *receiver, Files &files, const Interface::Holder &source, const Interface::Holder &dest, bool move) :
     FilesBaseTask(receiver, dest),
     m_move(move),
     m_files(std::move(files)),
     m_tryier(NULL),
+    m_source(source),
     m_methods({ this, &CopyTask::askUser, NULL })
 {}
 
@@ -46,6 +47,7 @@ void CopyTask::run(volatile bool &aborted)
     {
         IDirectory::const_iterator first;
         IDirectory::const_iterator second;
+        Interface::Holder source;
         Interface::Holder dest;
         int notCopied;
     };
@@ -53,6 +55,7 @@ void CopyTask::run(volatile bool &aborted)
 
     Interface::Holder dest = destination()->as<Core::INode>()->file();
     Interface::Holder holder;
+    Interface::Holder holder2;
     IDirectory *dir;
 
     Tryier tryier(aborted);
@@ -74,7 +77,7 @@ void CopyTask::run(volatile bool &aborted)
                      m_tryier->tryTo(CreateDestinationFolder(m_methods, dest, *it, holder)))
             {
                 Stack stack;
-                Stack::value_type current({ dir->begin(), dir->end(), holder, 0 });
+                Stack::value_type current({ dir->begin(), dir->end(), *it, holder, 0 });
 
                 do
                 {
@@ -89,12 +92,13 @@ void CopyTask::run(volatile bool &aborted)
                                 current.notCopied += !m_tryier->tryTo(CopyFile(m_methods, current.dest, holder, m_move));
                         }
                         else if ((dir = holder->as<IDirectory>()) &&
-                                m_tryier->tryTo(CreateDestinationFolder(m_methods, current.dest, holder, holder)))
+                                m_tryier->tryTo(CreateDestinationFolder(m_methods, current.dest, holder, holder2)))
                         {
                             stack.push_back(current);
                             current.first = dir->begin();
                             current.second = dir->end();
-                            current.dest = holder;
+                            current.source = holder;
+                            current.dest = holder2;
                             current.notCopied = 0;
                         }
                     }
@@ -105,14 +109,14 @@ void CopyTask::run(volatile bool &aborted)
                     if (stack.empty())
                     {
                         if (m_move && current.notCopied == 0)
-                            m_tryier->tryTo(RemoveFile(m_methods, destination(), current.dest));
+                            m_tryier->tryTo(RemoveFile(m_methods, m_source, current.source));
 
                         break;
                     }
                     else
                     {
                         if (m_move && current.notCopied == 0)
-                            if (m_tryier->tryTo(RemoveFile(m_methods, stack.back().dest, current.dest)))
+                            m_tryier->tryTo(RemoveFile(m_methods, stack.back().source, current.source));
 
                         current = stack.back();
                         stack.pop_back();
