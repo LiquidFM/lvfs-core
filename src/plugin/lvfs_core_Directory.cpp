@@ -53,12 +53,6 @@ public:
     {}
 
 protected:
-    union Buffer
-    {
-        struct dirent d;
-        char b[offsetof(struct dirent, d_name) + NAME_MAX + 1];
-    };
-
     class Imp : public const_iterator::Implementation
     {
         PLATFORM_MAKE_NONCOPYABLE(Imp)
@@ -76,7 +70,6 @@ protected:
             m_dir(NULL),
             m_entry(NULL)
         {
-            ::memset(&m_buffer, 0, sizeof(m_buffer));
             ::strncpy(m_path, path, sizeof(m_path));
 
             if (m_dir = ::opendir(m_path))
@@ -112,16 +105,15 @@ protected:
         {
             Module::Error error;
             Interface::Holder file;
+            char path[Module::MaxUriLength];
 
             m_file.reset();
 
-            while (::readdir_r(m_dir, &m_buffer.d, &m_entry) == 0 && m_entry)
+            while (m_entry = ::readdir(m_dir))
                 if (::strcmp(m_entry->d_name, ".") == 0 || ::strcmp(m_entry->d_name, "..") == 0)
                     continue;
                 else
                 {
-                    char path[Module::MaxUriLength];
-
                     if (UNLIKELY(std::snprintf(path, sizeof(path), "%s/%s", m_path, m_entry->d_name) < 0))
                     {
                         m_entry = NULL;
@@ -145,7 +137,6 @@ protected:
 
     private:
         DIR *m_dir;
-        Buffer m_buffer;
         struct dirent *m_entry;
         Interface::Holder m_file;
         char m_path[Module::MaxUriLength];

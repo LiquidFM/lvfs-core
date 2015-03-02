@@ -136,38 +136,10 @@ Interface::Holder Entry::open(const char *uri, Error &error)
     if (::lstat(file, &st) != 0)
         error = errno;
     else
-        if (S_ISREG(st.st_mode))
-            return Interface::Holder(new (std::nothrow) Entry(file, st));
-        else if (S_ISDIR(st.st_mode))
+        if (S_ISDIR(st.st_mode))
             return Interface::Holder(new (std::nothrow) Directory(file, st));
-        else if (S_ISLNK(st.st_mode))
-        {
-            char buff[Module::MaxUriLength] = {};
-            struct stat st2;
-
-            if (::readlink(file, buff, Module::MaxUriLength) != 0)
-                error = errno;
-            else
-                if (char *realName = ::canonicalize_file_name(buff))
-                {
-                    Interface::Holder res;
-
-                    if (::stat(realName, &st2) != 0)
-                        return Interface::Holder(new (std::nothrow) Entry(file, st));
-                    else
-                        if (S_ISREG(st2.st_mode))
-                            res = Interface::Holder(new (std::nothrow) Entry(file, st2));
-                        else if (S_ISDIR(st2.st_mode))
-                            res = Interface::Holder(new (std::nothrow) Directory(file, st2));
-                        else
-                            error = ENOENT;
-
-                    ::free(realName);
-                    return res;
-                }
-                else
-                    error = errno;
-        }
+        else
+            return Interface::Holder(new (std::nothrow) Entry(file, st));
 
     return Interface::Holder();
 }
