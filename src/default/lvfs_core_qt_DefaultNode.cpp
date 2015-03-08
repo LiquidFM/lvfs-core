@@ -318,7 +318,7 @@ void DefaultNode::rename(const Interface::Holder &view, const QModelIndex &index
 
     if (!item->isLocked())
     {
-        QString name = toUnicode(item->file->as<IEntry>()->title());
+        QString name = item->title;
         StringDialog dialog(tr("Enter new name for \"%1\"").arg(name), tr("Name"), name, view->as<Core::IView>()->widget());
 
         if (dialog.exec() == QDialog::Accepted)
@@ -438,6 +438,36 @@ void DefaultNode::remove(const Interface::Holder &view, const QModelIndexList &i
 
             doRemoveFiles(files);
         }
+    }
+}
+
+void DefaultNode::createDirectory(const Interface::Holder &view, const QModelIndex &index)
+{
+    QString name;
+
+    if (index.isValid())
+        name = static_cast<Item *>(index.internalPointer())->title;
+
+    StringDialog dialog(tr("Enter name for new directory"), tr("Name"), name, view->as<Core::IView>()->widget());
+
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        Interface::Adaptor<IDirectory> file = this->file();
+        Interface::Holder type = Module::desktop().typeOfDirectory();
+        Interface::Holder dir = file->entry(Qt::Node::fromUnicode(dialog.value()), type->as<IType>(), true);
+
+        if (dir.isValid())
+        {
+            beginInsertRows(QModelIndex(), m_files.size(), m_files.size());
+            m_files.push_back(createItem(dir));
+            endInsertRows();
+
+            view->as<Qt::IView>()->select(createIndex(m_files.size() - 1, 0, &m_files[m_files.size() - 1]));
+        }
+        else
+            QMessageBox::critical(view->as<Core::IView>()->widget(),
+                                  tr("Error"),
+                                  Qt::Node::toUnicode(file->lastError().description()));
     }
 }
 

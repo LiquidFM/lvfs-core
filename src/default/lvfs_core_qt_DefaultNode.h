@@ -70,6 +70,7 @@ public: /* Qt::INode */
     virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Core::INode::Files &files, bool move = false);
     virtual void copyToClipboard(const Interface::Holder &view, const QModelIndexList &indices, bool move = false);
     virtual void remove(const Interface::Holder &view, const QModelIndexList &indices);
+    virtual void createDirectory(const Interface::Holder &view, const QModelIndex &index);
     virtual void cancel(const QModelIndexList &indices);
 
 public: /* QAbstractItemModel */

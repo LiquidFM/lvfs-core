@@ -112,7 +112,7 @@ bool DefaultView::setNode(const Interface::Holder &node)
             if (m_node.isValid())
             {
                 Qt::INode *currentQtNode = m_node->as<Qt::INode>();
-                currentQtNode->setCurrentIndex(m_view.selectionModel()->currentIndex());
+                currentQtNode->setCurrentIndex(m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
             }
 
             m_node = node;
@@ -124,7 +124,7 @@ bool DefaultView::setNode(const Interface::Holder &node)
 
             m_view.sortByColumn(qtNode->sorting().first, qtNode->sorting().second);
 
-            select(qtNode->currentIndex());
+            select(m_sortFilterModel.mapFromSource(qtNode->currentIndex()));
 
             return true;
         }
@@ -134,10 +134,10 @@ bool DefaultView::setNode(const Interface::Holder &node)
 
 void DefaultView::select(const QModelIndex &index, bool expand)
 {
-    QModelIndex toBeSelected = index;
+    QModelIndex toBeSelected;
 
-    if (toBeSelected.isValid())
-        toBeSelected = m_sortFilterModel.index(toBeSelected.row(), toBeSelected.column());
+    if (index.isValid())
+        toBeSelected = m_sortFilterModel.mapFromSource(index);
 
     if (!toBeSelected.isValid())
         toBeSelected = m_sortFilterModel.index(0, 0);
@@ -203,25 +203,7 @@ void DefaultView::createFileShortcut()
 
 void DefaultView::createDirectoryShortcut()
 {
-    QModelIndex index = m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
-
-    if (index.isValid())
-    {
-        QString name = Qt::Node::toUnicode(m_node->as<Qt::INode>()->mapToFile(index)->as<IEntry>()->title());
-        StringDialog dialog(tr("Enter name for new directory"), tr("Name"), name, widget());
-
-        if (dialog.exec() == QDialog::Accepted)
-        {
-            Interface::Adaptor<IDirectory> file = m_node->as<Core::INode>()->file();
-            Interface::Holder type = Module::desktop().typeOfDirectory();
-            Interface::Holder dir = file->entry(Qt::Node::fromUnicode(dialog.value()), type->as<IType>(), true);
-
-            if (dir.isValid())
-                m_node->as<Core::INode>()->refresh();
-            else
-                QMessageBox::critical(widget(), tr("Error"), Qt::Node::toUnicode(file->lastError().description()));
-        }
-    }
+    m_node->as<Qt::INode>()->createDirectory(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
 }
 
 void DefaultView::removeShortcut()
