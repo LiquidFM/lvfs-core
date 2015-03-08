@@ -23,21 +23,24 @@
 #include <lvfs/IProperties>
 #include <lvfs/IApplication>
 #include <lvfs/IApplications>
-#include <brolly/assert.h>
+
+#include <lvfs-core/IView>
+#include <lvfs-core/IMainView>
+#include <lvfs-core/INodeFactory>
+#include <lvfs-core/models/Qt/IView>
+#include <lvfs-core/tools/strings/readableints.h>
+#include <lvfs-core/tools/widgets/StringDialog>
 
 #include <QtGui/QIcon>
 #include <QtGui/QClipboard>
+#include <QtGui/QMessageBox>
 #include <QtGui/QApplication>
 #include <QtCore/QMimeData>
 #include <QtCore/QSet>
 
-#include <lvfs-core/IView>
-#include <lvfs-core/IMainView>
-#include <lvfs-core/models/Qt/IView>
-#include <lvfs-core/tools/strings/readableints.h>
-
 #include <efc/Set>
 #include <efc/ScopedPointer>
+#include <brolly/assert.h>
 
 #include <platform/platform.h>
 #define PLATFORM_DE(PLATFORM_FEATURE) PLATFORM_IS_SET(PLATFORM_DE_##PLATFORM_FEATURE)
@@ -155,38 +158,6 @@ void DefaultNode::refresh(int depth)
 void DefaultNode::accept(const Interface::Holder &view, Files &files)
 {}
 
-void DefaultNode::copy(const Interface::Holder &view, const Interface::Holder &dest, Files &files, bool move)
-{
-    QString reason = move ? tr("Moving...") : tr("Copying...");
-
-    for (auto &i : files)
-        for (auto q = 0; q < m_files.size(); ++q)
-            if (i == m_files[q].file)
-            {
-                m_files[q].lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()), dest);
-                emit dataChanged(createIndex(q, 0, &m_files[q]), createIndex(q, 1, &m_files[q]));
-                break;
-            }
-
-    doCopyFiles(dest, files, move);
-}
-
-void DefaultNode::remove(const Interface::Holder &view, Files &files)
-{
-    QString reason = tr("Removing...");
-
-    for (auto &i : files)
-        for (auto q = 0; q < m_files.size(); ++q)
-            if (i == m_files[q].file)
-            {
-                m_files[q].lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()));
-                emit dataChanged(createIndex(q, 0, &m_files[q]), createIndex(q, 1, &m_files[q]));
-                break;
-            }
-
-    doRemoveFiles(files);
-}
-
 void DefaultNode::clear()
 {
     unsafeClear();
@@ -211,21 +182,7 @@ void DefaultNode::setNode(const Interface::Holder &file, const Interface::Holder
     if (node.isValid())
     {
         beginInsertRows(QModelIndex(), m_files.size(), m_files.size());
-        {
-            Item item;
-
-            item.isDir = ::strcmp(file->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
-            item.title = toUnicode(file->as<IEntry>()->title());
-            item.schema = toUnicode(file->as<IEntry>()->schema());
-            item.location = toUnicode(file->as<IEntry>()->location());
-            item.icon.addFile(toUnicode(file->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
-            item.size = file->as<IProperties>() ? humanReadableSize(file->as<IProperties>()->size()) : QString::fromLatin1("<DIR>");
-            item.modified = file->as<IProperties>() ? QDateTime::fromTime_t(file->as<IProperties>()->mTime()).toLocalTime() : QDateTime();
-            item.file = file;
-            item.node = node;
-
-            m_files.push_back(item);
-        }
+        m_files.push_back(createItem(file, node));
         endInsertRows();
     }
 }
@@ -245,14 +202,20 @@ const DefaultNode::Sorting &DefaultNode::sorting() const
     return m_sorting;
 }
 
-Core::INode::Files DefaultNode::mapToFile(const QModelIndex &index) const
+QModelIndex DefaultNode::currentIndex() const
+{
+    return m_currentIndex;
+}
+
+void DefaultNode::setCurrentIndex(const QModelIndex &index)
+{
+    m_currentIndex = index;
+}
+
+Interface::Holder DefaultNode::mapToFile(const QModelIndex &index) const
 {
     ASSERT(index.isValid());
-    Core::INode::Files res;
-
-    res.push_back(static_cast<Item *>(index.internalPointer())->file);
-
-    return res;
+    return static_cast<Item *>(index.internalPointer())->file;
 }
 
 Core::INode::Files DefaultNode::mapToFile(const QModelIndexList &indices) const
@@ -315,14 +278,23 @@ bool DefaultNode::compareItems(const QModelIndex &left, const QModelIndex &right
     return true;
 }
 
-void DefaultNode::activated(const QModelIndex &file, const Interface::Holder &view) const
+void DefaultNode::activated(const Interface::Holder &view, const QModelIndex &index)
 {
-    if (file.isValid())
-        if (m_files[file.row()].node.isValid())
-            view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, m_files[file.row()].node);
+    ASSERT(index.isValid());
+    Item *item = static_cast<Item *>(index.internalPointer());
+
+    if (item->node.isValid())
+        view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
+    else
+    {
+        if (INodeFactory *factory = item->file->as<INodeFactory>())
+            item->node = factory->createNode(item->file, Interface::Holder::fromRawData(this));
+
+        if (item->node.isValid())
+            view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
         else
         {
-            Interface::Holder apps = Module::desktop().applications(m_files[file.row()].file->as<IEntry>()->type());
+            Interface::Holder apps = Module::desktop().applications(item->file->as<IEntry>()->type());
 
             if (apps.isValid())
             {
@@ -332,13 +304,64 @@ void DefaultNode::activated(const QModelIndex &file, const Interface::Holder &vi
                 if (iterator != apps->as<IApplications>()->end())
                 {
                     ASSERT((*iterator)->as<IApplication>() != NULL);
-                    (*iterator)->as<IApplication>()->open(m_files[file.row()].file->as<IEntry>());
+                    (*iterator)->as<IApplication>()->open(item->file->as<IEntry>());
                 }
             }
         }
+    }
 }
 
-void DefaultNode::copyToClipboard(const QModelIndexList &files, bool move)
+void DefaultNode::rename(const Interface::Holder &view, const QModelIndex &index)
+{
+    ASSERT(index.isValid());
+    Item *item = static_cast<Item *>(index.internalPointer());
+
+    if (!item->isLocked())
+    {
+        QString name = toUnicode(item->file->as<IEntry>()->title());
+        StringDialog dialog(tr("Enter new name for \"%1\"").arg(name), tr("Name"), name, view->as<Core::IView>()->widget());
+
+        if (dialog.exec() == QDialog::Accepted)
+        {
+            QByteArray new_name = fromUnicode(dialog.value());
+            Interface::Adaptor<IDirectory> dir = file();
+
+            if (dir->rename(item->file, new_name.data()))
+            {
+                Interface::Holder new_file = dir->entry(new_name.data());
+                ASSERT(new_file.isValid());
+
+                item->file = new_file;
+                item->title = toUnicode(new_file->as<IEntry>()->title());
+                item->node.reset();
+
+                emit dataChanged(createIndex(index.row(), 0, item), createIndex(index.row(), 0, item));
+            }
+            else
+                QMessageBox::critical(view->as<Core::IView>()->widget(),
+                                      tr("Failed to rename \"%1\"").arg(name),
+                                      toUnicode(dir->lastError().description()));
+        }
+    }
+}
+
+void DefaultNode::copy(const Interface::Holder &view, const Interface::Holder &dest, Core::INode::Files &files, bool move)
+{
+    QString reason = move ? tr("Moving...") : tr("Copying...");
+
+    for (auto &i : files)
+        for (auto q = 0; q < m_files.size(); ++q)
+            if (i == m_files[q].file)
+            {
+                m_files[q].lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()), dest);
+                emit dataChanged(createIndex(q, 0, &m_files[q]), createIndex(q, 1, &m_files[q]));
+                break;
+            }
+
+    doCopyFiles(dest, files, move);
+}
+
+void DefaultNode::copyToClipboard(const Interface::Holder &view, const QModelIndexList &indices, bool move)
 {
 #if PLATFORM_DE(KDE)
     static const QByteArray suffix = QByteArray::fromRawData("\r\n", qstrlen("\r\n"));
@@ -346,23 +369,22 @@ void DefaultNode::copyToClipboard(const QModelIndexList &files, bool move)
     static const QByteArray suffix = QByteArray::fromRawData("\n", qstrlen("\n"));
 #endif
 
-    const IEntry *file;
     EFC::ScopedPointer<ClipboardMimeData> data(new (std::nothrow) ClipboardMimeData(move));
 
     if (LIKELY(data != NULL))
     {
+        EFC::Set<Interface::Holder> set;
+        const IEntry *file;
         QByteArray res;
-        QSet<const IEntry *> set;
+        Item *item;
 
-        set.reserve(files.size());
-
-        for (int i = 0; i < files.size(); ++i)
+        for (int i = 0; i < indices.size(); ++i)
         {
-            file = (*static_cast<Interface::Holder *>(files.at(i).internalPointer()))->as<Core::INode>()->file()->as<IEntry>();
+            item = static_cast<Item *>(indices.at(i).internalPointer());
 
-            if (!set.contains(file))
+            if (set.insert(item->file).second)
             {
-                set.insert(file);
+                file = item->file->as<IEntry>();
                 res.append(file->schema()).append(Module::SchemaDelimiter).append(file->location()).append(suffix);
             }
         }
@@ -372,14 +394,56 @@ void DefaultNode::copyToClipboard(const QModelIndexList &files, bool move)
     }
 }
 
-QModelIndex DefaultNode::currentIndex() const
+void DefaultNode::remove(const Interface::Holder &view, const QModelIndexList &indices)
 {
-    return m_currentIndex;
+    EFC::Set<Interface::Holder> set;
+    EFC::List<QModelIndex> items;
+    QStringList list;
+    Files files;
+    Item *item;
+
+    list.reserve(indices.size());
+
+    for (int i = 0; i < indices.size(); ++i)
+    {
+        item = static_cast<Item *>(indices.at(i).internalPointer());
+
+        if (set.insert(item->file).second && !item->isLocked())
+        {
+            list.push_back(toUnicode(item->file->as<IEntry>()->title()));
+            items.push_back(indices.at(i));
+            files.push_back(item->file);
+        }
+    }
+
+    if (!files.empty())
+    {
+        int answer = QMessageBox::question(view->as<Core::IView>()->widget(),
+                                           tr("Removing..."),
+                                           tr("Would you like remove files:").
+                                               append(QChar(L'\n')).
+                                               append(list.join(QChar(L'\n'))),
+                                           QMessageBox::Yes | QMessageBox::No);
+
+        if (answer == QMessageBox::Yes)
+        {
+            QString reason = tr("Removing...");
+
+            for (auto &i : items)
+            {
+                item = static_cast<Item *>(i.internalPointer());
+                item->lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()));
+                emit dataChanged(createIndex(i.row(), 0, item), createIndex(i.row(), 1, item));
+            }
+
+            doRemoveFiles(files);
+        }
+    }
 }
 
-void DefaultNode::setCurrentIndex(const QModelIndex &index)
+void DefaultNode::cancel(const QModelIndexList &indices)
 {
-    m_currentIndex = index;
+    cancelTasks(mapToFile(indices));
 }
 
 int DefaultNode::rowCount(const QModelIndex &parent) const
@@ -508,32 +572,18 @@ QModelIndex DefaultNode::parent(const QModelIndex &child) const
     return QModelIndex();
 }
 
-void DefaultNode::processListFile(Snapshot &files, bool isFirstEvent)
+void DefaultNode::processListFile(Files &files, bool isFirstEvent)
 {
     if (isFirstEvent)
         safeClear(files);
 
     beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
     for (auto i = files.begin(); i != files.end(); i = files.erase(i))
-    {
-        Item item;
-
-        item.isDir = ::strcmp((*i).first->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
-        item.title = toUnicode((*i).first->as<IEntry>()->title());
-        item.schema = toUnicode((*i).first->as<IEntry>()->schema());
-        item.location = toUnicode((*i).first->as<IEntry>()->location());
-        item.icon.addFile(toUnicode((*i).first->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
-        item.size = (*i).first->as<IProperties>() ? humanReadableSize((*i).first->as<IProperties>()->size()) : QString::fromLatin1("<DIR>");
-        item.modified = (*i).first->as<IProperties>() ? QDateTime::fromTime_t((*i).first->as<IProperties>()->mTime()).toLocalTime() : QDateTime();
-        item.file = (*i).first;
-        item.node = (*i).second;
-
-        m_files.push_back(item);
-    }
+        m_files.push_back(createItem(*i));
     endInsertRows();
 }
 
-void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
+void DefaultNode::doneListFile(Files &files, const QString &error, bool isFirstEvent)
 {
     if (isFirstEvent)
         safeClear(files);
@@ -542,27 +592,16 @@ void DefaultNode::doneListFile(Snapshot &files, bool isFirstEvent)
     {
         beginInsertRows(QModelIndex(), m_files.size(), m_files.size() + files.size() - 1);
         for (auto i = files.begin(); i != files.end(); i = files.erase(i))
-        {
-            Item item;
-
-            item.isDir = ::strcmp((*i).first->as<IEntry>()->type()->name(), Module::DirectoryTypeName) == 0;
-            item.title = toUnicode((*i).first->as<IEntry>()->title());
-            item.schema = toUnicode((*i).first->as<IEntry>()->schema());
-            item.location = toUnicode((*i).first->as<IEntry>()->location());
-            item.icon.addFile(toUnicode((*i).first->as<IEntry>()->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
-            item.size = (*i).first->as<IProperties>() ? humanReadableSize((*i).first->as<IProperties>()->size()) : QString::fromLatin1("<DIR>");
-            item.modified = (*i).first->as<IProperties>() ? QDateTime::fromTime_t((*i).first->as<IProperties>()->mTime()).toLocalTime() : QDateTime();
-            item.file = (*i).first;
-            item.node = (*i).second;
-
-            m_files.push_back(item);
-        }
+            m_files.push_back(createItem(*i));
         endInsertRows();
     }
 
     if (!m_files.empty())
         for (auto i : views())
             i->as<Qt::IView>()->select(currentIndex());
+
+    if (!error.isEmpty())
+        QMessageBox::critical(QApplication::focusWidget(), toUnicode(file()->as<IEntry>()->location()), error);
 }
 
 void DefaultNode::doneCopyFiles(const Interface::Holder &dest, Files &files, bool move)
@@ -648,7 +687,41 @@ void DefaultNode::completeProgress(const Interface::Holder &file, quint64 timeEl
         }
 }
 
-void DefaultNode::safeClear(Snapshot &files)
+DefaultNode::Item DefaultNode::createItem(const Interface::Holder &file) const
+{
+    Item item;
+    Interface::Adaptor<IEntry> entry(file);
+    Interface::Adaptor<IProperties> properties(file);
+
+    item.isDir = ::strcmp(entry->type()->name(), Module::DirectoryTypeName) == 0;
+    item.title = toUnicode(entry->title());
+    item.schema = toUnicode(entry->schema());
+    item.location = toUnicode(entry->location());
+    item.icon.addFile(toUnicode(entry->type()->icon()->as<IEntry>()->location()), QSize(16, 16));
+
+    if (properties.isValid())
+    {
+        item.size = !item.isDir ? humanReadableSize(properties->size()) : QString::fromLatin1("<DIR>");
+        item.modified = QDateTime::fromTime_t(properties->mTime()).toLocalTime();
+    }
+    else
+    {
+        item.size = !item.isDir ? tr("<UNKNOWN>") : QString::fromLatin1("<DIR>");
+        item.modified = QDateTime();
+    }
+
+    item.file = file;
+    return item;
+}
+
+DefaultNode::Item DefaultNode::createItem(const Interface::Holder &file, const Interface::Holder &node) const
+{
+    Item item = createItem(file);
+    item.node = node;
+    return item;
+}
+
+void DefaultNode::safeClear(Files &files)
 {
     if (!m_files.empty())
     {
@@ -687,7 +760,7 @@ void DefaultNode::safeClear(Snapshot &files)
             for (auto i = files.begin(), tmp = i; i != files.end(); tmp = i)
             {
                 for (auto q = m_files.begin(), end = m_files.end(); q != end; ++q)
-                    if (::strcmp(i->first->as<IEntry>()->title(), q->file->as<IEntry>()->title()) == 0)
+                    if (::strcmp((*i)->as<IEntry>()->title(), q->file->as<IEntry>()->title()) == 0)
                     {
                         i = files.erase(i);
                         break;

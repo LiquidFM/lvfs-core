@@ -48,8 +48,8 @@ public:
         const_iterator(new (std::nothrow) Imp())
     {}
 
-    Iterator(const char *path) :
-        const_iterator(new (std::nothrow) Imp(path))
+    Iterator(const char *path, Error &lastError) :
+        const_iterator(new (std::nothrow) Imp(path, lastError))
     {}
 
 protected:
@@ -61,24 +61,28 @@ protected:
     public:
         Imp() :
             m_dir(NULL),
+            m_lastError(NULL),
             m_entry(NULL)
         {
             ::memset(&m_path, 0, sizeof(m_path));
         }
 
-        Imp(const char *path) :
+        Imp(const char *path, Error &lastError) :
             m_dir(NULL),
+            m_lastError(&lastError),
             m_entry(NULL)
         {
             ::strncpy(m_path, path, sizeof(m_path));
 
             if (m_dir = ::opendir(m_path))
             {
-                if (strcmp(m_path, "/") == 0)
+                if (::strcmp(m_path, "/") == 0)
                     m_path[0] = 0;
 
                 next();
             }
+            else
+                (*m_lastError) = errno;
         }
 
         virtual ~Imp()
@@ -137,6 +141,7 @@ protected:
 
     private:
         DIR *m_dir;
+        Error *m_lastError;
         struct dirent *m_entry;
         Interface::Holder m_file;
         char m_path[Module::MaxUriLength];
@@ -190,7 +195,8 @@ Interface::Holder Directory::open(IFile::Mode mode) const
 
 Directory::const_iterator Directory::begin() const
 {
-    return Iterator(m_filePath);
+    m_lastError = 0;
+    return Iterator(m_filePath, m_lastError);
 }
 
 Directory::const_iterator Directory::end() const
@@ -340,7 +346,19 @@ bool Directory::copy(const Progress &callback, const Interface::Holder &file, bo
 
 bool Directory::rename(const Interface::Holder &file, const char *name)
 {
-    return false;
+    ASSERT(file.isValid());
+    char path[Module::MaxUriLength];
+
+    if (UNLIKELY(std::snprintf(path, sizeof(path), "%s/%s", m_filePath, name) < 0))
+        return false;
+
+    if (::rename(file->as<IEntry>()->location(), path) != 0)
+    {
+        m_lastError = errno;
+        return false;
+    }
+
+    return true;
 }
 
 bool Directory::remove(const Interface::Holder &file)

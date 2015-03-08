@@ -82,7 +82,7 @@ private:
     time_t m_mTime;
     time_t m_aTime;
     int m_permissions;
-    Error m_lastError;
+    mutable Error m_lastError;
 };
 
 }}

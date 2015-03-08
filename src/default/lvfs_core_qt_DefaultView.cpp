@@ -24,6 +24,7 @@
 #include <lvfs-core/IMainView>
 #include <lvfs-core/models/Qt/INode>
 #include <lvfs-core/models/Qt/Node>
+#include <lvfs-core/tools/widgets/StringDialog>
 
 #include <brolly/assert.h>
 
@@ -163,7 +164,7 @@ void DefaultView::goUpShortcut()
 
 void DefaultView::goIntoShortcut()
 {
-    m_node->as<Qt::INode>()->activated(m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), Interface::Holder::fromRawData(this));
+    m_node->as<Qt::INode>()->activated(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
 }
 
 void DefaultView::cancelShortcut()
@@ -178,8 +179,7 @@ void DefaultView::cancelShortcut()
         for (int i = 0; i < items.size(); ++i)
             indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
 
-        Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(indices);
-        m_node->as<Core::INode>()->cancel(files);
+        m_node->as<Qt::INode>()->cancel(indices);
     }
 }
 
@@ -190,7 +190,10 @@ void DefaultView::pathToClipboardShortcut()
 
 void DefaultView::renameShortcut()
 {
+    QModelIndex index = m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
 
+    if (index.isValid())
+        m_node->as<Qt::INode>()->rename(Interface::Holder::fromRawData(this), index);
 }
 
 void DefaultView::createFileShortcut()
@@ -200,7 +203,25 @@ void DefaultView::createFileShortcut()
 
 void DefaultView::createDirectoryShortcut()
 {
+    QModelIndex index = m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
 
+    if (index.isValid())
+    {
+        QString name = Qt::Node::toUnicode(m_node->as<Qt::INode>()->mapToFile(index)->as<IEntry>()->title());
+        StringDialog dialog(tr("Enter name for new directory"), tr("Name"), name, widget());
+
+        if (dialog.exec() == QDialog::Accepted)
+        {
+            Interface::Adaptor<IDirectory> file = m_node->as<Core::INode>()->file();
+            Interface::Holder type = Module::desktop().typeOfDirectory();
+            Interface::Holder dir = file->entry(Qt::Node::fromUnicode(dialog.value()), type->as<IType>(), true);
+
+            if (dir.isValid())
+                m_node->as<Core::INode>()->refresh();
+            else
+                QMessageBox::critical(widget(), tr("Error"), Qt::Node::toUnicode(file->lastError().description()));
+        }
+    }
 }
 
 void DefaultView::removeShortcut()
@@ -215,26 +236,7 @@ void DefaultView::removeShortcut()
         for (int i = 0; i < items.size(); ++i)
             indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
 
-        Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(indices);
-
-        if (!files.empty())
-        {
-            QStringList list;
-
-            list.reserve(files.size());
-            for (auto &i : files)
-                list.push_back(Qt::Node::toUnicode(i->as<IEntry>()->title()));
-
-            int answer = QMessageBox::question(widget(),
-                                               tr("Removing..."),
-                                               tr("Would you like remove files:").
-                                                   append(QChar(L'\n')).
-                                                   append(list.join(QChar(L'\n'))),
-                                               QMessageBox::Yes | QMessageBox::No);
-
-            if (answer == QMessageBox::Yes)
-                m_node->as<Core::INode>()->remove(Interface::Holder::fromRawData(this), files);
-        }
+        m_node->as<Qt::INode>()->remove(Interface::Holder::fromRawData(this), indices);
     }
 }
 
@@ -260,34 +262,12 @@ void DefaultView::searchShortcut()
 
 void DefaultView::copyToClipboardShortcut()
 {
-    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
-
-    if (!items.isEmpty())
-    {
-        QModelIndexList files;
-        files.reserve(items.size());
-
-        for (int i = 0; i < items.size(); ++i)
-            files.push_back(m_sortFilterModel.mapToSource(items.at(i)));
-
-//        m_node->as<Qt::INode>()->copyToClipboard(files, false);
-    }
+    copyToClipboard(false);
 }
 
 void DefaultView::cutToClipboardShortcut()
 {
-    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
-
-    if (!items.isEmpty())
-    {
-        QModelIndexList files;
-        files.reserve(items.size());
-
-        for (int i = 0; i < items.size(); ++i)
-            files.push_back(m_sortFilterModel.mapToSource(items.at(i)));
-
-//        m_node->as<Qt::INode>()->copyToClipboard(files, true);
-    }
+    copyToClipboard(true);
 }
 
 void DefaultView::pasteFromClipboardShortcut()
@@ -322,8 +302,24 @@ void DefaultView::copyMoveShortcut(bool move)
             node->as<Core::INode>()->accept(self, files);
 
             if (!files.empty())
-                m_node->as<Core::INode>()->copy(self, node, files, move);
+                m_node->as<Qt::INode>()->copy(self, node, files, move);
         }
+    }
+}
+
+void DefaultView::copyToClipboard(bool move)
+{
+    QModelIndexList items = m_view.selectionModel()->selectedIndexes();
+
+    if (!items.isEmpty())
+    {
+        QModelIndexList indices;
+        indices.reserve(items.size());
+
+        for (int i = 0; i < items.size(); ++i)
+            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
+
+        m_node->as<Qt::INode>()->copyToClipboard(Interface::Holder::fromRawData(this), indices, move);
     }
 }
 

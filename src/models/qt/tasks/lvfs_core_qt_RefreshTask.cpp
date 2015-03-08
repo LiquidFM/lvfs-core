@@ -19,11 +19,11 @@
 
 #include "lvfs_core_qt_RefreshTask.h"
 
-#include <QtCore/QDateTime>
-
 #include <lvfs-core/INode>
-#include <lvfs-core/INodeFactory>
 #include <lvfs/IDirectory>
+#include <lvfs-core/models/Qt/Node>
+
+#include <QtCore/QDateTime>
 
 
 namespace LVFS {
@@ -38,21 +38,20 @@ RefreshTask::RefreshTask(QObject *receiver, const Interface::Holder &node, int d
 
 void RefreshTask::run(volatile bool &aborted)
 {
-    Snapshot files;
+    Files files;
     bool isFirstEvent = true;
-    Interface::Holder node;
     Interface::Holder file;
-    INodeFactory *factory;
 
+    QString error;
     QTime baseTime = QTime::currentTime();
     QTime currentTime;
 
     if (IDirectory *dir = m_node->as<Core::INode>()->file()->as<IDirectory>())
+    {
         for (auto i = dir->begin(), end = dir->end(); i != end && !aborted; ++i)
         {
             currentTime = QTime::currentTime();
             file = (*i);
-            node.reset();
 
             if (UNLIKELY(!file.isValid()))
             {
@@ -60,15 +59,7 @@ void RefreshTask::run(volatile bool &aborted)
                 break;
             }
 
-            if (factory = file->as<INodeFactory>())
-            {
-                node = factory->createNode(file, m_node);
-
-                if (node.isValid() && m_depth > 0)
-                    node->as<Core::INode>()->refresh(m_depth - 1);
-            }
-
-            files.push_back(std::move(Snapshot::value_type(file, node)));
+            files.push_back(std::move(file));
 
             if (baseTime.msecsTo(currentTime) > 300)
             {
@@ -82,7 +73,11 @@ void RefreshTask::run(volatile bool &aborted)
             }
         }
 
-    postEvent(new (std::nothrow) Event(this, Event::DoneListFileEventId, aborted, files, isFirstEvent));
+        if (!dir->lastError().isOk())
+            error = Qt::Node::toUnicode(dir->lastError().description());
+    }
+
+    postEvent(new (std::nothrow) Event(this, Event::DoneListFileEventId, aborted, files, isFirstEvent, error));
 }
 
 }}}

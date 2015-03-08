@@ -50,13 +50,18 @@ public:
     virtual QModelIndex currentIndex() const = 0;
     virtual void setCurrentIndex(const QModelIndex &index) = 0;
 
-    virtual Core::INode::Files mapToFile(const QModelIndex &index) const = 0;
+    virtual Interface::Holder mapToFile(const QModelIndex &index) const = 0;
     virtual Core::INode::Files mapToFile(const QModelIndexList &indices) const = 0;
 
     virtual bool isLocked(const QModelIndex &index, quint64 &progress, quint64 &total) const = 0;
     virtual bool compareItems(const QModelIndex &left, const QModelIndex &right, ::Qt::SortOrder sortOrder) const = 0;
 
-    virtual void activated(const QModelIndex &index, const Interface::Holder &view) const = 0;
+    virtual void activated(const Interface::Holder &view, const QModelIndex &index) = 0;
+    virtual void rename(const Interface::Holder &view, const QModelIndex &index) = 0;
+    virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Core::INode::Files &files, bool move = false) = 0;
+    virtual void copyToClipboard(const Interface::Holder &view, const QModelIndexList &indices, bool move = false) = 0;
+    virtual void remove(const Interface::Holder &view, const QModelIndexList &indices) = 0;
+    virtual void cancel(const QModelIndexList &indices) = 0;
 };
 
 }}}

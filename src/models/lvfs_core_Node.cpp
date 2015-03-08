@@ -48,12 +48,6 @@ const Interface::Holder &Node::file() const
     return m_file;
 }
 
-void Node::cancel(const Files &files)
-{
-    for (auto &i : files)
-        cancelTask(i);
-}
-
 int Node::refs() const
 {
     return m_ref;
@@ -122,6 +116,12 @@ void Node::doneTask(TaskId task)
             if (n->as<Core::INode>()->decRef() == 0)
                 n->as<Core::INode>()->clear();
     }
+}
+
+void Node::cancelTasks(const Files &files)
+{
+    for (auto &i : files)
+        cancelTask(i);
 }
 
 void Node::cancelTasks()

@@ -36,8 +36,7 @@ namespace Qt {
 class PLATFORM_MAKE_PUBLIC Node : public Core::Node
 {
 public:
-    typedef EFC::Set<Interface::Holder>                                Views;
-    typedef EFC::List<EFC::Pair<Interface::Holder, Interface::Holder>> Snapshot;
+    typedef EFC::Set<Interface::Holder> Views;
 
 public:
     Node(const Interface::Holder &file, const Interface::Holder &parent);
@@ -59,8 +58,8 @@ protected:
 
 protected: /* Actions section */
     void doListFile(int depth = 0);
-    virtual void processListFile(Snapshot &files, bool isFirstEvent) = 0;
-    virtual void doneListFile(Snapshot &files, bool isFirstEvent) = 0;
+    virtual void processListFile(Files &files, bool isFirstEvent) = 0;
+    virtual void doneListFile(Files &files, const QString &error, bool isFirstEvent) = 0;
 
     void doCopyFiles(const Interface::Holder &dest, Files &files, bool move = false);
     virtual void doneCopyFiles(const Interface::Holder &dest, Files &files, bool move) = 0;

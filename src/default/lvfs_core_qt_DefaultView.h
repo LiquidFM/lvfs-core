@@ -82,6 +82,7 @@ private:
 
 private:
     void copyMoveShortcut(bool move);
+    void copyToClipboard(bool move);
 
 private:
     typedef Tools::MouseDoubleClickEventSource<

@@ -44,8 +44,6 @@ public:
 public: /* Core::INode */
     virtual void refresh(int depth = 0);
     virtual void accept(const Interface::Holder &view, Files &files);
-    virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Files &files, bool move = false);
-    virtual void remove(const Interface::Holder &view, Files &files);
 
     virtual void clear();
 
@@ -58,17 +56,21 @@ public: /* Qt::INode */
     virtual const Geometry &geometry() const;
     virtual const Sorting &sorting() const;
 
-    virtual Core::INode::Files mapToFile(const QModelIndex &index) const;
+    virtual QModelIndex currentIndex() const;
+    virtual void setCurrentIndex(const QModelIndex &index);
+
+    virtual Interface::Holder mapToFile(const QModelIndex &index) const;
     virtual Core::INode::Files mapToFile(const QModelIndexList &indices) const;
 
     virtual bool isLocked(const QModelIndex &index, quint64 &progress, quint64 &total) const;
     virtual bool compareItems(const QModelIndex &left, const QModelIndex &right, ::Qt::SortOrder sortOrder) const;
 
-    virtual void activated(const QModelIndex &file, const Interface::Holder &view) const;
-    virtual void copyToClipboard(const QModelIndexList &files, bool move);
-
-    virtual QModelIndex currentIndex() const;
-    virtual void setCurrentIndex(const QModelIndex &index);
+    virtual void activated(const Interface::Holder &view, const QModelIndex &file);
+    virtual void rename(const Interface::Holder &view, const QModelIndex &index);
+    virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Core::INode::Files &files, bool move = false);
+    virtual void copyToClipboard(const Interface::Holder &view, const QModelIndexList &indices, bool move = false);
+    virtual void remove(const Interface::Holder &view, const QModelIndexList &indices);
+    virtual void cancel(const QModelIndexList &indices);
 
 public: /* QAbstractItemModel */
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -80,8 +82,8 @@ public: /* QAbstractItemModel */
     virtual QModelIndex parent(const QModelIndex &child) const;
 
 protected: /* Core::Qt::Node */
-    virtual void processListFile(Snapshot &files, bool isFirstEvent);
-    virtual void doneListFile(Snapshot &files, bool isFirstEvent);
+    virtual void processListFile(Files &files, bool isFirstEvent);
+    virtual void doneListFile(Files &files, const QString &error, bool isFirstEvent);
     virtual void doneCopyFiles(const Interface::Holder &dest, Files &files, bool move);
     virtual void doneRemoveFiles(Files &files);
 
@@ -135,7 +137,10 @@ private:
         Interface::Holder destNode;
     };
 
-    void safeClear(Snapshot &files);
+    Item createItem(const Interface::Holder &file) const;
+    Item createItem(const Interface::Holder &file, const Interface::Holder &node) const;
+
+    void safeClear(Files &files);
     void unsafeClear();
 
     QModelIndex index(Item *item) const;

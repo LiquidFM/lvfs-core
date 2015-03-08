@@ -31,19 +31,28 @@ namespace Qt {
 class PLATFORM_MAKE_PRIVATE RefreshTask : public FilesBaseTask
 {
 public:
-    typedef Qt::Node::Snapshot Snapshot;
+    typedef Qt::Node::Files Files;
 
     class Event : public FilesBaseTask::Event
     {
     public:
-        Event(Task *task, Type type, bool canceled, Snapshot &snapshot, bool isFirstEvent) :
+        Event(Task *task, Type type, bool canceled, Files &snapshot, bool isFirstEvent) :
             FilesBaseTask::Event(task, type, canceled),
             snapshot(std::move(snapshot)),
-            isFirstEvent(isFirstEvent)
+            isFirstEvent(isFirstEvent),
+            error()
         {}
 
-        Snapshot snapshot;
+        Event(Task *task, Type type, bool canceled, Files &snapshot, bool isFirstEvent, QString &error) :
+            FilesBaseTask::Event(task, type, canceled),
+            snapshot(std::move(snapshot)),
+            isFirstEvent(isFirstEvent),
+            error(error)
+        {}
+
+        Files snapshot;
         bool isFirstEvent;
+        QString error;
     };
 
 public:

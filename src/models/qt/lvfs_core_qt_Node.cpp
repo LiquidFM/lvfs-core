@@ -175,7 +175,7 @@ bool Node::EventsHandler::event(QEvent *event)
         {
             event->accept();
             m_node->m_doListFile = false;
-            m_node->doneListFile(static_cast<RefreshTask::Event *>(event)->snapshot, static_cast<RefreshTask::Event *>(event)->isFirstEvent);
+            m_node->doneListFile(static_cast<RefreshTask::Event *>(event)->snapshot, static_cast<RefreshTask::Event *>(event)->error, static_cast<RefreshTask::Event *>(event)->isFirstEvent);
             m_node->doneTask(static_cast<Task::Event *>(event)->task);
             return true;
         }

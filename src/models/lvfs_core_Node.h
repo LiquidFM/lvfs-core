@@ -41,8 +41,6 @@ public: /* Core::INode */
     virtual const Interface::Holder &parent() const;
     virtual const Interface::Holder &file() const;
 
-    virtual void cancel(const Files &files);
-
     virtual int refs() const;
     virtual void incRef();
     virtual int decRef();
@@ -56,6 +54,7 @@ protected:
     void handleTask(EFC::Task::Holder &task, const Files &files);
     void cancelTask(const Interface::Holder &file);
     void doneTask(TaskId task);
+    void cancelTasks(const Files &files);
     void cancelTasks();
 
 private:
