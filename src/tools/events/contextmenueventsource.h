@@ -27,7 +27,7 @@ namespace LVFS {
 namespace Tools {
 
 template <typename BaseClass = EventSourceBase<QWidget>>
-class ContextMenuEventSource : public BaseClass
+class PLATFORM_MAKE_PRIVATE ContextMenuEventSource : public BaseClass
 {
 public:
 	ContextMenuEventSource(EventHandler *eventHandler) :

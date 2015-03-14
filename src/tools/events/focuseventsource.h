@@ -27,7 +27,7 @@ namespace LVFS {
 namespace Tools {
 
 template <typename BaseClass = EventSourceBase<QWidget>>
-class FocusOutEventSource : public BaseClass
+class PLATFORM_MAKE_PRIVATE FocusOutEventSource : public BaseClass
 {
 public:
 	FocusOutEventSource(EventHandler *eventHandler) :
@@ -49,7 +49,7 @@ protected:
 
 
 template <typename BaseClass = EventSourceBase<QWidget>>
-class FocusInEventSource : public BaseClass
+class PLATFORM_MAKE_PRIVATE FocusInEventSource : public BaseClass
 {
 public:
 	FocusInEventSource(EventHandler *eventHandler) :

@@ -29,15 +29,18 @@ namespace LVFS {
 namespace Tools {
 
 template <
-	typename BaseClass     = EventHandlerBase<Templates::null_type>,
+	typename BaseClass = EventHandlerBase<Templates::null_type>,
 	typename FallbackToBaseClass = Templates::bool_value<false>,
-	typename IntercepEvent = Templates::bool_value<true>
+    typename InterceptEvents = Templates::bool_value<true>
 >
-class KeyboardEventHandler : public BaseClass
+class PLATFORM_MAKE_PRIVATE KeyboardEventHandler : public BaseClass
 {
 public:
 	typedef typename BaseClass::Listener Listener;
-	typedef typename BaseClass::Method   Method;
+    typedef typename Templates::select_first_type_if<typename BaseClass::Method1,
+                                                     typename BaseClass::Method2,
+                                                     InterceptEvents::value
+                                                    >::type Method;
 
 public:
 	KeyboardEventHandler(Listener *object) :
@@ -46,7 +49,7 @@ public:
 
 	virtual bool keyboardEvent(QKeyEvent *event)
 	{
-		if (IntercepEvent::value)
+		if (InterceptEvents::value)
 			if (FallbackToBaseClass::value)
 				return this->invokeMethod1(m_hotkeys.value(event->modifiers() + event->key(), NULL), event) ? true : BaseClass::keyboardEvent(event);
 			else

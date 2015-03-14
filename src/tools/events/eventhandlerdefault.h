@@ -28,14 +28,13 @@ namespace Tools {
 
 template <
 	typename ListenerType,
-	typename IntercepEvent = Templates::bool_value<true>
+    typename InterceptEvents = Templates::bool_value<true>
 >
-class EventHandlerDefault : public EventHandlerBase<ListenerType>
+class PLATFORM_MAKE_PRIVATE EventHandlerDefault : public EventHandlerBase<ListenerType>
 {
 public:
 	typedef EventHandlerBase<ListenerType> BaseClass;
 	typedef typename BaseClass::Listener   Listener;
-	typedef typename BaseClass::Method     Method;
 	typedef bool (Listener::*DefaultMethod)(QEvent *event);
 
 	enum Event
@@ -60,7 +59,7 @@ public:
 
 	virtual bool mouseReleaseEvent(QMouseEvent *event)
 	{
-		if (IntercepEvent::value)
+		if (InterceptEvents::value)
 			return invokeMethod3(m_handlers[MouseReleaseEvent], event);
 		else
 			return invokeMethod4(m_handlers[MouseReleaseEvent], event);
@@ -68,7 +67,7 @@ public:
 
 	virtual bool mouseDoubleClickEvent(QMouseEvent *event)
 	{
-		if (IntercepEvent::value)
+		if (InterceptEvents::value)
 			return invokeMethod3(m_handlers[MouseDoubleClickEvent], event);
 		else
 			return invokeMethod4(m_handlers[MouseDoubleClickEvent], event);
@@ -76,7 +75,7 @@ public:
 
 	virtual bool keyboardEvent(QKeyEvent *event)
 	{
-		if (IntercepEvent::value)
+		if (InterceptEvents::value)
 			return invokeMethod3(m_handlers[KeyboardEvent], event);
 		else
 			return invokeMethod4(m_handlers[KeyboardEvent], event);
@@ -84,7 +83,7 @@ public:
 
     virtual bool focusOutEvent(QFocusEvent *event)
     {
-		if (IntercepEvent::value)
+		if (InterceptEvents::value)
 			return invokeMethod3(m_handlers[FocusOutEvent], event);
 		else
 			return invokeMethod4(m_handlers[FocusOutEvent], event);
@@ -92,7 +91,7 @@ public:
 
     virtual bool focusInEvent(QFocusEvent *event)
     {
-		if (IntercepEvent::value)
+		if (InterceptEvents::value)
 			return invokeMethod3(m_handlers[FocusInEvent], event);
 		else
 			return invokeMethod4(m_handlers[FocusInEvent], event);
@@ -100,7 +99,7 @@ public:
 
     virtual bool contextMenuEvent(QContextMenuEvent *event)
     {
-		if (IntercepEvent::value)
+		if (InterceptEvents::value)
 			return invokeMethod3(m_handlers[ContextMenuEvent], event);
 		else
 			return invokeMethod4(m_handlers[ContextMenuEvent], event);

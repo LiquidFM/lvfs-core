@@ -27,7 +27,7 @@ namespace LVFS {
 namespace Tools {
 
 template <typename BaseClass = EventSourceBase<QWidget>>
-class KeyboardEventSource : public BaseClass
+class PLATFORM_MAKE_PRIVATE KeyboardEventSource : public BaseClass
 {
 public:
 	KeyboardEventSource(EventHandler *eventHandler) :

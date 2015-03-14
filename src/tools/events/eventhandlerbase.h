@@ -29,11 +29,12 @@ namespace LVFS {
 namespace Tools {
 
 template <typename ListenerType>
-class EventHandlerBase : public EventHandler
+class PLATFORM_MAKE_PRIVATE EventHandlerBase : public EventHandler
 {
 public:
-	typedef ListenerType Listener;
-	typedef void (Listener::*Method)();
+	typedef ListenerType    Listener;
+	typedef void (Listener::*Method1)();
+    typedef bool (Listener::*Method2)();
 
 public:
 	EventHandlerBase(Listener *object) :
@@ -52,7 +53,10 @@ public:
 protected:
     inline Listener *listener() const { return m_object; }
 
-    inline bool invokeMethod1(Method method, QEvent *event)
+    inline bool invokeMethod1(Method2 method, QEvent *event);
+    inline bool invokeMethod2(Method1 method, QEvent *event);
+
+    inline bool invokeMethod1(Method1 method, QEvent *event)
     {
 		if (method)
 		{
@@ -63,10 +67,13 @@ protected:
 
 		return false;
     }
-    inline bool invokeMethod2(Method method, QEvent *event)
+    inline bool invokeMethod2(Method2 method, QEvent *event)
     {
-		if (method)
-			(m_object->*method)();
+		if (method && (m_object->*method)())
+		{
+            event->accept();
+            return true;
+        }
 
 		return false;
     }

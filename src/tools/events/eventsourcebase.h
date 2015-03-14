@@ -30,7 +30,7 @@ namespace LVFS {
 namespace Tools {
 
 template <typename BaseClass>
-class EventSourceBase : public BaseClass
+class PLATFORM_MAKE_PRIVATE EventSourceBase : public BaseClass
 {
 public:
 	EventSourceBase(EventHandler *eventHandler) :

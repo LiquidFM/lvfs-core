@@ -27,7 +27,7 @@ namespace LVFS {
 namespace Tools {
 
 template <typename BaseClass = EventSourceBase<QWidget>>
-class MouseReleaseEventSource : public BaseClass
+class PLATFORM_MAKE_PRIVATE MouseReleaseEventSource : public BaseClass
 {
 public:
 	MouseReleaseEventSource(EventHandler *eventHandler) :
@@ -49,7 +49,7 @@ protected:
 
 
 template <typename BaseClass = EventSourceBase<QWidget>>
-class MouseDoubleClickEventSource : public BaseClass
+class PLATFORM_MAKE_PRIVATE MouseDoubleClickEventSource : public BaseClass
 {
 public:
 	MouseDoubleClickEventSource(EventHandler *eventHandler) :
