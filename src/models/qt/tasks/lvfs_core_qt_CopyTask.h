@@ -48,7 +48,7 @@ public:
     };
 
 public:
-    CopyTask(QObject *receiver, Files &files, const Interface::Holder &source, const Interface::Holder &dest, bool move);
+    CopyTask(QObject *receiver, Files &files, const Interface::Holder &source, const Interface::Holder &dest, const Interface::Holder &node, bool move);
     virtual ~CopyTask();
 
     const Files &files() const { return m_files; }
@@ -130,6 +130,7 @@ private:
     bool m_move;
     Files m_files;
     Interface::Holder m_source;
+    Interface::Holder m_dest;
 
     Tryier *m_tryier;
     Tryier *m_overwrite;

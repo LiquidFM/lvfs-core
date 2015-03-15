@@ -132,6 +132,11 @@ bool DefaultView::setNode(const Interface::Holder &node)
     return false;
 }
 
+QModelIndex DefaultView::currentIndex() const
+{
+    return m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
+}
+
 void DefaultView::select(const QModelIndex &index, bool expand)
 {
     QModelIndex toBeSelected;
@@ -279,12 +284,12 @@ void DefaultView::copyMoveShortcut(bool move)
         if (!files.empty())
         {
             Interface::Holder self = Interface::Holder::fromRawData(this);
-            Interface::Holder node = m_mainView->as<IMainView>()->opposite(self)->as<Core::IView>()->node();
+            Interface::Holder opposite = m_mainView->as<IMainView>()->opposite(self);
+            Interface::Holder node = opposite->as<Core::IView>()->node();
+            Interface::Holder dest = node->as<Core::INode>()->accept(opposite, files);
 
-            node->as<Core::INode>()->accept(self, files);
-
-            if (!files.empty())
-                m_node->as<Qt::INode>()->copy(self, node, files, move);
+            if (dest.isValid())
+                m_node->as<Qt::INode>()->copy(self, files, dest, node, move);
         }
     }
 }

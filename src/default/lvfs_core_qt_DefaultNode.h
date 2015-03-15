@@ -43,7 +43,7 @@ public:
 
 public: /* Core::INode */
     virtual void refresh(int depth = 0);
-    virtual void accept(const Interface::Holder &view, Files &files);
+    virtual Interface::Holder accept(const Interface::Holder &view, Files &files);
 
     virtual void clear();
 
@@ -67,7 +67,7 @@ public: /* Qt::INode */
 
     virtual void activated(const Interface::Holder &view, const QModelIndex &file);
     virtual void rename(const Interface::Holder &view, const QModelIndex &index);
-    virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Core::INode::Files &files, bool move = false);
+    virtual void copy(const Interface::Holder &view, Core::INode::Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move = false);
     virtual void copyToClipboard(const Interface::Holder &view, const QModelIndexList &indices, bool move = false);
     virtual void remove(const Interface::Holder &view, const QModelIndexList &indices);
     virtual void createDirectory(const Interface::Holder &view, const QModelIndex &index);
@@ -85,7 +85,7 @@ public: /* QAbstractItemModel */
 protected: /* Core::Qt::Node */
     virtual void processListFile(Files &files, bool isFirstEvent);
     virtual void doneListFile(Files &files, const QString &error, bool isFirstEvent);
-    virtual void doneCopyFiles(const Interface::Holder &dest, Files &files, bool move);
+    virtual void doneCopyFiles(const Interface::Holder &node, Files &files, bool move);
     virtual void doneRemoveFiles(Files &files);
 
     virtual void initProgress(const Interface::Holder &file, quint64 total);

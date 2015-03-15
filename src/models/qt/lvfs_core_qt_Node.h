@@ -61,8 +61,8 @@ protected: /* Actions section */
     virtual void processListFile(Files &files, bool isFirstEvent) = 0;
     virtual void doneListFile(Files &files, const QString &error, bool isFirstEvent) = 0;
 
-    void doCopyFiles(const Interface::Holder &dest, Files &files, bool move = false);
-    virtual void doneCopyFiles(const Interface::Holder &dest, Files &files, bool move) = 0;
+    void doCopyFiles(Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move = false);
+    virtual void doneCopyFiles(const Interface::Holder &node, Files &files, bool move) = 0;
 
     void doRemoveFiles(Files &files);
     virtual void doneRemoveFiles(Files &files) = 0;

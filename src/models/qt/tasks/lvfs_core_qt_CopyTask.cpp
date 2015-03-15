@@ -29,12 +29,13 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-CopyTask::CopyTask(QObject *receiver, Files &files, const Interface::Holder &source, const Interface::Holder &dest, bool move) :
-    FilesBaseTask(receiver, dest),
+CopyTask::CopyTask(QObject *receiver, Files &files, const Interface::Holder &source, const Interface::Holder &dest, const Interface::Holder &node, bool move) :
+    FilesBaseTask(receiver, node),
     m_move(move),
     m_files(std::move(files)),
     m_tryier(NULL),
     m_source(source),
+    m_dest(dest),
     m_methods({ this, &CopyTask::askUser, NULL })
 {}
 
@@ -53,7 +54,7 @@ void CopyTask::run(volatile bool &aborted)
     };
     typedef EFC::List<StackEntry> Stack;
 
-    Interface::Holder dest = destination()->as<Core::INode>()->file();
+    Interface::Holder dest = m_dest;
     Interface::Holder holder;
     Interface::Holder holder2;
     IDirectory *dir;

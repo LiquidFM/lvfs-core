@@ -155,8 +155,10 @@ void DefaultNode::refresh(int depth)
     doListFile(depth);
 }
 
-void DefaultNode::accept(const Interface::Holder &view, Files &files)
-{}
+Interface::Holder DefaultNode::accept(const Interface::Holder &view, Files &files)
+{
+    return file();
+}
 
 void DefaultNode::clear()
 {
@@ -345,7 +347,7 @@ void DefaultNode::rename(const Interface::Holder &view, const QModelIndex &index
     }
 }
 
-void DefaultNode::copy(const Interface::Holder &view, const Interface::Holder &dest, Core::INode::Files &files, bool move)
+void DefaultNode::copy(const Interface::Holder &view, Core::INode::Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move)
 {
     QString reason = move ? tr("Moving...") : tr("Copying...");
 
@@ -353,12 +355,12 @@ void DefaultNode::copy(const Interface::Holder &view, const Interface::Holder &d
         for (auto q = 0; q < m_files.size(); ++q)
             if (i == m_files[q].file)
             {
-                m_files[q].lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()), dest);
+                m_files[q].lock(reason, standardIcon(QStyle::SP_BrowserReload, view->as<Core::IView>()->widget()), node);
                 emit dataChanged(createIndex(q, 0, &m_files[q]), createIndex(q, 1, &m_files[q]));
                 break;
             }
 
-    doCopyFiles(dest, files, move);
+    doCopyFiles(files, dest, node, move);
 }
 
 void DefaultNode::copyToClipboard(const Interface::Holder &view, const QModelIndexList &indices, bool move)
@@ -634,9 +636,9 @@ void DefaultNode::doneListFile(Files &files, const QString &error, bool isFirstE
         QMessageBox::critical(QApplication::focusWidget(), toUnicode(file()->as<IEntry>()->location()), error);
 }
 
-void DefaultNode::doneCopyFiles(const Interface::Holder &dest, Files &files, bool move)
+void DefaultNode::doneCopyFiles(const Interface::Holder &node, Files &files, bool move)
 {
-    dest->as<Core::INode>()->refresh();
+    node->as<Core::INode>()->refresh();
 
     for (auto i = files.begin(); i != files.end(); i = files.erase(i))
         for (auto q = 0; q < m_files.size(); ++q)

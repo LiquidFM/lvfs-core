@@ -100,9 +100,9 @@ void Node::doListFile(int depth)
     }
 }
 
-void Node::doCopyFiles(const Interface::Holder &dest, Files &files, bool move)
+void Node::doCopyFiles(Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move)
 {
-    EFC::Task::Holder task(new (std::nothrow) CopyTask(&m_eventsHandler, files, file(), dest, move));
+    EFC::Task::Holder task(new (std::nothrow) CopyTask(&m_eventsHandler, files, file(), dest, node, move));
     handleTask(task, static_cast<CopyTask *>(task.get())->files());
 }
 

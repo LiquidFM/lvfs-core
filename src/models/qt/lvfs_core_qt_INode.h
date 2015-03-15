@@ -58,7 +58,7 @@ public:
 
     virtual void activated(const Interface::Holder &view, const QModelIndex &index) = 0;
     virtual void rename(const Interface::Holder &view, const QModelIndex &index) = 0;
-    virtual void copy(const Interface::Holder &view, const Interface::Holder &dest, Core::INode::Files &files, bool move = false) = 0;
+    virtual void copy(const Interface::Holder &view, Core::INode::Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move = false) = 0;
     virtual void copyToClipboard(const Interface::Holder &view, const QModelIndexList &indices, bool move = false) = 0;
     virtual void remove(const Interface::Holder &view, const QModelIndexList &indices) = 0;
     virtual void createDirectory(const Interface::Holder &view, const QModelIndex &index) = 0;

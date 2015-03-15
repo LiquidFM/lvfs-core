@@ -60,6 +60,7 @@ public:
     virtual bool setNode(const Interface::Holder &node);
 
     /* Qt::IView */
+    virtual QModelIndex currentIndex() const;
     virtual void select(const QModelIndex &index, bool expand = false);
 
 private:

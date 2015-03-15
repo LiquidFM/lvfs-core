@@ -48,7 +48,7 @@ public:
     virtual void refresh(int depth = 0) = 0;
     virtual void opened(const Interface::Holder &view) = 0;
     virtual void closed(const Interface::Holder &view) = 0;
-    virtual void accept(const Interface::Holder &view, Files &files) = 0;
+    virtual Interface::Holder accept(const Interface::Holder &view, Files &files) = 0;
 
     virtual int refs() const = 0;
     virtual void incRef() = 0;
