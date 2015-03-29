@@ -296,17 +296,25 @@ void DefaultNode::activated(const Interface::Holder &view, const QModelIndex &in
             view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
         else
         {
-            Interface::Holder apps = Module::desktop().applications(item->file->as<IEntry>()->type());
+            if (item->file->as<IDirectory>())
+                item->node = Interface::Holder(new (std::nothrow) Qt::DefaultNode(item->file, Interface::Holder::fromRawData(this)));
 
-            if (apps.isValid())
+            if (item->node.isValid())
+                view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
+            else
             {
-                ASSERT(apps->as<IApplications>() != NULL);
-                IApplications::const_iterator iterator = apps->as<IApplications>()->begin();
+                Interface::Holder apps = Module::desktop().applications(item->file->as<IEntry>()->type());
 
-                if (iterator != apps->as<IApplications>()->end())
+                if (apps.isValid())
                 {
-                    ASSERT((*iterator)->as<IApplication>() != NULL);
-                    (*iterator)->as<IApplication>()->open(item->file->as<IEntry>());
+                    ASSERT(apps->as<IApplications>() != NULL);
+                    IApplications::const_iterator iterator = apps->as<IApplications>()->begin();
+
+                    if (iterator != apps->as<IApplications>()->end())
+                    {
+                        ASSERT((*iterator)->as<IApplication>() != NULL);
+                        (*iterator)->as<IApplication>()->open(item->file->as<IEntry>());
+                    }
                 }
             }
         }
