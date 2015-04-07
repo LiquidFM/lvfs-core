@@ -68,6 +68,7 @@ public:
 private:
     void goUpShortcut();
     void goIntoShortcut();
+    void viewShortcut();
     void cancelShortcut();
     void pathToClipboardShortcut();
     void renameShortcut();

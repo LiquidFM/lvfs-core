@@ -55,6 +55,7 @@ DefaultView::DefaultView() :
 
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Return, &DefaultView::goIntoShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Enter, &DefaultView::goIntoShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F3, &DefaultView::viewShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Backspace, &DefaultView::goUpShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Escape, &DefaultView::cancelShortcut);
     m_eventHandler.registerShortcut(::Qt::ALT + ::Qt::CTRL, ::Qt::Key_X, &DefaultView::pathToClipboardShortcut);
@@ -161,6 +162,11 @@ void DefaultView::goUpShortcut()
 void DefaultView::goIntoShortcut()
 {
     m_node->as<Qt::INode>()->activated(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
+}
+
+void DefaultView::viewShortcut()
+{
+    m_node->as<Qt::INode>()->view(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
 }
 
 void DefaultView::cancelShortcut()

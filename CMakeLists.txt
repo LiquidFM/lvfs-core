@@ -32,6 +32,7 @@ add_documentation ("LVFS-Core" 0.0.1 "LVFS core library")
 # Install rules
 install_header_files (lvfs-core "src/lvfs_core_INode.h:INode"
                                 "src/lvfs_core_IView.h:IView"
+                                "src/lvfs_core_IEditor.h:IEditor"
                                 "src/lvfs_core_IMainView.h:IMainView"
                                 "src/lvfs_core_INodeFactory.h:INodeFactory"
                                 "src/lvfs_core_IViewFactory.h:IViewFactory"

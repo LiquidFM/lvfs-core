@@ -65,6 +65,7 @@ public: /* Qt::INode */
     virtual bool compareItems(const QModelIndex &left, const QModelIndex &right, ::Qt::SortOrder sortOrder) const;
 
     virtual void activated(const Interface::Holder &view, const QModelIndex &file);
+    virtual void view(const Interface::Holder &view, const QModelIndex &index);
     virtual void rename(const Interface::Holder &view, const QModelIndex &index);
     virtual void copy(const Interface::Holder &view, Core::INode::Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move = false);
     virtual void copyToClipboard(const Interface::Holder &view, const QModelIndexList &indices, bool move = false);

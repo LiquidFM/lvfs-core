@@ -25,6 +25,7 @@
 #include <lvfs/IApplications>
 
 #include <lvfs-core/IView>
+#include <lvfs-core/IEditor>
 #include <lvfs-core/IMainView>
 #include <lvfs-core/INodeFactory>
 #include <lvfs-core/models/Qt/IView>
@@ -321,6 +322,16 @@ void DefaultNode::activated(const Interface::Holder &view, const QModelIndex &in
             }
         }
     }
+}
+
+void DefaultNode::view(const Interface::Holder &view, const QModelIndex &index)
+{
+    ASSERT(index.isValid());
+    Item *item = static_cast<Item *>(index.internalPointer());
+
+    if (!item->isLocked())
+        if (IEditor *editor = item->file->as<IEditor>())
+            editor->view(view->as<Core::IView>()->widget());
 }
 
 void DefaultNode::rename(const Interface::Holder &view, const QModelIndex &index)
