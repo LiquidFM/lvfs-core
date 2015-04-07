@@ -39,15 +39,14 @@ public:
     virtual QWidget *widget() const;
 
     virtual const Interface::Holder &node() const;
-    virtual bool setNode(const Interface::Holder &node);
+    virtual void setNode(const Interface::Holder &node);
 
-    virtual const Interface::Holder &opposite() const;
+    virtual bool isAbleToView(const Interface::Holder &node) const;
 
 protected:
     virtual void onModelChanged(KItemModelBase *current, KItemModelBase *previous);
 
 private:
-    Interface::Holder m_opposite;
     KItemListController m_controller;
     KItemListContainer m_container;
 

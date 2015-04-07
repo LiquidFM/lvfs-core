@@ -57,7 +57,9 @@ public:
     virtual void setMainView(const Interface::Holder &mainView);
 
     virtual const Interface::Holder &node() const;
-    virtual bool setNode(const Interface::Holder &node);
+    virtual void setNode(const Interface::Holder &node);
+
+    virtual bool isAbleToView(const Interface::Holder &node) const;
 
     /* Qt::IView */
     virtual QModelIndex currentIndex() const;

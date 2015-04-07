@@ -47,9 +47,6 @@ public:
     virtual const Geometry &geometry() const = 0;
     virtual const Sorting &sorting() const = 0;
 
-    virtual QModelIndex currentIndex() const = 0;
-    virtual void setCurrentIndex(const QModelIndex &index) = 0;
-
     virtual Interface::Holder mapToFile(const QModelIndex &index) const = 0;
     virtual Core::INode::Files mapToFile(const QModelIndexList &indices) const = 0;
 

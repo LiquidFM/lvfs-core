@@ -42,7 +42,9 @@ public:
     virtual void setMainView(const Interface::Holder &mainView) = 0;
 
     virtual const Interface::Holder &node() const = 0;
-    virtual bool setNode(const Interface::Holder &node) = 0;
+    virtual void setNode(const Interface::Holder &node) = 0;
+
+    virtual bool isAbleToView(const Interface::Holder &node) const = 0;
 };
 
 }}

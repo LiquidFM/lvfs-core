@@ -96,40 +96,31 @@ const Interface::Holder &DefaultView::node() const
     return m_node;
 }
 
-bool DefaultView::setNode(const Interface::Holder &node)
+void DefaultView::setNode(const Interface::Holder &node)
 {
     if (!node.isValid())
     {
         m_node.reset();
-        return true;
+        return;
     }
 
-    Core::INode *coreNode = node->as<Core::INode>();
+    ASSERT(node->as<Core::INode>()->file()->as<IDirectory>() != NULL);
+    ASSERT(node->as<Qt::INode>() != NULL);
+    Qt::INode *qtNode = node->as<Qt::INode>();
 
-    if (coreNode->file()->as<IDirectory>())
-        if (Qt::INode *qtNode = node->as<Qt::INode>())
-        {
-            if (m_node.isValid())
-            {
-                Qt::INode *currentQtNode = m_node->as<Qt::INode>();
-                currentQtNode->setCurrentIndex(m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
-            }
+    m_node = node;
+    m_sortFilterModel.setSourceModel(qtNode->model());
 
-            m_node = node;
-            m_sortFilterModel.setSourceModel(qtNode->model());
+    qint32 column = 0;
+    for (auto i : qtNode->geometry())
+        m_view.setColumnWidth(column++, i);
 
-            qint32 column = 0;
-            for (auto i : qtNode->geometry())
-                m_view.setColumnWidth(column++, i);
+    m_view.sortByColumn(qtNode->sorting().first, qtNode->sorting().second);
+}
 
-            m_view.sortByColumn(qtNode->sorting().first, qtNode->sorting().second);
-
-            select(m_sortFilterModel.mapFromSource(qtNode->currentIndex()));
-
-            return true;
-        }
-
-    return false;
+bool DefaultView::isAbleToView(const Interface::Holder &node) const
+{
+    return node->as<Core::INode>()->file()->as<IDirectory>() && node->as<Qt::INode>();
 }
 
 QModelIndex DefaultView::currentIndex() const

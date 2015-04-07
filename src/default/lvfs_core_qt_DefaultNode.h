@@ -43,6 +43,8 @@ public:
 
 public: /* Core::INode */
     virtual void refresh(int depth = 0);
+    virtual void opened(const Interface::Holder &view);
+    virtual void closed(const Interface::Holder &view);
     virtual Interface::Holder accept(const Interface::Holder &view, Files &files);
 
     virtual void clear();
@@ -55,9 +57,6 @@ public: /* Qt::INode */
 
     virtual const Geometry &geometry() const;
     virtual const Sorting &sorting() const;
-
-    virtual QModelIndex currentIndex() const;
-    virtual void setCurrentIndex(const QModelIndex &index);
 
     virtual Interface::Holder mapToFile(const QModelIndex &index) const;
     virtual Core::INode::Files mapToFile(const QModelIndexList &indices) const;

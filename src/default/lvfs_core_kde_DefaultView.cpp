@@ -55,7 +55,7 @@ const Interface::Holder &DefaultView::node() const
     return m_node;
 }
 
-bool DefaultView::setNode(const Interface::Holder &node)
+void DefaultView::setNode(const Interface::Holder &node)
 {
     ASSERT(node.isValid());
     Interface::Adaptor<Kde::INode> kdeModel(node);
@@ -63,13 +63,11 @@ bool DefaultView::setNode(const Interface::Holder &node)
 
     m_controller.setModel(kdeModel->model());
     m_node = node;
-
-    return true;
 }
 
-const Interface::Holder &DefaultView::opposite() const
+bool DefaultView::isAbleToView(const Interface::Holder &node) const
 {
-    return m_opposite;
+    return false;
 }
 
 void DefaultView::onModelChanged(KItemModelBase *current, KItemModelBase *previous)

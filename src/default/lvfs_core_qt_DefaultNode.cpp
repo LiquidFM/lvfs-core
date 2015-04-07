@@ -155,6 +155,18 @@ void DefaultNode::refresh(int depth)
     doListFile(depth);
 }
 
+void DefaultNode::opened(const Interface::Holder &view)
+{
+    Complements::opened(view);
+    view->as<Qt::IView>()->select(m_currentIndex);
+}
+
+void DefaultNode::closed(const Interface::Holder &view)
+{
+    m_currentIndex = view->as<Qt::IView>()->currentIndex();
+    Complements::closed(view);
+}
+
 Interface::Holder DefaultNode::accept(const Interface::Holder &view, Files &files)
 {
     return file();
@@ -202,16 +214,6 @@ const DefaultNode::Geometry &DefaultNode::geometry() const
 const DefaultNode::Sorting &DefaultNode::sorting() const
 {
     return m_sorting;
-}
-
-QModelIndex DefaultNode::currentIndex() const
-{
-    return m_currentIndex;
-}
-
-void DefaultNode::setCurrentIndex(const QModelIndex &index)
-{
-    m_currentIndex = index;
 }
 
 Interface::Holder DefaultNode::mapToFile(const QModelIndex &index) const
@@ -638,7 +640,7 @@ void DefaultNode::doneListFile(Files &files, const QString &error, bool isFirstE
 
     if (!m_files.empty())
         for (auto i : views())
-            i->as<Qt::IView>()->select(currentIndex());
+            i->as<Qt::IView>()->select(m_currentIndex);
 
     if (!error.isEmpty())
         QMessageBox::critical(QApplication::focusWidget(), toUnicode(file()->as<IEntry>()->location()), error);
