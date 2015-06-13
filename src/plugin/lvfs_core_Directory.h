@@ -20,7 +20,7 @@
 #ifndef LVFS_CORE_DIRECTORY_H_
 #define LVFS_CORE_DIRECTORY_H_
 
-#include <lvfs/IFile>
+#include <lvfs/IStream>
 #include <lvfs/IDirectory>
 #include <lvfs/IProperties>
 #include <lvfs-core/INodeFactory>
@@ -44,7 +44,7 @@ public: /* IEntry */
     virtual const char *schema() const;
     virtual const char *location() const;
     virtual const IType *type() const;
-    virtual Interface::Holder open(IFile::Mode mode) const;
+    virtual Interface::Holder open(IStream::Mode mode) const;
 
 public: /* IDirectory */
     virtual const_iterator begin() const;

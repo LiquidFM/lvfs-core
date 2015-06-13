@@ -19,7 +19,7 @@
 
 #include "lvfs_core_qt_CopyTask.h"
 
-#include <lvfs/IFile>
+#include <lvfs/IStream>
 #include <lvfs/IDirectory>
 
 #include <QtGui/QMessageBox>

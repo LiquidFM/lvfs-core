@@ -19,7 +19,7 @@
 
 #include "lvfs_core_qt_RemoveTask.h"
 
-#include <lvfs/IFile>
+#include <lvfs/IStream>
 #include <lvfs/IDirectory>
 #include <lvfs/IProperties>
 

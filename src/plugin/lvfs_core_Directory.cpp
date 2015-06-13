@@ -188,7 +188,7 @@ const IType *Directory::type() const
     return m_type;
 }
 
-Interface::Holder Directory::open(IFile::Mode mode) const
+Interface::Holder Directory::open(IStream::Mode mode) const
 {
     return Interface::Holder();
 }
@@ -304,7 +304,7 @@ bool Directory::copy(const Progress &callback, const Interface::Holder &file, bo
         return false;
     }
 
-    Interface::Adaptor<IFile> src_file(file->as<IEntry>()->open());
+    Interface::Adaptor<IStream> src_file(file->as<IEntry>()->open());
 
     if (!src_file.isValid())
     {

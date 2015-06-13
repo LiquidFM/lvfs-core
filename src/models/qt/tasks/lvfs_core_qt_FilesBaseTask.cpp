@@ -21,7 +21,7 @@
 
 #include <efc/List>
 #include <efc/Pair>
-#include <lvfs/IFile>
+#include <lvfs/IStream>
 #include <lvfs/IDirectory>
 #include <lvfs/IProperties>
 #include <lvfs/Module>

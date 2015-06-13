@@ -20,7 +20,7 @@
 #ifndef LVFS_CORE_FILE_H_
 #define LVFS_CORE_FILE_H_
 
-#include <lvfs/IFile>
+#include <lvfs/IStream>
 #include <lvfs/IProperties>
 
 
@@ -30,7 +30,7 @@ struct stat;
 namespace LVFS {
 namespace Core {
 
-class PLATFORM_MAKE_PRIVATE File : public Implements<IFile, IProperties>
+class PLATFORM_MAKE_PRIVATE File : public Implements<IStream, IProperties>
 {
 public:
     File(const char *fileName, Mode mode);
@@ -38,8 +38,7 @@ public:
 
     bool isValid() const;
 
-    /* IFile */
-
+public: /* IStream */
     virtual size_t read(void *buffer, size_t size);
     virtual size_t write(const void *buffer, size_t size);
     virtual bool advise(off64_t offset, off64_t len, Advise advise);
@@ -48,14 +47,14 @@ public:
 
     virtual const Error &lastError() const;
 
-    /* IProperties */
-
+public: /* IProperties */
     virtual off64_t size() const;
     virtual time_t cTime() const;
     virtual time_t mTime() const;
     virtual time_t aTime() const;
     virtual int permissions() const;
 
+public:
     static int translatePermissions(const struct stat &st);
 
 private:

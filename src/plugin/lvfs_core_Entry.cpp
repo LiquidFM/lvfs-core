@@ -74,7 +74,7 @@ const IType *Entry::type() const
     return m_type;
 }
 
-Interface::Holder Entry::open(IFile::Mode mode) const
+Interface::Holder Entry::open(IStream::Mode mode) const
 {
     File *file = new (std::nothrow) File(m_filePath, mode);
 

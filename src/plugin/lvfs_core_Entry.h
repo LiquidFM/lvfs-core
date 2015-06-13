@@ -41,7 +41,7 @@ public: /* IEntry */
     virtual const char *schema() const;
     virtual const char *location() const;
     virtual const IType *type() const;
-    virtual Interface::Holder open(IFile::Mode mode) const;
+    virtual Interface::Holder open(IStream::Mode mode) const;
 
 public: /* IProperties */
     virtual off64_t size() const;
