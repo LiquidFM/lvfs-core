@@ -35,6 +35,11 @@ const char *Package::name() const
     return "Core";
 }
 
+Settings::Scope *Package::settings() const
+{
+    return NULL;
+}
+
 const Package::Plugin **Package::contentPlugins() const
 {
     return NULL;
