@@ -55,6 +55,9 @@ DefaultView::DefaultView() :
 
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Return, &DefaultView::goIntoShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Enter, &DefaultView::goIntoShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_Return, &DefaultView::newWindowShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_Enter, &DefaultView::newWindowShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_W, &DefaultView::closeShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F3, &DefaultView::viewShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Backspace, &DefaultView::goUpShortcut);
     m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Escape, &DefaultView::cancelShortcut);
@@ -161,7 +164,17 @@ void DefaultView::goUpShortcut()
 
 void DefaultView::goIntoShortcut()
 {
-    m_node->as<Qt::INode>()->activated(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
+    m_node->as<Qt::INode>()->activated(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), false);
+}
+
+void DefaultView::newWindowShortcut()
+{
+    m_node->as<Qt::INode>()->activated(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), true);
+}
+
+void DefaultView::closeShortcut()
+{
+    m_mainView->as<Core::IMainView>()->close(Interface::Holder::fromRawData(this));
 }
 
 void DefaultView::viewShortcut()

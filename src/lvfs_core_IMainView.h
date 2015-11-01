@@ -35,6 +35,8 @@ public:
 
     virtual const Interface::Holder &opposite(const Interface::Holder &view) const = 0;
     virtual void show(const Interface::Holder &view, const Interface::Holder &node) = 0;
+    virtual void show(const Interface::Holder &node) = 0;
+    virtual void close(const Interface::Holder &view) = 0;
 };
 
 }}

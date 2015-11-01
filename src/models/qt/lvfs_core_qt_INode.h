@@ -53,7 +53,7 @@ public:
     virtual bool isLocked(const QModelIndex &index, quint64 &progress, quint64 &total) const = 0;
     virtual bool compareItems(const QModelIndex &left, const QModelIndex &right, ::Qt::SortOrder sortOrder) const = 0;
 
-    virtual void activated(const Interface::Holder &view, const QModelIndex &index) = 0;
+    virtual void activated(const Interface::Holder &view, const QModelIndex &index, bool newWindow) = 0;
     virtual void view(const Interface::Holder &view, const QModelIndex &index) = 0;
     virtual void rename(const Interface::Holder &view, const QModelIndex &index) = 0;
     virtual void copy(const Interface::Holder &view, Core::INode::Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move = false) = 0;

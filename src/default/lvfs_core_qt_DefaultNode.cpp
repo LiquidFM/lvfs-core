@@ -283,27 +283,37 @@ bool DefaultNode::compareItems(const QModelIndex &left, const QModelIndex &right
     return true;
 }
 
-void DefaultNode::activated(const Interface::Holder &view, const QModelIndex &index)
+void DefaultNode::activated(const Interface::Holder &view, const QModelIndex &index, bool newWindow)
 {
     ASSERT(index.isValid());
     Item *item = static_cast<Item *>(index.internalPointer());
 
     if (item->node.isValid())
-        view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
+        if (newWindow)
+            view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(item->node);
+        else
+            view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
     else
     {
         if (INodeFactory *factory = item->file->as<INodeFactory>())
             item->node = factory->createNode(item->file, Interface::Holder::fromRawData(this));
 
         if (item->node.isValid())
-            view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
-        else
-        {
-            if (item->file->as<IDirectory>())
-                item->node = Interface::Holder(new (std::nothrow) Qt::DefaultNode(item->file, Interface::Holder::fromRawData(this)));
-
-            if (item->node.isValid())
+            if (newWindow)
+                view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(item->node);
+            else
                 view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
+        else
+            if (item->file->as<IDirectory>())
+            {
+                item->node.reset(new (std::nothrow) Qt::DefaultNode(item->file, Interface::Holder::fromRawData(this)));
+
+                if (LIKELY(item->node.isValid() == true))
+                    if (newWindow)
+                        view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(item->node);
+                    else
+                        view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
+            }
             else
             {
                 Interface::Holder apps = Module::desktop().applications(item->file->as<IEntry>()->type());
@@ -320,7 +330,6 @@ void DefaultNode::activated(const Interface::Holder &view, const QModelIndex &in
                     }
                 }
             }
-        }
     }
 }
 
