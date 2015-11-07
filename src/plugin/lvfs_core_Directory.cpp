@@ -161,7 +161,10 @@ Directory::Directory(const char *fileName, const struct stat &st) :
     m_mTime(st.st_mtime),
     m_aTime(st.st_atime),
     m_permissions(File::translatePermissions(st))
-{}
+{
+    if (::strlen(m_fileName) == 0)
+        m_fileName = "/";
+}
 
 Directory::~Directory()
 {
