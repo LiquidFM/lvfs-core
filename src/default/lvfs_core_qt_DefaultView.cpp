@@ -159,27 +159,27 @@ void DefaultView::goUpShortcut()
     const Interface::Holder &node = m_node->as<Core::INode>()->parent();
 
     if (node.isValid())
-        m_mainView->as<Core::IMainView>()->show(Interface::Holder::fromRawData(this), node);
+        m_mainView->as<Core::IMainView>()->show(Interface::self(), node);
 }
 
 void DefaultView::goIntoShortcut()
 {
-    m_node->as<Qt::INode>()->activated(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), false);
+    m_node->as<Qt::INode>()->activated(Interface::self(), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), false);
 }
 
 void DefaultView::newWindowShortcut()
 {
-    m_node->as<Qt::INode>()->activated(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), true);
+    m_node->as<Qt::INode>()->activated(Interface::self(), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), true);
 }
 
 void DefaultView::closeShortcut()
 {
-    m_mainView->as<Core::IMainView>()->close(Interface::Holder::fromRawData(this));
+    m_mainView->as<Core::IMainView>()->close(Interface::self());
 }
 
 void DefaultView::viewShortcut()
 {
-    m_node->as<Qt::INode>()->view(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
+    m_node->as<Qt::INode>()->view(Interface::self(), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
 }
 
 void DefaultView::cancelShortcut()
@@ -208,7 +208,7 @@ void DefaultView::renameShortcut()
     QModelIndex index = m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
 
     if (index.isValid())
-        m_node->as<Qt::INode>()->rename(Interface::Holder::fromRawData(this), index);
+        m_node->as<Qt::INode>()->rename(Interface::self(), index);
 }
 
 void DefaultView::createFileShortcut()
@@ -218,7 +218,7 @@ void DefaultView::createFileShortcut()
 
 void DefaultView::createDirectoryShortcut()
 {
-    m_node->as<Qt::INode>()->createDirectory(Interface::Holder::fromRawData(this), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
+    m_node->as<Qt::INode>()->createDirectory(Interface::self(), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
 }
 
 void DefaultView::removeShortcut()
@@ -233,7 +233,7 @@ void DefaultView::removeShortcut()
         for (int i = 0; i < items.size(); ++i)
             indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
 
-        m_node->as<Qt::INode>()->remove(Interface::Holder::fromRawData(this), indices);
+        m_node->as<Qt::INode>()->remove(Interface::self(), indices);
     }
 }
 
@@ -293,7 +293,7 @@ void DefaultView::copyMoveShortcut(bool move)
 
         if (!files.empty())
         {
-            Interface::Holder self = Interface::Holder::fromRawData(this);
+            Interface::Holder self = Interface::self();
             Interface::Holder opposite = m_mainView->as<IMainView>()->opposite(self);
             Interface::Holder node = opposite->as<Core::IView>()->node();
             Interface::Holder dest = node->as<Core::INode>()->accept(opposite, files);
@@ -316,7 +316,7 @@ void DefaultView::copyToClipboard(bool move)
         for (int i = 0; i < items.size(); ++i)
             indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
 
-        m_node->as<Qt::INode>()->copyToClipboard(Interface::Holder::fromRawData(this), indices, move);
+        m_node->as<Qt::INode>()->copyToClipboard(Interface::self(), indices, move);
     }
 }
 

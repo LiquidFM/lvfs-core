@@ -93,7 +93,7 @@ void Node::doListFile(int depth)
 {
     if (!m_doListFile)
     {
-        EFC::Task::Holder task(new (std::nothrow) RefreshTask(&m_eventsHandler, Interface::Holder::fromRawData(this), depth));
+        EFC::Task::Holder task(new (std::nothrow) RefreshTask(&m_eventsHandler, Interface::self(), depth));
 
         m_doListFile = true;
         handleTask(task, file());

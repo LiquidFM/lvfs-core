@@ -138,6 +138,8 @@ private:
         Interface::Holder destNode;
     };
 
+    typedef EFC::Vector<Item> Container;
+
     Item createItem(const Interface::Holder &file) const;
     Item createItem(const Interface::Holder &file, const Interface::Holder &node) const;
 
@@ -149,7 +151,7 @@ private:
 //    QModelIndex parent(Item *item, size_type &row) const;
 
 private:
-    EFC::Vector<Item> m_files;
+    Container m_files;
     QModelIndex m_currentIndex;
     Geometry m_geometry;
     Sorting m_sorting;

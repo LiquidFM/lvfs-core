@@ -72,7 +72,7 @@ void Node::handleTask(EFC::Task::Holder &task, const Interface::Holder &file)
         m_tasks[taskId].push_back(file);
         m_items[file] = taskId;
 
-        for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+        for (Interface::Holder n = Interface::self(); n.isValid(); n = n->as<Core::INode>()->parent())
             n->as<Core::INode>()->incRef();
     }
 }
@@ -88,7 +88,7 @@ void Node::handleTask(EFC::Task::Holder &task, const Files &files)
         for (auto &i : files)
             m_items[i] = taskId;
 
-        for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+        for (Interface::Holder n = Interface::self(); n.isValid(); n = n->as<Core::INode>()->parent())
             n->as<Core::INode>()->incRef();
     }
 }
@@ -112,7 +112,7 @@ void Node::doneTask(TaskId task)
 
         m_tasks.erase(i);
 
-        for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+        for (Interface::Holder n = Interface::self(); n.isValid(); n = n->as<Core::INode>()->parent())
             if (n->as<Core::INode>()->decRef() == 0)
                 n->as<Core::INode>()->clear();
     }
@@ -132,7 +132,7 @@ void Node::cancelTasks()
     {
         Core::INode::cancelTask(i->first, true);
 
-        for (Interface::Holder n = Interface::Holder::fromRawData(this); n.isValid(); n = n->as<Core::INode>()->parent())
+        for (Interface::Holder n = Interface::self(); n.isValid(); n = n->as<Core::INode>()->parent())
             if (n->as<Core::INode>()->decRef() == 0)
                 n->as<Core::INode>()->clear();
     }

@@ -184,7 +184,7 @@ Interface::Holder DefaultNode::node(const Interface::Holder &file) const
     const char *title = file->as<IEntry>()->title();
 
     for (auto i = m_files.begin(); i != m_files.end(); ++i)
-        if (strcmp(i->node->as<Core::INode>()->file()->as<IEntry>()->title(), title) == 0)
+        if (::strcmp(i->node->as<Core::INode>()->file()->as<IEntry>()->title(), title) == 0)
             return i->node;
 
     return Interface::Holder();
@@ -296,7 +296,7 @@ void DefaultNode::activated(const Interface::Holder &view, const QModelIndex &in
     else
     {
         if (INodeFactory *factory = item->file->as<INodeFactory>())
-            item->node = factory->createNode(item->file, Interface::Holder::fromRawData(this));
+            item->node = factory->createNode(item->file, Interface::self());
 
         if (item->node.isValid())
             if (newWindow)
@@ -306,7 +306,7 @@ void DefaultNode::activated(const Interface::Holder &view, const QModelIndex &in
         else
             if (item->file->as<IDirectory>())
             {
-                item->node.reset(new (std::nothrow) Qt::DefaultNode(item->file, Interface::Holder::fromRawData(this)));
+                item->node.reset(new (std::nothrow) Qt::DefaultNode(item->file, Interface::self()));
 
                 if (LIKELY(item->node.isValid() == true))
                     if (newWindow)
@@ -315,21 +315,24 @@ void DefaultNode::activated(const Interface::Holder &view, const QModelIndex &in
                         view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(view, item->node);
             }
             else
-            {
-                Interface::Holder apps = Module::desktop().applications(item->file->as<IEntry>()->type());
-
-                if (apps.isValid())
+                if (newWindow)
+                    view->as<Core::IView>()->mainView()->as<Core::IMainView>()->show(Interface::self());
+                else
                 {
-                    ASSERT(apps->as<IApplications>() != NULL);
-                    IApplications::const_iterator iterator = apps->as<IApplications>()->begin();
+                    Interface::Holder apps = Module::desktop().applications(item->file->as<IEntry>()->type());
 
-                    if (iterator != apps->as<IApplications>()->end())
+                    if (apps.isValid())
                     {
-                        ASSERT((*iterator)->as<IApplication>() != NULL);
-                        (*iterator)->as<IApplication>()->open(item->file->as<IEntry>());
+                        ASSERT(apps->as<IApplications>() != NULL);
+                        IApplications::const_iterator iterator = apps->as<IApplications>()->begin();
+
+                        if (iterator != apps->as<IApplications>()->end())
+                        {
+                            ASSERT((*iterator)->as<IApplication>() != NULL);
+                            (*iterator)->as<IApplication>()->open(item->file->as<IEntry>());
+                        }
                     }
                 }
-            }
     }
 }
 
