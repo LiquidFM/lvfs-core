@@ -53,26 +53,28 @@ DefaultView::DefaultView() :
     m_eventHandler.registerMouseDoubleClickEventHandler(&DefaultView::goIntoShortcut);
     m_eventHandler.setDefaultHandler(EventHandler::KeyboardEvent, &DefaultView::handleShortcut);
 
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Return, &DefaultView::goIntoShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Enter, &DefaultView::goIntoShortcut);
-    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_Return, &DefaultView::newWindowShortcut);
-    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_Enter, &DefaultView::newWindowShortcut);
-    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_W, &DefaultView::closeShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F3, &DefaultView::viewShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Backspace, &DefaultView::goUpShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Escape, &DefaultView::cancelShortcut);
-    m_eventHandler.registerShortcut(::Qt::ALT + ::Qt::CTRL, ::Qt::Key_X, &DefaultView::pathToClipboardShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F2, &DefaultView::renameShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F8, &DefaultView::createFileShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F7, &DefaultView::createDirectoryShortcut);
-    m_eventHandler.registerShortcut(::Qt::SHIFT,            ::Qt::Key_Delete, &DefaultView::removeShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_Space, &DefaultView::calculateSizeShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F5, &DefaultView::copyShortcut);
-    m_eventHandler.registerShortcut(::Qt::NoModifier,       ::Qt::Key_F6, &DefaultView::moveShortcut);
-    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_F, &DefaultView::searchShortcut);
-    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_C, &DefaultView::copyToClipboardShortcut);
-    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_X, &DefaultView::cutToClipboardShortcut);
-    m_eventHandler.registerShortcut(::Qt::CTRL,             ::Qt::Key_V, &DefaultView::pasteFromClipboardShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_Return, &DefaultView::goIntoShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_Enter, &DefaultView::goIntoShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,               ::Qt::Key_Return, &DefaultView::newWindowShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,               ::Qt::Key_Enter, &DefaultView::newWindowShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL + ::Qt::SHIFT, ::Qt::Key_Left, &DefaultView::newWindowOnOppositeTabShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL + ::Qt::SHIFT, ::Qt::Key_Right, &DefaultView::newWindowOnOppositeTabShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,               ::Qt::Key_W, &DefaultView::closeShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_F3, &DefaultView::viewShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_Backspace, &DefaultView::goUpShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_Escape, &DefaultView::cancelShortcut);
+    m_eventHandler.registerShortcut(::Qt::ALT + ::Qt::CTRL,   ::Qt::Key_X, &DefaultView::pathToClipboardShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_F2, &DefaultView::renameShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_F8, &DefaultView::createFileShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_F7, &DefaultView::createDirectoryShortcut);
+    m_eventHandler.registerShortcut(::Qt::SHIFT,              ::Qt::Key_Delete, &DefaultView::removeShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_Space, &DefaultView::calculateSizeShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_F5, &DefaultView::copyShortcut);
+    m_eventHandler.registerShortcut(::Qt::NoModifier,         ::Qt::Key_F6, &DefaultView::moveShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,               ::Qt::Key_F, &DefaultView::searchShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,               ::Qt::Key_C, &DefaultView::copyToClipboardShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,               ::Qt::Key_X, &DefaultView::cutToClipboardShortcut);
+    m_eventHandler.registerShortcut(::Qt::CTRL,               ::Qt::Key_V, &DefaultView::pasteFromClipboardShortcut);
 }
 
 DefaultView::~DefaultView()
@@ -170,6 +172,12 @@ void DefaultView::goIntoShortcut()
 void DefaultView::newWindowShortcut()
 {
     m_node->as<Qt::INode>()->activated(Interface::self(), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), true);
+}
+
+void DefaultView::newWindowOnOppositeTabShortcut()
+{
+    Interface::Holder opposite = m_mainView->as<IMainView>()->opposite(Interface::self());
+    m_node->as<Qt::INode>()->activated(opposite, m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), true);
 }
 
 void DefaultView::closeShortcut()

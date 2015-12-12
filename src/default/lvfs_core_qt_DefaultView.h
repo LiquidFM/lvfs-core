@@ -50,7 +50,7 @@ public:
     DefaultView();
     virtual ~DefaultView();
 
-    /* Core::IView */
+public: /* Core::IView */
     virtual QWidget *widget() const;
 
     virtual const Interface::Holder &mainView() const;
@@ -61,7 +61,7 @@ public:
 
     virtual bool isAbleToView(const Interface::Holder &node) const;
 
-    /* Qt::IView */
+public: /* Qt::IView */
     virtual QModelIndex currentIndex() const;
     virtual void select(const QModelIndex &index, bool expand = false);
 
@@ -69,6 +69,7 @@ private:
     void goUpShortcut();
     void goIntoShortcut();
     void newWindowShortcut();
+    void newWindowOnOppositeTabShortcut();
     void closeShortcut();
     void viewShortcut();
     void cancelShortcut();
