@@ -35,7 +35,7 @@ const char *Package::name() const
     return "Core";
 }
 
-Settings::Scope *Package::settings() const
+Package::Settings *Package::settings() const
 {
     return NULL;
 }
