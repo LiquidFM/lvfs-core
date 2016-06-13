@@ -139,7 +139,40 @@ Interface::Holder Entry::open(const char *uri, Error &error)
         if (S_ISDIR(st.st_mode))
             return Interface::Holder(new (std::nothrow) Directory(file, st));
         else
+        {
+            if (S_ISLNK(st.st_mode))
+            {
+                char link[Module::MaxUriLength];
+                int res = ::readlink(file, link, sizeof(link));
+
+                if (res != -1 && res < sizeof(link))
+                {
+                    struct stat st2;
+
+                    link[res] = 0;
+
+                    if (link[0] != '/')
+                    {
+                        ptrdiff_t res2 = ::strrchr(file, '/') - file + 1;
+
+                        if (sizeof(link) - res >= res2)
+                        {
+                            ::memmove(link + res2, link, res);
+                            ::memcpy(link, file, res2);
+                            link[res + res2] = 0;
+                        }
+                    }
+
+                    if (::lstat(link, &st2) == 0)
+                        if (S_ISDIR(st2.st_mode))
+                            return Interface::Holder(new (std::nothrow) Directory(file, st2));
+                        else
+                            return Interface::Holder(new (std::nothrow) Entry(file, st2));
+                }
+            }
+
             return Interface::Holder(new (std::nothrow) Entry(file, st));
+        }
 
     return Interface::Holder();
 }
