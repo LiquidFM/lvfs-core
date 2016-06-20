@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,14 +36,14 @@ public:
     class Event : public FilesBaseTask::Event
     {
     public:
-        Event(Task *task, Type type, bool canceled, Files &snapshot, bool isFirstEvent) :
+        Event(Task *task, Type type, bool canceled, Files &&snapshot, bool isFirstEvent) :
             FilesBaseTask::Event(task, type, canceled),
             snapshot(std::move(snapshot)),
             isFirstEvent(isFirstEvent),
             error()
         {}
 
-        Event(Task *task, Type type, bool canceled, Files &snapshot, bool isFirstEvent, QString &error) :
+        Event(Task *task, Type type, bool canceled, Files &&snapshot, bool isFirstEvent, QString &error) :
             FilesBaseTask::Event(task, type, canceled),
             snapshot(std::move(snapshot)),
             isFirstEvent(isFirstEvent),
@@ -56,14 +56,16 @@ public:
     };
 
 public:
-    RefreshTask(QObject *receiver, const Interface::Holder &node, int depth);
+    RefreshTask(QObject *receiver, void *id, const Interface::Holder &file);
+
+    virtual FilesBaseTask::Files files() const;
 
 protected:
     virtual void run(volatile bool &aborted);
 
 private:
-    Interface::Holder m_node;
-    int m_depth;
+    void *m_id;
+    Interface::Holder m_file;
 };
 
 }}}

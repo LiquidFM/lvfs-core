@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,15 +40,12 @@ namespace Qt {
 DefaultView::DefaultView() :
     m_view(&m_eventHandler),
     m_eventHandler(this),
-    m_sortFilterModel(m_node),
-    m_styledItemDelegate(m_node, m_sortFilterModel)
+    m_styledItemDelegate(m_node)
 {
     m_view.setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_view.setContextMenuPolicy(::Qt::DefaultContextMenu);
     m_view.setItemDelegate(&m_styledItemDelegate);
     m_view.setSortingEnabled(true);
-    m_sortFilterModel.setDynamicSortFilter(true);
-    m_view.setModel(&m_sortFilterModel);
 
     m_eventHandler.registerMouseDoubleClickEventHandler(&DefaultView::goIntoShortcut);
     m_eventHandler.setDefaultHandler(EventHandler::KeyboardEvent, &DefaultView::handleShortcut);
@@ -115,7 +112,8 @@ void DefaultView::setNode(const Interface::Holder &node)
     Qt::INode *qtNode = node->as<Qt::INode>();
 
     m_node = node;
-    m_sortFilterModel.setSourceModel(qtNode->model());
+    m_view.setModel(qtNode->model());
+
 
     qint32 column = 0;
     for (auto i : qtNode->geometry())
@@ -131,28 +129,20 @@ bool DefaultView::isAbleToView(const Interface::Holder &node) const
 
 QModelIndex DefaultView::currentIndex() const
 {
-    return m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
+    return m_view.selectionModel()->currentIndex();
 }
 
 void DefaultView::select(const QModelIndex &index, bool expand)
 {
-    QModelIndex toBeSelected;
-
-    if (index.isValid())
-        toBeSelected = m_sortFilterModel.mapFromSource(index);
-
-    if (!toBeSelected.isValid())
-        toBeSelected = m_sortFilterModel.index(0, 0);
-
-    if (LIKELY(toBeSelected.isValid() == true))
+    if (LIKELY(index.isValid() == true))
     {
         m_view.setFocus();
-        m_view.scrollTo(toBeSelected, QAbstractItemView::PositionAtCenter);
-        m_view.selectionModel()->select(toBeSelected, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Columns);
-        m_view.selectionModel()->setCurrentIndex(toBeSelected, QItemSelectionModel::ClearAndSelect);
+        m_view.scrollTo(index, QAbstractItemView::PositionAtCenter);
+        m_view.selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Columns);
+        m_view.selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
 
         if (expand)
-            m_view.expand(toBeSelected);
+            m_view.expand(index);
     }
 }
 
@@ -166,18 +156,29 @@ void DefaultView::goUpShortcut()
 
 void DefaultView::goIntoShortcut()
 {
-    m_node->as<Qt::INode>()->activated(Interface::self(), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), false);
+    QModelIndex index = m_view.selectionModel()->currentIndex();
+
+    if (index.isValid())
+        m_node->as<Qt::INode>()->activated(Interface::self(), index, false);
 }
 
 void DefaultView::newWindowShortcut()
 {
-    m_node->as<Qt::INode>()->activated(Interface::self(), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), true);
+    QModelIndex index = m_view.selectionModel()->currentIndex();
+
+    if (index.isValid())
+        m_node->as<Qt::INode>()->activated(Interface::self(), index, true);
 }
 
 void DefaultView::newWindowOnOppositeTabShortcut()
 {
-    Interface::Holder opposite = m_mainView->as<IMainView>()->opposite(Interface::self());
-    m_node->as<Qt::INode>()->activated(opposite, m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()), true);
+    QModelIndex index = m_view.selectionModel()->currentIndex();
+
+    if (index.isValid())
+    {
+        Interface::Holder opposite = m_mainView->as<IMainView>()->opposite(Interface::self());
+        m_node->as<Qt::INode>()->activated(opposite, index, true);
+    }
 }
 
 void DefaultView::closeShortcut()
@@ -187,7 +188,10 @@ void DefaultView::closeShortcut()
 
 void DefaultView::viewShortcut()
 {
-    m_node->as<Qt::INode>()->view(Interface::self(), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
+    QModelIndex index = m_view.selectionModel()->currentIndex();
+
+    if (index.isValid())
+        m_node->as<Qt::INode>()->view(Interface::self(), index);
 }
 
 void DefaultView::cancelShortcut()
@@ -195,15 +199,7 @@ void DefaultView::cancelShortcut()
     QModelIndexList items = m_view.selectionModel()->selectedIndexes();
 
     if (!items.isEmpty())
-    {
-        QModelIndexList indices;
-        indices.reserve(items.size());
-
-        for (int i = 0; i < items.size(); ++i)
-            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
-
-        m_node->as<Qt::INode>()->cancel(indices);
-    }
+        m_node->as<Qt::INode>()->cancel(items);
 }
 
 void DefaultView::pathToClipboardShortcut()
@@ -213,7 +209,7 @@ void DefaultView::pathToClipboardShortcut()
 
 void DefaultView::renameShortcut()
 {
-    QModelIndex index = m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex());
+    QModelIndex index = m_view.selectionModel()->currentIndex();
 
     if (index.isValid())
         m_node->as<Qt::INode>()->rename(Interface::self(), index);
@@ -226,7 +222,10 @@ void DefaultView::createFileShortcut()
 
 void DefaultView::createDirectoryShortcut()
 {
-    m_node->as<Qt::INode>()->createDirectory(Interface::self(), m_sortFilterModel.mapToSource(m_view.selectionModel()->currentIndex()));
+    QModelIndex index = m_view.selectionModel()->currentIndex();
+
+    if (index.isValid())
+        m_node->as<Qt::INode>()->createDirectory(Interface::self(), index);
 }
 
 void DefaultView::removeShortcut()
@@ -234,15 +233,7 @@ void DefaultView::removeShortcut()
     QModelIndexList items = m_view.selectionModel()->selectedIndexes();
 
     if (!items.isEmpty())
-    {
-        QModelIndexList indices;
-        indices.reserve(items.size());
-
-        for (int i = 0; i < items.size(); ++i)
-            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
-
-        m_node->as<Qt::INode>()->remove(Interface::self(), indices);
-    }
+        m_node->as<Qt::INode>()->remove(Interface::self(), items);
 }
 
 void DefaultView::calculateSizeShortcut()
@@ -291,13 +282,7 @@ void DefaultView::copyMoveShortcut(bool move)
 
     if (!items.isEmpty())
     {
-        QModelIndexList indices;
-        indices.reserve(items.size());
-
-        for (int i = 0; i < items.size(); ++i)
-            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
-
-        Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(indices);
+        Core::INode::Files files = m_node->as<Qt::INode>()->mapToFile(items);
 
         if (!files.empty())
         {
@@ -317,15 +302,7 @@ void DefaultView::copyToClipboard(bool move)
     QModelIndexList items = m_view.selectionModel()->selectedIndexes();
 
     if (!items.isEmpty())
-    {
-        QModelIndexList indices;
-        indices.reserve(items.size());
-
-        for (int i = 0; i < items.size(); ++i)
-            indices.push_back(m_sortFilterModel.mapToSource(items.at(i)));
-
-        m_node->as<Qt::INode>()->copyToClipboard(Interface::self(), indices, move);
-    }
+        m_node->as<Qt::INode>()->copyToClipboard(Interface::self(), items, move);
 }
 
 }}}

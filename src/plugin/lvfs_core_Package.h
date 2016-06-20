@@ -20,13 +20,13 @@
 #ifndef LVFS_CORE_PACKAGE_H_
 #define LVFS_CORE_PACKAGE_H_
 
-#include <lvfs/plugins/Package>
+#include <lvfs/plugins/IPackage>
 
 
 namespace LVFS {
 namespace Core {
 
-class PLATFORM_MAKE_PRIVATE Package : public ::LVFS::Package
+class PLATFORM_MAKE_PRIVATE Package : public Implements<IPackage>
 {
     PLATFORM_MAKE_NONCOPYABLE(Package)
     PLATFORM_MAKE_NONMOVEABLE(Package)
@@ -37,7 +37,7 @@ public:
     virtual ~Package();
 
     virtual const char *name() const;
-    virtual Settings *settings() const;
+    virtual Settings::Scope *settings() const;
     virtual const Plugin **contentPlugins() const;
     virtual const Plugin **protocolPlugins() const;
 };

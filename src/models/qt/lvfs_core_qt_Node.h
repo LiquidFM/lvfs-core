@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,19 +57,37 @@ protected:
     inline const Views &views() const { return m_views; }
 
 protected: /* Actions section */
-    void doListFile(int depth = 0);
+    void doListFile(void *id, const Interface::Holder &file);
     virtual void processListFile(Files &files, bool isFirstEvent) = 0;
     virtual void doneListFile(Files &files, const QString &error, bool isFirstEvent) = 0;
 
-    void doCopyFiles(Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move = false);
-    virtual void doneCopyFiles(const Interface::Holder &node, Files &files, bool move) = 0;
+public:
+    struct FilesToCopyId
+    {
+        void *id;
+        Interface::Holder container;
 
-    void doRemoveFiles(Files &files);
-    virtual void doneRemoveFiles(Files &files) = 0;
+        inline bool operator<(const FilesToCopyId &other) const { return id < other.id; }
+        inline bool operator==(const FilesToCopyId &other) const { return id == other.id; }
+    };
+    typedef EFC::Map< FilesToCopyId, EFC::List<Interface::Holder> > FilesToCopy;
 
-    virtual void initProgress(const Interface::Holder &file, quint64 total) = 0;
-    virtual void updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed) = 0;
-    virtual void completeProgress(const Interface::Holder &file, quint64 timeElapsed) = 0;
+protected:
+    void doCopyFiles(FilesToCopy &files, const Interface::Holder &dest, const Interface::Holder &node, bool move = false);
+    virtual void doneCopyFiles(const Interface::Holder &node, FilesToCopy &files, bool move) = 0;
+
+public:
+    typedef FilesToCopyId FilesToRemoveId;
+    typedef FilesToCopy FilesToRemove;
+
+protected:
+    void doRemoveFiles(FilesToRemove &files);
+    virtual void doneRemoveFiles(FilesToRemove &files) = 0;
+
+protected:
+    virtual void initProgress(void *id, const Interface::Holder &file, quint64 total) = 0;
+    virtual void updateProgress(void *id, const Interface::Holder &file, quint64 progress, quint64 timeElapsed) = 0;
+    virtual void completeProgress(void *id, const Interface::Holder &file, quint64 timeElapsed) = 0;
 
 private:
     class EventsHandler : public QObject

@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,10 +27,9 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-StyledItemDelegate::StyledItemDelegate(const Interface::Holder &node, const QSortFilterProxyModel &proxy, QObject *parent) :
+StyledItemDelegate::StyledItemDelegate(const Interface::Holder &node, QObject *parent) :
     QStyledItemDelegate(parent),
-    m_node(node),
-    m_proxy(proxy)
+    m_node(node)
 {}
 
 void StyledItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
@@ -38,7 +37,7 @@ void StyledItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &op
     quint64 total;
     quint64 progress;
 
-    if (index.column() == 1 && m_node->as<Qt::INode>()->isLocked(m_proxy.mapToSource(index), progress, total))
+    if (index.column() == 1 && m_node->as<Qt::INode>()->isLocked(index, progress, total))
         paintProgressInMb(painter, option, total ? progress * 100 / total : 100);
     else
         paintBackgroundLines(painter, option, index);

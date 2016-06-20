@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include <QtCore/QEvent>
 #include <QtCore/QObject>
 #include <lvfs/Interface>
+#include "../lvfs_core_qt_Node.h"
 
 
 namespace LVFS {
@@ -31,7 +32,7 @@ namespace Core {
 namespace Qt {
 
 
-class PLATFORM_MAKE_PRIVATE Task : public EFC::Task
+class PLATFORM_MAKE_PRIVATE Task : public Core::Node::Task
 {
 public:
     class Event : public QEvent

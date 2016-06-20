@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #ifndef LVFS_CORE_INODE_H_
 #define LVFS_CORE_INODE_H_
 
+#include <efc/Map>
 #include <efc/List>
 #include <efc/Task>
 #include <lvfs/Interface>
@@ -37,7 +38,7 @@ class PLATFORM_MAKE_PUBLIC INode
     DECLARE_INTERFACE(LVFS::Core::INode)
 
 public:
-    typedef EFC::List<Interface::Holder> Files;
+    typedef EFC::Map< void *, EFC::List<Interface::Holder> > Files;
 
 public:
     virtual ~INode();
@@ -45,7 +46,7 @@ public:
     virtual const Interface::Holder &parent() const = 0;
     virtual const Interface::Holder &file() const = 0;
 
-    virtual void refresh(int depth = 0) = 0;
+    virtual void refresh() = 0;
     virtual void opened(const Interface::Holder &view) = 0;
     virtual void closed(const Interface::Holder &view) = 0;
     virtual Interface::Holder accept(const Interface::Holder &view, Files &files) = 0;
@@ -71,25 +72,23 @@ protected:
         { return container.erase(iterator); }
     };
 
-    template <typename T, typename Adaptor, typename Deleter = ClearDeleter<T>>
+    template < typename T, typename Adaptor, typename Deleter = ClearDeleter<T> >
     static inline void clear(T &container, Adaptor adaptor, Deleter deleter = Deleter())
     {
         for (typename T::iterator i = container.begin(); i != container.end();)
         {
             const Interface::Holder &item = static_cast<const Interface::Holder &>(adaptor(i));
 
-            if (item.isValid())
-            {
-                if (item->as<Core::INode>()->refs() == 0)
+            if (!item.isValid())
+                i = deleter(container, i);
+            else
+                if (item->as<Core::INode>()->refs() > 0)
+                    ++i;
+                else
                 {
                     item->as<Core::INode>()->clear();
                     i = deleter(container, i);
                 }
-                else
-                    ++i;
-            }
-            else
-                i = deleter(container, i);
         }
     }
 

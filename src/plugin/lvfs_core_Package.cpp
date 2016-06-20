@@ -20,6 +20,8 @@
 #include "lvfs_core_Package.h"
 #include "lvfs_core_Plugin.h"
 
+#include <lvfs/plugins/Package>
+
 
 namespace LVFS {
 namespace Core {
@@ -35,7 +37,7 @@ const char *Package::name() const
     return "Core";
 }
 
-Package::Settings *Package::settings() const
+Settings::Scope *Package::settings() const
 {
     return NULL;
 }
@@ -54,10 +56,12 @@ const Package::Plugin **Package::protocolPlugins() const
     };
     enum { Count = sizeof(types) / sizeof(Plugin) };
 
-    static const Plugin *res[Count + 1] = {};
+    static const Plugin *res[Count + 1];
 
     for (unsigned i = 0; i < Count; ++i)
         res[i] = &types[i];
+
+    res[Count] = NULL;
 
     return res;
 }
@@ -65,4 +69,4 @@ const Package::Plugin **Package::protocolPlugins() const
 }}
 
 
-DECLARE_PLUGIN(::LVFS::Core::Package)
+DECLARE_PLUGINS_PACKAGE(::LVFS::Core::Package)

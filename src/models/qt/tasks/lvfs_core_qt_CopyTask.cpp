@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,18 +29,28 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-CopyTask::CopyTask(QObject *receiver, Files &files, const Interface::Holder &source, const Interface::Holder &dest, const Interface::Holder &node, bool move) :
+CopyTask::CopyTask(QObject *receiver, Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move) :
     FilesBaseTask(receiver, node),
     m_move(move),
     m_files(std::move(files)),
-    m_tryier(NULL),
-    m_source(source),
     m_dest(dest),
+    m_tryier(NULL),
     m_methods({ this, &CopyTask::askUser, NULL })
 {}
 
 CopyTask::~CopyTask()
 {}
+
+FilesBaseTask::Files CopyTask::files() const
+{
+    FilesBaseTask::Files res;
+
+    for (auto &i : m_files)
+        for (auto &j : i.second)
+            res.push_back(j);
+
+    return res;
+}
 
 void CopyTask::run(volatile bool &aborted)
 {
@@ -68,66 +78,67 @@ void CopyTask::run(volatile bool &aborted)
     m_methods.aborted = &aborted;
 
     for (Files::const_iterator it = m_files.begin(), end = m_files.end(); it != end && !aborted; ++it)
-    {
-        m_progress.init(*it, calculateSize(*it));
+        for (Files::mapped_type::const_iterator it2 = it->second.begin(), end = it->second.end(); it2 != end && !aborted; ++it2)
+        {
+            m_progress.init(it->first.id, *it2, calculateSize(*it2));
 
-        if (m_overwrite->askFor(OverwriteFile(m_methods, dest, *it)))
-            if (::strcmp((*it)->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
-                m_tryier->tryTo(CopyFile(m_methods, dest, *it, m_move));
-            else if ((dir = (*it)->as<IDirectory>()) &&
-                     m_tryier->tryTo(CreateDestinationFolder(m_methods, dest, *it, holder)))
-            {
-                Stack stack;
-                Stack::value_type current({ dir->begin(), dir->end(), *it, holder, 0 });
-
-                do
+            if (m_overwrite->askFor(OverwriteFile(m_methods, dest, *it2)))
+                if (::strcmp((*it2)->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
+                    m_tryier->tryTo(CopyFile(m_methods, dest, *it2, m_move));
+                else if ((dir = (*it2)->as<IDirectory>()) &&
+                    m_tryier->tryTo(CreateDestinationFolder(m_methods, dest, *it2, holder)))
                 {
-                    while (current.first != current.second && !aborted)
-                    {
-                        holder = (*current.first);
-                        ++current.first;
+                    Stack stack;
+                    Stack::value_type current({ dir->begin(), dir->end(), *it2, holder, 0 });
 
-                        if (::strcmp(holder->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
+                    do
+                    {
+                        while (current.first != current.second && !aborted)
                         {
-                            if (m_overwrite->askFor(OverwriteFile(m_methods, current.dest, holder)))
-                                current.notCopied += !m_tryier->tryTo(CopyFile(m_methods, current.dest, holder, m_move));
+                            holder = (*current.first);
+                            ++current.first;
+
+                            if (::strcmp(holder->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
+                            {
+                                if (m_overwrite->askFor(OverwriteFile(m_methods, current.dest, holder)))
+                                    current.notCopied += !m_tryier->tryTo(CopyFile(m_methods, current.dest, holder, m_move));
+                            }
+                            else if ((dir = holder->as<IDirectory>()) &&
+                                    m_tryier->tryTo(CreateDestinationFolder(m_methods, current.dest, holder, holder2)))
+                            {
+                                stack.push_back(current);
+                                current.first = dir->begin();
+                                current.second = dir->end();
+                                current.source = holder;
+                                current.dest = holder2;
+                                current.notCopied = 0;
+                            }
                         }
-                        else if ((dir = holder->as<IDirectory>()) &&
-                                m_tryier->tryTo(CreateDestinationFolder(m_methods, current.dest, holder, holder2)))
+
+                        if (aborted)
+                            break;
+
+                        if (stack.empty())
                         {
-                            stack.push_back(current);
-                            current.first = dir->begin();
-                            current.second = dir->end();
-                            current.source = holder;
-                            current.dest = holder2;
-                            current.notCopied = 0;
+                            if (m_move && current.notCopied == 0)
+                                m_tryier->tryTo(RemoveFile(m_methods, it->first.container, current.source));
+
+                            break;
+                        }
+                        else
+                        {
+                            if (m_move && current.notCopied == 0)
+                                m_tryier->tryTo(RemoveFile(m_methods, stack.back().source, current.source));
+
+                            current = stack.back();
+                            stack.pop_back();
                         }
                     }
-
-                    if (aborted)
-                        break;
-
-                    if (stack.empty())
-                    {
-                        if (m_move && current.notCopied == 0)
-                            m_tryier->tryTo(RemoveFile(m_methods, m_source, current.source));
-
-                        break;
-                    }
-                    else
-                    {
-                        if (m_move && current.notCopied == 0)
-                            m_tryier->tryTo(RemoveFile(m_methods, stack.back().source, current.source));
-
-                        current = stack.back();
-                        stack.pop_back();
-                    }
+                    while (true);
                 }
-                while (true);
-            }
 
-        m_progress.complete();
-    }
+            m_progress.complete();
+        }
 
     postEvent(new (std::nothrow) Event(this, FilesBaseTask::Event::DoneCopyFilesEventId, aborted, destination(), m_files, m_move));
 }

@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ class PLATFORM_MAKE_PUBLIC StyledItemDelegate : public QStyledItemDelegate
     PLATFORM_MAKE_NONCOPYABLE(StyledItemDelegate)
 
 public:
-    StyledItemDelegate(const Interface::Holder &node, const QSortFilterProxyModel &proxy, QObject *parent = 0);
+    StyledItemDelegate(const Interface::Holder &node, QObject *parent = 0);
 
     virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 
@@ -46,7 +46,6 @@ protected:
 
 private:
     const Interface::Holder &m_node;
-    const QSortFilterProxyModel &m_proxy;
 };
 
 }}}

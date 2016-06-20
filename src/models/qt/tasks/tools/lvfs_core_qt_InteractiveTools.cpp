@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,9 +36,10 @@ TaskProgress::TaskProgress(QObject *receiver) :
 {}
 
 
-void TaskProgress::init(const Interface::Holder &file, quint64 total)
+void TaskProgress::init(void *id, const Interface::Holder &file, quint64 total)
 {
     ASSERT(file.isValid());
+    m_id = id;
     m_file = file;
     m_total = total;
     m_progress = 0;
@@ -62,7 +63,7 @@ void TaskProgress::complete()
 {
     typedef CompleteProgressEvent Event;
 
-    EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_file, m_startTime.msecsTo(QDateTime::currentDateTime())));
+    EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_id, m_file, m_startTime.msecsTo(QDateTime::currentDateTime())));
     QApplication::postEvent(m_receiver, event.release());
 }
 
@@ -75,7 +76,7 @@ void TaskProgress::postInitEvent()
 {
     typedef InitProgressEvent Event;
 
-    EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_file, m_total));
+    EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_id, m_file, m_total));
     QApplication::postEvent(m_receiver, event.release());
 }
 
@@ -83,7 +84,7 @@ void TaskProgress::postUpdateEvent()
 {
     typedef UpdateProgressEvent Event;
 
-    EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_file, m_progress, m_startTime.msecsTo(m_currentTime)));
+    EFC::ScopedPointer<Event> event(new (std::nothrow) Event(m_id, m_file, m_progress, m_startTime.msecsTo(m_currentTime)));
     QApplication::postEvent(m_receiver, event.release());
 }
 

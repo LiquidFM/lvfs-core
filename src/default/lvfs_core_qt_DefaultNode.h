@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
 #ifndef LVFS_CORE_QT_DEFAULTNODE_H_
 #define LVFS_CORE_QT_DEFAULTNODE_H_
 
-#include <efc/Set>
 #include <efc/Vector>
 #include <QtGui/QIcon>
 #include <QtCore/QString>
@@ -42,7 +41,7 @@ public:
     virtual ~DefaultNode();
 
 public: /* Core::INode */
-    virtual void refresh(int depth = 0);
+    virtual void refresh();
     virtual void opened(const Interface::Holder &view);
     virtual void closed(const Interface::Holder &view);
     virtual Interface::Holder accept(const Interface::Holder &view, Files &files);
@@ -75,7 +74,7 @@ public: /* Qt::INode */
 
 public: /* QAbstractItemModel */
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    virtual int columnCount(const QModelIndex &parent) const;
+    virtual int columnCount(const QModelIndex &parent = QModelIndex()) const;
     virtual QVariant data(const QModelIndex &index, int role = ::Qt::DisplayRole) const;
     virtual ::Qt::ItemFlags flags(const QModelIndex &index) const;
     virtual QVariant headerData(int section, ::Qt::Orientation orientation, int role = ::Qt::DisplayRole) const;
@@ -85,16 +84,31 @@ public: /* QAbstractItemModel */
 protected: /* Core::Qt::Node */
     virtual void processListFile(Files &files, bool isFirstEvent);
     virtual void doneListFile(Files &files, const QString &error, bool isFirstEvent);
-    virtual void doneCopyFiles(const Interface::Holder &node, Files &files, bool move);
-    virtual void doneRemoveFiles(Files &files);
+    virtual void doneCopyFiles(const Interface::Holder &node, FilesToCopy &files, bool move);
+    virtual void doneRemoveFiles(FilesToRemove &files);
 
-    virtual void initProgress(const Interface::Holder &file, quint64 total);
-    virtual void updateProgress(const Interface::Holder &file, quint64 progress, quint64 timeElapsed);
-    virtual void completeProgress(const Interface::Holder &file, quint64 timeElapsed);
+    virtual void initProgress(void *id, const Interface::Holder &file, quint64 total);
+    virtual void updateProgress(void *id, const Interface::Holder &file, quint64 progress, quint64 timeElapsed);
+    virtual void completeProgress(void *id, const Interface::Holder &file, quint64 timeElapsed);
 
 private:
     struct Item
     {
+        typedef EFC::Vector<Item> Container;
+
+        class Compare
+        {
+        public:
+            Compare(::Qt::SortOrder sortOrder) :
+                m_sortOrder(sortOrder)
+            {}
+
+            bool operator()(const Item &i1, const Item &i2) const;
+
+        private:
+            ::Qt::SortOrder m_sortOrder;
+        };
+
         Item(Item *parent = 0) :
             isDir(false),
             parent(parent),
@@ -128,7 +142,7 @@ private:
         QDateTime modified;
         Interface::Holder file;
         Interface::Holder node;
-        EFC::Vector<Item> items;
+        Container items;
 
         QIcon lockIcon;
         QString lockReason;
@@ -138,20 +152,19 @@ private:
         Interface::Holder destNode;
     };
 
-    typedef EFC::Vector<Item> Container;
+    Item createItem(Item *parent, const Interface::Holder &file) const;
+    Item createItem(Item *parent, const Interface::Holder &file, const Interface::Holder &node) const;
+    Item createProcessItem(Item *parent) const;
 
-    Item createItem(const Interface::Holder &file) const;
-    Item createItem(const Interface::Holder &file, const Interface::Holder &node) const;
-
-    void safeClear(Files &files);
-    void unsafeClear();
+    void safeClear(Item *item, Files::mapped_type &files);
+    void unsafeClear(Item *item);
 
     QModelIndex index(Item *item) const;
     QModelIndex parent(Item *item) const;
 //    QModelIndex parent(Item *item, size_type &row) const;
 
 private:
-    Container m_files;
+    Item m_rootItem;
     QModelIndex m_currentIndex;
     Geometry m_geometry;
     Sorting m_sorting;

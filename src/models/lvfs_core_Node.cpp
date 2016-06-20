@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,27 +63,21 @@ int Node::decRef()
     return --m_ref;
 }
 
-void Node::handleTask(EFC::Task::Holder &task, const Interface::Holder &file)
+Node::Task::Task()
+{}
+
+Node::Task::~Task()
+{}
+
+void Node::handleTask(Task::Holder &task)
 {
-    TaskId taskId = task.get();
+    Task::Id taskId = task.get();
 
     if (Core::INode::handleTask(task))
     {
-        m_tasks[taskId].push_back(file);
-        m_items[file] = taskId;
+        Tasks::mapped_type &files = m_tasks[taskId];
 
-        for (Interface::Holder n = Interface::self(); n.isValid(); n = n->as<Core::INode>()->parent())
-            n->as<Core::INode>()->incRef();
-    }
-}
-
-void Node::handleTask(EFC::Task::Holder &task, const Files &files)
-{
-    TaskId taskId = task.get();
-
-    if (Core::INode::handleTask(task))
-    {
-        m_tasks[taskId] = files;
+        files = std::move(static_cast<Task *>(taskId)->files());
 
         for (auto &i : files)
             m_items[i] = taskId;
@@ -93,15 +87,7 @@ void Node::handleTask(EFC::Task::Holder &task, const Files &files)
     }
 }
 
-void Node::cancelTask(const Interface::Holder &file)
-{
-    auto i = m_items.find(file);
-
-    if (i != m_items.end())
-        Core::INode::cancelTask(i->second, false);
-}
-
-void Node::doneTask(TaskId task)
+void Node::doneTask(Task::Id task)
 {
     auto i = m_tasks.find(task);
 
@@ -118,10 +104,19 @@ void Node::doneTask(TaskId task)
     }
 }
 
+void Node::cancelTask(const Interface::Holder &file)
+{
+    auto i = m_items.find(file);
+
+    if (i != m_items.end())
+        Core::INode::cancelTask(i->second, false);
+}
+
 void Node::cancelTasks(const Files &files)
 {
     for (auto &i : files)
-        cancelTask(i);
+        for (auto &q : i.second)
+            cancelTask(q);
 }
 
 void Node::cancelTasks()

@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ class PLATFORM_MAKE_PRIVATE TaskProgress
 public:
     TaskProgress(QObject *receiver);
 
-    void init(const Interface::Holder &file, quint64 total);
+    void init(void *id, const Interface::Holder &file, quint64 total);
     void update(quint64 progressIncrement);
     void complete();
     void clear();
@@ -45,6 +45,7 @@ private:
     void postUpdateEvent();
 
 private:
+    void *m_id;
     quint64 m_total;
     quint64 m_progress;
     QObject *m_receiver;

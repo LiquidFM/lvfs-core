@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ namespace Qt {
 class PLATFORM_MAKE_PRIVATE RemoveTask : public FilesBaseTask
 {
 public:
-    typedef Qt::Node::Files Files;
+    typedef Node::FilesToRemove Files;
 
     class Event : public FilesBaseTask::Event
     {
@@ -44,16 +44,15 @@ public:
     };
 
 public:
-    RemoveTask(QObject *receiver, const Interface::Holder &container, Files &files);
+    RemoveTask(QObject *receiver, Files &files);
     virtual ~RemoveTask();
 
-    const Files &files() const { return m_files; }
+    virtual FilesBaseTask::Files files() const;
 
 protected:
     virtual void run(volatile bool &aborted);
 
 private:
-    Interface::Holder m_container;
     Files m_files;
 
     Tryier *m_tryier;

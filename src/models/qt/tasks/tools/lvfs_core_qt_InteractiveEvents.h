@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,12 +36,14 @@ namespace Qt {
 class PLATFORM_MAKE_PRIVATE InitProgressEvent : public Task::Event
 {
 public:
-    InitProgressEvent(const Interface::Holder &item, quint64 total) :
+    InitProgressEvent(void *id, const Interface::Holder &item, quint64 total) :
         Task::Event(NULL, Task::Event::InitProgress, false),
+        id(id),
         item(item),
         total(total)
     {}
 
+    void *id;
     Interface::Holder item;
     quint64 total;
 };
@@ -49,13 +51,15 @@ public:
 class PLATFORM_MAKE_PRIVATE UpdateProgressEvent : public Task::Event
 {
 public:
-    UpdateProgressEvent(const Interface::Holder &item, quint64 progress, quint64 timeElapsed) :
+    UpdateProgressEvent(void *id, const Interface::Holder &item, quint64 progress, quint64 timeElapsed) :
         Task::Event(NULL, Task::Event::UpdateProgress, false),
+        id(id),
         item(item),
         progress(progress),
         timeElapsed(timeElapsed)
     {}
 
+    void *id;
     Interface::Holder item;
     quint64 progress;
     quint64 timeElapsed;
@@ -65,12 +69,14 @@ public:
 class PLATFORM_MAKE_PRIVATE CompleteProgressEvent : public Task::Event
 {
 public:
-    CompleteProgressEvent(const Interface::Holder &item, quint64 timeElapsed) :
+    CompleteProgressEvent(void *id, const Interface::Holder &item, quint64 timeElapsed) :
         Task::Event(NULL, Task::Event::CompleteProgress, false),
+        id(id),
         item(item),
         timeElapsed(timeElapsed)
     {}
 
+    void *id;
     Interface::Holder item;
     quint64 timeElapsed;
 };

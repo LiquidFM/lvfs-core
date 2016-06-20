@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,9 +28,8 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-RemoveTask::RemoveTask(QObject *receiver, const Interface::Holder &container, Files &files) :
+RemoveTask::RemoveTask(QObject *receiver, Files &files) :
     FilesBaseTask(receiver),
-    m_container(container),
     m_files(std::move(files)),
     m_tryier(NULL),
     m_methods({ this, &RemoveTask::askUser, NULL })
@@ -38,6 +37,17 @@ RemoveTask::RemoveTask(QObject *receiver, const Interface::Holder &container, Fi
 
 RemoveTask::~RemoveTask()
 {}
+
+FilesBaseTask::Files RemoveTask::files() const
+{
+    FilesBaseTask::Files res;
+
+    for (auto &i : m_files)
+        for (auto &j : i.second)
+            res.push_back(j);
+
+    return res;
+}
 
 void RemoveTask::run(volatile bool &aborted)
 {
@@ -58,54 +68,55 @@ void RemoveTask::run(volatile bool &aborted)
     m_methods.aborted = &aborted;
 
     for (Files::const_iterator it = m_files.begin(), end = m_files.end(); it != end && !aborted; ++it)
-    {
-        m_progress.init(*it, calculateSize(*it));
-
-        if (::strcmp((*it)->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
-            m_tryier->tryTo(RemoveFile(m_methods, m_container, *it));
-        else if (dir = (*it)->as<IDirectory>())
+        for (Files::mapped_type::const_iterator it2 = it->second.begin(), end = it->second.end(); it2 != end && !aborted; ++it2)
         {
-            Stack stack;
-            Stack::value_type current({ dir->begin(), dir->end(), *it });
+            m_progress.init(it->first.id, *it2, calculateSize(*it2));
 
-            do
+            if (::strcmp((*it2)->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
+                m_tryier->tryTo(RemoveFile(m_methods, it->first.container, *it2));
+            else if (dir = (*it2)->as<IDirectory>())
             {
-                while (current.first != current.second && !aborted)
+                Stack stack;
+                Stack::value_type current({ dir->begin(), dir->end(), *it2 });
+
+                do
                 {
-                    holder = (*current.first);
-                    ++current.first;
-
-                    if (::strcmp(holder->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
-                        m_tryier->tryTo(RemoveFile(m_methods, current.container, holder));
-                    else if (dir = holder->as<IDirectory>())
+                    while (current.first != current.second && !aborted)
                     {
-                        stack.push_back(current);
-                        current.first = dir->begin();
-                        current.second = dir->end();
-                        current.container = holder;
+                        holder = (*current.first);
+                        ++current.first;
+
+                        if (::strcmp(holder->as<IEntry>()->type()->name(), Module::DirectoryTypeName) != 0)
+                            m_tryier->tryTo(RemoveFile(m_methods, current.container, holder));
+                        else if (dir = holder->as<IDirectory>())
+                        {
+                            stack.push_back(current);
+                            current.first = dir->begin();
+                            current.second = dir->end();
+                            current.container = holder;
+                        }
                     }
-                }
 
-                if (aborted)
-                    break;
+                    if (aborted)
+                        break;
 
-                if (stack.empty())
-                {
-                    m_tryier->tryTo(RemoveFile(m_methods, m_container, current.container));
-                    break;
-                }
-                else
-                    if (m_tryier->tryTo(RemoveFile(m_methods, stack.back().container, current.container)))
+                    if (stack.empty())
                     {
-                        current = stack.back();
-                        stack.pop_back();
+                        m_tryier->tryTo(RemoveFile(m_methods, it->first.container, current.container));
+                        break;
                     }
+                    else
+                        if (m_tryier->tryTo(RemoveFile(m_methods, stack.back().container, current.container)))
+                        {
+                            current = stack.back();
+                            stack.pop_back();
+                        }
+                }
+                while (true);
             }
-            while (true);
-        }
 
-        m_progress.complete();
-    }
+            m_progress.complete();
+        }
 
     postEvent(new (std::nothrow) Event(this, FilesBaseTask::Event::DoneRemoveFilesEventId, aborted, m_files));
 }

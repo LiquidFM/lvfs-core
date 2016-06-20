@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,15 +30,25 @@ namespace LVFS {
 namespace Core {
 namespace Qt {
 
-RefreshTask::RefreshTask(QObject *receiver, const Interface::Holder &node, int depth) :
+RefreshTask::RefreshTask(QObject *receiver, void *id, const Interface::Holder &file) :
     FilesBaseTask(receiver),
-    m_node(node),
-    m_depth(depth)
+    m_id(id),
+    m_file(file)
 {}
+
+FilesBaseTask::Files RefreshTask::files() const
+{
+    FilesBaseTask::Files res;
+
+    res.push_back(m_file);
+
+    return res;
+}
 
 void RefreshTask::run(volatile bool &aborted)
 {
-    Files files;
+    Files res;
+    Files::mapped_type *files = &res[m_id];
     bool isFirstEvent = true;
     Interface::Holder file;
 
@@ -46,7 +56,7 @@ void RefreshTask::run(volatile bool &aborted)
     QTime baseTime = QTime::currentTime();
     QTime currentTime;
 
-    if (IDirectory *dir = m_node->as<Core::INode>()->file()->as<IDirectory>())
+    if (IDirectory *dir = m_file->as<IDirectory>())
     {
         for (auto i = dir->begin(), end = dir->end(); i != end && !aborted; ++i)
         {
@@ -55,20 +65,21 @@ void RefreshTask::run(volatile bool &aborted)
 
             if (UNLIKELY(!file.isValid()))
             {
-                files.clear();
+                files->clear();
                 break;
             }
 
-            files.push_back(std::move(file));
+            files->push_back(std::move(file));
 
             if (baseTime.msecsTo(currentTime) > 300)
             {
                 baseTime = currentTime;
 
-                if (!files.empty())
+                if (!files->empty())
                 {
-                    postEvent(new (std::nothrow) Event(this, Event::ProcessListFileEventId, false, files, isFirstEvent));
+                    postEvent(new (std::nothrow) Event(this, Event::ProcessListFileEventId, false, std::move(res), isFirstEvent));
                     isFirstEvent = false;
+                    files = &res[m_id];
                 }
             }
         }
@@ -77,7 +88,7 @@ void RefreshTask::run(volatile bool &aborted)
             error = Qt::Node::toUnicode(dir->lastError().description());
     }
 
-    postEvent(new (std::nothrow) Event(this, Event::DoneListFileEventId, aborted, files, isFirstEvent, error));
+    postEvent(new (std::nothrow) Event(this, Event::DoneListFileEventId, aborted, std::move(res), isFirstEvent, error));
 }
 
 }}}

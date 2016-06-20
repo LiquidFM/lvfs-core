@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2014 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,15 +45,27 @@ public: /* Core::INode */
     virtual void incRef();
     virtual int decRef();
 
-protected:
-    typedef EFC::Task *                         TaskId;
-    typedef EFC::Map<TaskId, Files>             Tasks;
-    typedef EFC::Map<Interface::Holder, TaskId> Items;
+public:
+    class Task : public EFC::Task
+    {
+    public:
+        typedef EFC::List<Interface::Holder> Files;
+        typedef EFC::Task *                  Id;
 
-    void handleTask(EFC::Task::Holder &task, const Interface::Holder &file);
-    void handleTask(EFC::Task::Holder &task, const Files &files);
+    public:
+        Task();
+        virtual ~Task();
+
+        virtual Files files() const = 0;
+    };
+
+protected:
+    typedef EFC::Map<Task::Id, Task::Files>       Tasks;
+    typedef EFC::Map<Interface::Holder, Task::Id> Items;
+
+    void handleTask(Task::Holder &task);
+    void doneTask(Task::Id task);
     void cancelTask(const Interface::Holder &file);
-    void doneTask(TaskId task);
     void cancelTasks(const Files &files);
     void cancelTasks();
 

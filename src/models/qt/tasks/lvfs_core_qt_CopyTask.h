@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class PLATFORM_MAKE_PRIVATE CopyTask : public FilesBaseTask
     Q_DECLARE_TR_FUNCTIONS(CopyTask)
 
 public:
-    typedef Qt::Node::Files Files;
+    typedef Node::FilesToCopy Files;
 
     class Event : public FilesBaseTask::ExtendedEvent
     {
@@ -48,10 +48,10 @@ public:
     };
 
 public:
-    CopyTask(QObject *receiver, Files &files, const Interface::Holder &source, const Interface::Holder &dest, const Interface::Holder &node, bool move);
+    CopyTask(QObject *receiver, Files &files, const Interface::Holder &dest, const Interface::Holder &node, bool move);
     virtual ~CopyTask();
 
-    const Files &files() const { return m_files; }
+    virtual FilesBaseTask::Files files() const;
 
 protected:
     virtual void run(volatile bool &aborted);
@@ -129,7 +129,6 @@ protected:
 private:
     bool m_move;
     Files m_files;
-    Interface::Holder m_source;
     Interface::Holder m_dest;
 
     Tryier *m_tryier;

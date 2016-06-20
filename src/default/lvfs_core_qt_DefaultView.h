@@ -1,7 +1,7 @@
 /**
  * This file is part of lvfs-core.
  *
- * Copyright (C) 2011-2015 Dmitriy Vilkov, <dav.daemon@gmail.com>
+ * Copyright (C) 2011-2016 Dmitriy Vilkov, <dav.daemon@gmail.com>
  *
  * lvfs-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@
 
 #include <lvfs-core/IView>
 #include <lvfs-core/models/Qt/IView>
-#include <lvfs-core/models/Qt/SortFilterModel>
 #include <lvfs-core/models/Qt/StyledItemDelegate>
 
 #include <lvfs-core/tools/events/ContextMenuEventHandler>
@@ -115,7 +114,6 @@ private:
 private:
     TreeView m_view;
     EventHandler m_eventHandler;
-    SortFilterModel m_sortFilterModel;
     StyledItemDelegate m_styledItemDelegate;
 };
 
