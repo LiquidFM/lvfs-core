@@ -36,6 +36,8 @@
 #include <lvfs-core/tools/events/MouseEventHandler>
 #include <lvfs-core/tools/events/MouseEventSource>
 
+#include "lvfs_core_qt_DefaultView_p.h"
+
 
 namespace LVFS {
 namespace Core {
@@ -85,6 +87,8 @@ private:
     void cutToClipboardShortcut();
     void pasteFromClipboardShortcut();
     bool handleShortcut(QEvent *event);
+    void collapsed(const QModelIndex &index);
+    void expanded(const QModelIndex &index);
 
 private:
     void copyMoveShortcut(bool move);
@@ -115,6 +119,7 @@ private:
     TreeView m_view;
     EventHandler m_eventHandler;
     StyledItemDelegate m_styledItemDelegate;
+    DefaultViewListener m_listener;
 };
 
 }}}

@@ -40,12 +40,16 @@ namespace Qt {
 DefaultView::DefaultView() :
     m_view(&m_eventHandler),
     m_eventHandler(this),
-    m_styledItemDelegate(m_node)
+    m_styledItemDelegate(m_node),
+    m_listener(this, &DefaultView::collapsed, &DefaultView::expanded)
 {
     m_view.setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_view.setContextMenuPolicy(::Qt::DefaultContextMenu);
     m_view.setItemDelegate(&m_styledItemDelegate);
     m_view.setSortingEnabled(true);
+
+    QObject::connect(&m_view, SIGNAL(collapsed(const QModelIndex &)), &m_listener, SLOT(collapsed(const QModelIndex &)));
+    QObject::connect(&m_view, SIGNAL(expanded(const QModelIndex &)), &m_listener, SLOT(expanded(const QModelIndex &)));
 
     m_eventHandler.registerMouseDoubleClickEventHandler(&DefaultView::goIntoShortcut);
     m_eventHandler.setDefaultHandler(EventHandler::KeyboardEvent, &DefaultView::handleShortcut);
@@ -113,7 +117,6 @@ void DefaultView::setNode(const Interface::Holder &node)
 
     m_node = node;
     m_view.setModel(qtNode->model());
-
 
     qint32 column = 0;
     for (auto i : qtNode->geometry())
@@ -274,6 +277,16 @@ void DefaultView::pasteFromClipboardShortcut()
 bool DefaultView::handleShortcut(QEvent *event)
 {
     return false;
+}
+
+void DefaultView::collapsed(const QModelIndex &index)
+{
+//    m_node->as<Qt::INode>()->collapsed(Interface::self(), index);
+}
+
+void DefaultView::expanded(const QModelIndex &index)
+{
+//    m_node->as<Qt::INode>()->expanded(Interface::self(), index);
 }
 
 void DefaultView::copyMoveShortcut(bool move)

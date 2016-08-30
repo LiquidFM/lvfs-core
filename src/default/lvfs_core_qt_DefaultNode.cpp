@@ -678,8 +678,7 @@ void DefaultNode::processListFile(Files &files, bool isFirstEvent)
 
 void DefaultNode::doneListFile(Files &files, const QString &error, bool isFirstEvent)
 {
-    if (!files.empty())
-        processListFile(files, isFirstEvent);
+    processListFile(files, isFirstEvent);
 
     if (!error.isEmpty())
         QMessageBox::critical(QApplication::focusWidget(), toUnicode(file()->as<IEntry>()->location()), error);
