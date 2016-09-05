@@ -1,18 +1,13 @@
 project (lvfs-core)
 
 # Project header
-project_library_header_default ()
+project_header_default ("POSITION_INDEPENDENT_CODE:YES")
 
 # 3rdparty
-list (APPEND ${PROJECT_NAME}_LIBS brolly)
-list (APPEND ${PROJECT_NAME}_LIBS efc)
-list (APPEND ${PROJECT_NAME}_LIBS lvfs)
-list (APPEND ${PROJECT_NAME}_LIBS kitemviews)
-
-find_package (Qt4 4.7.1 COMPONENTS QtCore QtGui REQUIRED)
-include (${QT_USE_FILE})
+list (APPEND ${PROJECT_NAME}_LIBS ${EFC_LIB})
+list (APPEND ${PROJECT_NAME}_LIBS ${LVFS_LIB})
+#list (APPEND ${PROJECT_NAME}_LIBS kitemviews)
 list (APPEND ${PROJECT_NAME}_LIBS ${QT_LIBRARIES})
-add_definitions (${QT_DEFINITIONS} -DQT_NO_CAST_FROM_ASCII)
 
 # Sources
 add_subdirectory (src)
@@ -23,11 +18,8 @@ list (APPEND ${PROJECT_NAME}_SOURCES ${${PROJECT_NAME}_MOC_SOURCES})
 add_library (lvfs-core SHARED ${${PROJECT_NAME}_SOURCES})
 target_link_libraries (lvfs-core ${${PROJECT_NAME}_LIBS})
 
-# Version
-build_version_file (lvfs-core 0.0.1)
-
 # Documentation
-add_documentation ("LVFS-Core" 0.0.1 "LVFS core library")
+add_documentation (lvfs-core 0.0.1 "LVFS core library")
 
 # Install rules
 install_header_files (lvfs-core "src/lvfs_core_INode.h:INode"
@@ -36,6 +28,12 @@ install_header_files (lvfs-core "src/lvfs_core_INode.h:INode"
                                 "src/lvfs_core_IMainView.h:IMainView"
                                 "src/lvfs_core_INodeFactory.h:INodeFactory"
                                 "src/lvfs_core_IViewFactory.h:IViewFactory"
+
+                                "src/settings/lvfs_core_settings_Option.h:settings/Option"
+                                "src/settings/lvfs_core_settings_IntOption.h:settings/IntOption"
+                                "src/settings/lvfs_core_settings_StringOption.h:settings/StringOption"
+                                "src/settings/lvfs_core_settings_Scope.h:settings/Scope"
+                                "src/settings/lvfs_core_settings_Page.h:settings/Page"
 
                                 "src/tools/models/lvfs_core_TreeModel.h:tools/models/TreeModel"
                                 "src/tools/strings/strnatcmp.h:tools/strings/strnatcmp.h"
